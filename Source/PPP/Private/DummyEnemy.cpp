@@ -2,6 +2,7 @@
 
 #include "DummyEnemy.h"
 #include "PPPGameMode.h"
+#include "PPPGameState.h" //score
 #include "Kismet/GameplayStatics.h"
 
 ADummyEnemy::ADummyEnemy()
@@ -52,12 +53,22 @@ float ADummyEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 void ADummyEnemy::Kill()
 {
 	UE_LOG(LogEnemy, Warning, TEXT("DummyEnemy 사망"));
-
+//GameMode에 알림
 	APPPGameMode* GM = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this));
 	if (GM)
 	{
 		GM->OnEnemyKilled();
 	}
-
+// GameState에 점수 추가
+    UWorld* World = GetWorld();
+    if (World)
+    {
+        APPPGameState* GS = World->GetGameState<APPPGameState>();
+        if (GS)
+        {
+            GS->AddScore(10);
+            UE_LOG(LogEnemy, Warning, TEXT("score + 10. current score : %d"), GS->Score);
+        }
+    }
 	Destroy();
 }

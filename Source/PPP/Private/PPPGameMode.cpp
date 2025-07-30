@@ -73,6 +73,7 @@ void APPPGameMode::StartRound()
 
         UE_LOG(LogWave, Log, TEXT("Wave %d 시작!"), GS->CurrentRound);
     }
+    GS->StartRoundTimer(20.0f);
 
     SpawnEnemies();
 }
@@ -109,6 +110,8 @@ void APPPGameMode::OnEnemyKilled()
     GS->SetRemainingEnemies(NewCount);
 
     UE_LOG(LogEnemy, Log, TEXT("적 처치! 남은 적: %d"), NewCount);
+
+    CheckRewardCondition();
 
     if (NewCount <= 0)
     {
@@ -155,4 +158,45 @@ void APPPGameMode::SpawnEnemies()
 int32 APPPGameMode::GetMaxRounds() const
 {
     return MaxRounds;
+}
+
+void APPPGameMode::CheckRewardCondition()
+{
+    // GameState에서 현재 점수 가져오기
+    APPPGameState* GS = GetGameState<APPPGameState>();
+    if (!GS) return;
+
+    // 이미 보상 지급했으면 중복 방지
+    if (bRewardGiven) return;
+
+    // 점수 조건 충족 확인
+    if (GS->GetScore() >= 100)
+    {
+        bRewardGiven = true;
+
+        // 보상 액터 클래스가 유효한지 확인
+        if (RewardActorClass)
+        {
+            // 하늘 위 위치에서 스폰 (테스트 완료했고, 캐릭터 만들어지면 위치 조정 필요)
+            FVector SpawnLocation = FVector(0.0f, 0.0f, 1000.0f); // 월드 중앙 하늘 위
+            /** APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+            if (PlayerPawn)
+            {
+            FVector PlayerLocation = PlayerPawn->GetActorLocation();
+            FVector SpawnLocation = PlayerLocation + FVector(0, 0, 800); // 캐릭터 머리 위 800
+
+            GetWorld()->SpawnActor<AActor>(RewardActorClass, SpawnLocation, FRotator::ZeroRotator);
+            } */
+            FRotator SpawnRotation = FRotator::ZeroRotator;
+
+            FActorSpawnParameters SpawnParams;
+            GetWorld()->SpawnActor<AActor>(RewardActorClass, SpawnLocation, SpawnRotation, SpawnParams);
+
+            UE_LOG(LogGame, Warning, TEXT("점수 100 달성! 보상 액터가 떨어졌습니다."));
+        }
+        else
+        {
+            UE_LOG(LogGame, Warning, TEXT("RewardActorClass가 설정되지 않았습니다."));
+        }
+    }
 }

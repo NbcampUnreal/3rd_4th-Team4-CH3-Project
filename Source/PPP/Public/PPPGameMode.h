@@ -40,13 +40,13 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	int32 GetMaxRounds() const;
+    /**점수 보상 조건 확인 */
+    void CheckRewardCondition();
 protected:
-	
-
 	/** 최대 라운드 수 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Round", meta=(AllowPrivateAccess = "true"))
 	int32 MaxRounds = 3;
-	
+
 	/** 라운드당 적 수 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Round")
 	int32 EnemiesPerRound = 5;
@@ -54,4 +54,11 @@ protected:
 	/** 적 스폰용 클래스 */
 	UPROPERTY(EditDefaultsOnly, Category="Enemy")
 	TSubclassOf<ADummyEnemy> EnemyClass;
+
+    // [1단계] 보상으로 떨어질 액터 클래스 (블루프린트에서 설정)
+    UPROPERTY(EditAnywhere, Category = "Reward")
+    TSubclassOf<AActor> RewardActorClass;
+
+    // [1단계] 이미 보상을 줬는지 여부 (중복 스폰 방지용)
+    bool bRewardGiven = false;
 };
