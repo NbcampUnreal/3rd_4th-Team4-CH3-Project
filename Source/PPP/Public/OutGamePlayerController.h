@@ -2,6 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "Components/Button.h"
+#include "InputMappingContext.h"
+#include "InputAction.h"
 #include "OutGamePlayerController.generated.h"
 
 /**
@@ -18,40 +21,66 @@ class PPP_API AOutGamePlayerController : public APlayerController
 public:
     // 생성자
     // - 위젯 관련 포인터 초기화
-    // by Team4 (yeoul)
     AOutGamePlayerController();
 
     // 메인 메뉴 표시
     // - MainMenu 위젯을 생성하고 화면에 표시
     // - bIsRestart가 true면 Start 버튼 텍스트 변경
-    // by Team4 (yeoul)
     UFUNCTION(BlueprintCallable, Category = "UI")
     void ShowMainMenu(bool bIsRestart);
 
+    // 일시 정지 메뉴
+    UFUNCTION(BlueprintCallable, Category = "UI")
+    void ShowPauseMenu();
+
     // 게임 시작
-    // - 레벨 전환을 통해 인게임으로 이동
-    // - 이후 GameInstance 초기화 로직 예정
-    // by Team4 (yeoul)
+    // TODO: GameInstance 초기화 로직 예정
     UFUNCTION(BlueprintCallable, Category = "UI")
     void StartGame();
+
+    // 게임 종료
+    UFUNCTION(BlueprintCallable, Category = "UI")
+    void QuitGame();
 
 protected:
     // BeginPlay 오버라이드
     // - 현재 레벨이 MainMenuLevel이면 MainMenu UI 표시
-    // by Team4 (yeoul)
+    // - PauseMenu 입력 매핑 등록
     virtual void BeginPlay() override;
 
+    // ESC 입력 바인딩
+    virtual void SetupInputComponent() override;
+
     // MainMenu 위젯 클래스
-    // - BP에서 연결 (위젯 클래스 설정용)
-    // by Team4 (yeoul)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
     TSubclassOf<UUserWidget> MainMenuWidgetClass;
 
     // MainMenu 위젯 인스턴스
-    // - C++에서 생성 및 표시
-    // by Team4 (yeoul)
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
     UUserWidget* MainMenuWidgetInstance;
 
-    // TODO: 앞으로 추가될 PauseMenu, GameOver 위젯 인스턴스 포인터들 선언 예정
+    // Quit 사운드
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+    USoundBase* QuitSound;
+
+    // PauseMenu 위젯 클래스
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+    TSubclassOf<UUserWidget> PauseMenuWidgetClass;
+
+    // PauseMenu 위젯 인스턴스
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+    UUserWidget* PauseMenuWidgetInstance;
+
+    // 입력 매핑 컨텍스트 (ESC 키 처리용)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+    UInputMappingContext* PauseMenuIMC;
+    // ESC 키에 바인딩된 InputAction
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+    UInputAction* PauseMenuAction;
+
+    // ESC 키 입력 처리 함수
+    UFUNCTION()
+    void HandlePauseKey();
+
+    // TODO: GameOver 위젯 인스턴스 포인터들 선언 예정
 };
