@@ -38,6 +38,9 @@ public:
 	/** 적 스폰 */
 	void SpawnEnemies();
 
+    void OnRoundCleared(); //라운드 성공
+    void OnGameOver(); // 게임 오버
+
 	UFUNCTION(BlueprintCallable)
 	int32 GetMaxRounds() const;
     /**점수 보상 조건 확인 */

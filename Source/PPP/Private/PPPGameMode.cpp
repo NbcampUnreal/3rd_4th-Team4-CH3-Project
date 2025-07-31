@@ -62,20 +62,33 @@ void APPPGameMode::SetGameState(EGameState NewState)
     }
 }
 
-void APPPGameMode::StartRound()
+void APPPGameMode::StartRound() //라운드 시작시 적 초기화 수정
 {
+    // 1. 이전 라운드에서 살아남은 적 제거
+    for (TActorIterator<ADummyEnemy> It(GetWorld()); It; ++It)
+    {
+        It->Destroy();
+    }
+    UE_LOG(LogEnemy, Warning, TEXT("이전 라운드 적 전부 제거됨"));
+
+    // 2. 라운드 초기화
     APPPGameState* GS = GetGameState<APPPGameState>();
     if (GS)
     {
         GS->SetGameState(EGameState::InProgress);
-        GS->SetCurrentRound(GS->CurrentRound + 1); //  GameState에 라운드 증가
-        GS->SetRemainingEnemies(EnemiesPerRound);  //  적 수 설정
-
+        // 라운드 증가 제거 → OnRoundCleared()에서만 증가
+        GS->SetRemainingEnemies(EnemiesPerRound);
         UE_LOG(LogWave, Log, TEXT("Wave %d 시작!"), GS->CurrentRound);
     }
+
+    // 3. 타이머 시작
     GS->StartRoundTimer(20.0f);
 
+    // 4. 적 스폰
     SpawnEnemies();
+
+    // 5. 보상 여부 초기화
+    bRewardGiven = false;
 }
 
 void APPPGameMode::EndRound()
@@ -87,17 +100,19 @@ void APPPGameMode::EndRound()
 
     UE_LOG(LogWave, Log, TEXT("라운드 %d 종료!"), GS->CurrentRound);
 
-    // 라운드 증가 (StartRound에서 다시 세팅됨)
-    if (GS->CurrentRound >= MaxRounds)
+    // 점수 + 적 제거 조건 함께 판단
+    bool bClearedByScore = GS->IsRoundCleared();
+    bool bClearedByEnemies = (GS->RemainingEnemies <= 0);
+
+    if (bClearedByScore || bClearedByEnemies)
     {
-        // 모든 라운드 완료 → 게임 클리어
-        SetGameState(EGameState::GameOver);
-        UE_LOG(LogGame, Warning, TEXT("게임 클리어!"));
+        UE_LOG(LogGame, Log, TEXT("조건 충족 → 라운드 클리어"));
+        OnRoundCleared();
     }
     else
     {
-        // 다음 라운드 시작
-        StartRound();
+        UE_LOG(LogGame, Warning, TEXT("조건 미달 → 게임 오버"));
+        OnGameOver();
     }
 }
 
@@ -113,9 +128,15 @@ void APPPGameMode::OnEnemyKilled()
 
     CheckRewardCondition();
 
+    // 모든 적을 처치한 경우
     if (NewCount <= 0)
     {
-        EndRound();
+        UE_LOG(LogEnemy, Log, TEXT("모든 적 처치! 라운드 종료"));
+        EndRound(); // 라운드 종료 처리
+    }
+    else
+    {
+        UE_LOG(LogEnemy, Log, TEXT("라운드 진행 중 - 남은 적: %d"), NewCount);
     }
 }
 
@@ -177,26 +198,47 @@ void APPPGameMode::CheckRewardCondition()
         // 보상 액터 클래스가 유효한지 확인
         if (RewardActorClass)
         {
-            // 하늘 위 위치에서 스폰 (테스트 완료했고, 캐릭터 만들어지면 위치 조정 필요)
-            FVector SpawnLocation = FVector(0.0f, 0.0f, 1000.0f); // 월드 중앙 하늘 위
-            /** APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
-            if (PlayerPawn)
-            {
-            FVector PlayerLocation = PlayerPawn->GetActorLocation();
-            FVector SpawnLocation = PlayerLocation + FVector(0, 0, 800); // 캐릭터 머리 위 800
-
-            GetWorld()->SpawnActor<AActor>(RewardActorClass, SpawnLocation, FRotator::ZeroRotator);
-            } */
+            FVector SpawnLocation = FVector(0.0f, 0.0f, 1000.0f); // 하늘 위
             FRotator SpawnRotation = FRotator::ZeroRotator;
-
             FActorSpawnParameters SpawnParams;
-            GetWorld()->SpawnActor<AActor>(RewardActorClass, SpawnLocation, SpawnRotation, SpawnParams);
 
+            GetWorld()->SpawnActor<AActor>(RewardActorClass, SpawnLocation, SpawnRotation, SpawnParams);
             UE_LOG(LogGame, Warning, TEXT("점수 100 달성! 보상 액터가 떨어졌습니다."));
         }
         else
         {
             UE_LOG(LogGame, Warning, TEXT("RewardActorClass가 설정되지 않았습니다."));
         }
+
+        // ✅ 점수 조건 만족 시 라운드 종료 조건 추가
+        if (GS->GetCurrentState() == EGameState::InProgress)
+        {
+            UE_LOG(LogGame, Log, TEXT("점수 조건 충족 → 라운드 종료 호출"));
+            EndRound();
+        }
     }
 }
+// -------------------------------
+// 클리어, 게임오버 구분 처리
+// -------------------------------
+void APPPGameMode::OnRoundCleared()
+{
+    UE_LOG(LogGame, Log, TEXT("라운드 클리어 - 다음 라운드 진행"));
+    APPPGameState* GS = GetGameState<APPPGameState>();
+    if (GS)
+    {
+        //라운드 증가
+        int32 NewRound = GS->CurrentRound + 1;
+        GS ->SetCurrentRound(NewRound);
+        //스코어 0
+        GS->ResetScore(); // 스코어 초기화
+    }
+    StartRound(); // 다음 라운드 시작
+}
+void APPPGameMode::OnGameOver()
+{
+    UE_LOG(LogGame, Warning, TEXT("게임 오버"));
+    //게임 오버 상태로
+    //TODO : UI에 추가
+}
+

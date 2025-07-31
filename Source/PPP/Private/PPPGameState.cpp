@@ -7,16 +7,17 @@
 
 APPPGameState::APPPGameState()
 {
-	// 생성자에서는 아직 특별히 할 건 없음
 	CurrentState = EGameState::WaitingToStart;
-	CurrentRound = 0;
+	CurrentRound = 1;
 	RemainingEnemies = 0;
-
     PrimaryActorTick.bCanEverTick = true;// 타이머 작동을 위해 Tick 활성화
     RemainingTime = 0.0f; //타이머
     bIsTimerRunning = false;//작동중?
 }
-
+EGameState APPPGameState::GetCurrentState() const
+{
+    return CurrentState;
+}
 // -------------------------------
 // GameMode → GameState 데이터 전달 함수들
 // -------------------------------
@@ -68,6 +69,11 @@ void APPPGameState::ResetScore()
     OnRep_Score(); // 점수 초기화 시 UI 업데이트
     UE_LOG(LogGame, Log, TEXT("Score reset to 0"));
 }
+
+bool APPPGameState::IsRoundCleared() const
+{
+    return Score >= ScoreToClearRound; // 목표 점수 이상인지 확인
+}
 // -------------------------------
 // Timer
 // -------------------------------
@@ -84,7 +90,8 @@ void APPPGameState::StopRoundTimer()
 
 void APPPGameState::OnRoundTimerFinished()
 {
-    bIsTimerRunning = false;
+    UE_LOG(LogGame, Warning, TEXT("라운드 제한 시간 종료됨"));
+
 
     // GameMode에서 라운드 종료 함수 호출
     APPPGameMode* GameMode = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this));
@@ -92,6 +99,7 @@ void APPPGameState::OnRoundTimerFinished()
     {
         GameMode->EndRound(); // GameMode 쪽에 함수 있어야 작동함
     }
+    bIsTimerRunning = false; //타이머 중단
 }
 
 float APPPGameState::GetRemainingTime() const
@@ -115,7 +123,7 @@ void APPPGameState::Tick(float DeltaTime)
         if (CurrentSeconds != PreviousDisplaySeconds)
         {
             PreviousDisplaySeconds = CurrentSeconds;
-            UE_LOG(LogGame, Log, TEXT("Tick 작동 중 - 남은 시간(초): %d"), CurrentSeconds);
+            //UE_LOG(LogGame, Log, TEXT("Tick 작동 중 - 남은 시간(초): %d"), CurrentSeconds);
         }
 
         // 시간이 0 이하로 떨어졌을 경우 라운드 종료 처리

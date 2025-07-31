@@ -27,15 +27,22 @@ public:
     /** 점수 */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Score")
     int32 Score = 0;
+    // 점수로 라운드 클리어 판단
+    UFUNCTION(BlueprintCallable)
+    bool IsRoundCleared() const;
+
     UFUNCTION()
     void OnRep_Score();
+
     UFUNCTION(BlueprintCallable)
+
     void AddScore(int32 Amount); //증가
     void ResetScore(); //스코어 초기화
     void StartRoundTimer(float Duration);; //타이머 시작
     void StopRoundTimer(); //타이머 중지
     float GetRemainingTime() const; //남은 시간 가져오기
-virtual void Tick(float DeltaTime) override;//tick사용
+    virtual void Tick(float DeltaTime) override;//tick사용
+    EGameState GetCurrentState()const;
 	// -------------------------------
 	// GameMode에서 호출할 Setter 함수들
 	// -------------------------------
@@ -51,6 +58,9 @@ virtual void Tick(float DeltaTime) override;//tick사용
 	int32 GetRemainingEnemies() const;
     UFUNCTION(BlueprintCallable)
     int32 GetScore() const { return Score; } //reward 확인용
+    UPROPERTY(EditAnywhere, Category="Score")
+    int32 ScoreToClearRound = 30; //라운드 클리어 점수
+
 
 
 private:

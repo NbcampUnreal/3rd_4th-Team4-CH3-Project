@@ -52,23 +52,32 @@ float ADummyEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 // 죽는 함수, 지금은 테스용으로 K 눌렀을 때 액터가 Kill처리 되게 만들어놨음
 void ADummyEnemy::Kill()
 {
-	UE_LOG(LogEnemy, Warning, TEXT("DummyEnemy 사망"));
-//GameMode에 알림
-	APPPGameMode* GM = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this));
-	if (GM)
-	{
-		GM->OnEnemyKilled();
-	}
-// GameState에 점수 추가
+    UE_LOG(LogEnemy, Warning, TEXT("DummyEnemy 사망"));
+
+    // GameMode에 알림
+    APPPGameMode* GM = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this));
+
+    // GameState에 점수 추가
     UWorld* World = GetWorld();
-    if (World)
+    APPPGameState* GS = World ? World->GetGameState<APPPGameState>() : nullptr;
+
+    if (GS)
     {
-        APPPGameState* GS = World->GetGameState<APPPGameState>();
-        if (GS)
+        GS->AddScore(10);
+        UE_LOG(LogEnemy, Warning, TEXT("score + 10. current score : %d"), GS->Score);
+    }
+
+    if (GM)
+    {
+        GM->OnEnemyKilled();
+
+        // 점수 조건으로도 라운드 클리어 판단
+        if (GS && GS->IsRoundCleared())
         {
-            GS->AddScore(10);
-            UE_LOG(LogEnemy, Warning, TEXT("score + 10. current score : %d"), GS->Score);
+            UE_LOG(LogGame, Warning, TEXT("점수 조건 충족 → 라운드 클리어"));
+            GM->EndRound();
         }
     }
-	Destroy();
+
+    Destroy();
 }
