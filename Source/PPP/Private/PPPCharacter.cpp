@@ -5,6 +5,7 @@
 #include "PPPGameState.h"
 #include "EnhancedInputComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -34,6 +35,8 @@ APppCharacter::APppCharacter()
     FpsCameraComp->SetRelativeScale3D_Direct(FVector(1.0f,1.0f,1.0f));
     FpsCameraComp->bUsePawnControlRotation = false;
 
+    GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+    GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -96.f));
 	GetMesh()->SetRelativeLocationAndRotation(
 		FVector(0.f, 0.f, -90.f),
 		FQuat(FRotator(
@@ -139,7 +142,7 @@ void APppCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		        EnhancedInput->BindAction(
 		            PlayerController->CrouchAction,
-		            ETriggerEvent::Triggered,
+		            ETriggerEvent::Completed,
 		            this,
 		            &APppCharacter::EndCrouch
 		        );
