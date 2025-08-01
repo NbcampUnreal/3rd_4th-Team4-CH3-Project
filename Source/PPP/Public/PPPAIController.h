@@ -1,68 +1,177 @@
+/*
 #pragma once
 
 #include "CoreMinimal.h"
 #include "AIController.h"
 #include "Perception/AIPerceptionTypes.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
 #include "PPPAIController.generated.h"
 
-// 전방선언
-class UAIPerceptionComponent;
+// 필요한 클래스 전방 선언
+
+class UBehaviorTree;
+class UBlackboardComponent;
 class UAISenseConfig_Sight;
-class APPPAICharacter; // 추격 AI
-class APPPFleeAICharacter; // 도망 AI
-/**
- *
- */
+
 UCLASS()
 class PPP_API APPPAIController : public AAIController
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	APPPAIController();
+    APPPAIController();
+
+    FORCEINLINE UBlackboardComponent* GetBlackboardComp() const
+    {
+        return BlackboardComp;
+    }
 
 protected:
-	//감각 perception
-	UPROPERTY(VisibleAnywhere, BlueprintReadonly, Category = "AI")
-	UAIPerceptionComponent* AIPerception;
+    virtual void BeginPlay() override;
+    virtual void OnPossess(APawn* InPawn) override; // OnPossess에서 BT 실행
 
-	// 시야
-	UPROPERTY(VisibleAnywhere, BlueprintReadonly, Category = "AI")
-	UAISenseConfig_Sight* SightConfig;
+    // 이제 각 AI 컨트롤러 블루프린트에서 고유한 BehaviorTreeAsset을 할당합니다.
+    UPROPERTY(EditDefaultsOnly, Category = "AI")
+    class UBehaviorTree* BehaviorTreeAsset;
 
-	// 감지 후 추적 로직
-	UPROPERTY()
-	AActor* CurrentTarget = nullptr;
+    // AI 블랙보드 컴포넌트
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+    UBlackboardComponent* BlackboardComp;
 
-	// 플레이어 감지 시 호출될 함수
-	UFUNCTION()
-	void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
-
-	bool bIsChasing = false; // 추격 중인지 나타내는 플래그
-	FTimerHandle ChaseTimer; // 추격 관련 타이머
-
-	void StartChasing(AActor* Target); // 추격 시작
-	void StopChasing(); // 추격 중지
-	void UpdateChase(); // 추격 중 주기적으로 호출될 함수
-
-	bool bIsFleeing = false; // 도망 중인지 나타내는 플래그
-	FTimerHandle FleeTimer; // 도망 관련 타이머
-
-	UPROPERTY(EditAnywhere, Category = "AI")
-	float FleeDistance = 1500.0f; // 플레이어로부터 도망갈 최소 거리
-
-	void StartFlee(AActor* Target); // 도망 시작
-	void StopFlee(); // 도망 중지
-	void UpdateFlee(); // 도망 중 주기적으로 호출될 함수
-
-	virtual void BeginPlay() override;
-	virtual void OnPossess(APawn* InPawn) override;
 private:
-	// 랜덤으로 움직이게 함
-	void MoveToRandomLocation();
-	// n초마다 움직이게 함
-	FTimerHandle RandomMoveTimer;
-	// 이동 반경
-	UPROPERTY(EditAnywhere, Category = "AI")
-	float MoveRadius = 1000.0f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI", meta = (AllowPrivateAccess = "true"))
+    UAIPerceptionComponent* AIPerception;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI", meta = (AllowPrivateAccess = "true"))
+    UAISenseConfig_Sight* SightConfig;
+
+    UFUNCTION()
+    void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
+
+
+    FName TargetActorKeyName;
+    FName CanSeeTargetKeyName;
+    FName TargetLastKnownLocationKeyName;
+    FName IsInvestigatingKeyName;
+    FName PatrolLocationKeyName;
+
+    // AI 특성 설정 변수들은 유지 (BT Task에서 참조하거나, 직접 사용)
+    UPROPERTY(EditAnywhere, Category = "AI")
+    float MoveRadius = 1000.0f; // BTTask_MoveToRandomLocation에서 사용
+
+    UPROPERTY(EditAnywhere, Category = "AI | 시야 설정 - 추격")
+    float ChaseSightRadius = 1500.0f;
+    UPROPERTY(EditAnywhere, Category = "AI | 시야 설정 - 추격")
+    float ChaseLoseSightRadius = 2000.0f;
+    UPROPERTY(EditAnywhere, Category = "AI | 시야 설정 - 추격")
+    float ChasePeripheralVisionAngleDegrees = 90.0f;
+    UPROPERTY(EditAnywhere, Category = "AI | 시야 설정 - 추격")
+    float ChaseMaxAge = 5.0f;
+
+    UPROPERTY(EditAnywhere, Category = "AI | 시야 설정 - 도망")
+    float FleeSightRadius = 1000.0f;
+    UPROPERTY(EditAnywhere, Category = "AI | 시야 설정 - 도망")
+    float FleeLoseSightRadius = 1500.0f;
+    UPROPERTY(EditAnywhere, Category = "AI | 시야 설정 - 도망")
+    float FleePeripheralVisionAngleDegrees = 160.0f;
+    UPROPERTY(EditAnywhere, Category = "AI | 시야 설정 - 도망")
+    float FleeMaxAge = 30.0f;
+
+    UPROPERTY(EditAnywhere, Category = "AI | 도망")
+    float FleeDistance = 2500.0f; // UBTTask_FleeFromPlayer에서 사용
+};
+*/
+
+// PPPAIController.h
+
+// PPPAIController.h
+
+// PPPAIController.h
+#pragma once
+
+#include "CoreMinimal.h"
+#include "AIController.h"
+// Perception 관련 헤더는 필요 시 포함합니다.
+#include "Perception/AIPerceptionTypes.h" // FAIStimulus
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
+
+#include "PPPAIController.generated.h"
+
+// 필요한 클래스 전방 선언 (TObjectPtr 사용 시 필수 아님, 하지만 명시적으로 두면 좋음)
+class UBehaviorTree;
+class UBlackboardData;
+// UBlackboardComponent는 AAIController에 이미 내장되어 있으므로 전방 선언 불필요
+
+UCLASS()
+class PPP_API APPPAIController : public AAIController
+{
+    GENERATED_BODY()
+
+public:
+    APPPAIController();
+
+protected:
+    virtual void BeginPlay() override;
+    virtual void OnPossess(APawn* InPawn) override; // OnPossess에서 BT 실행
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Sight")
+    float PeripheralVisionAngleDegrees;
+
+    // 비헤이비어 트리 에셋을 레퍼런싱하기 위한 변수
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+    TObjectPtr<UBehaviorTree> BehaviorTreeAsset;
+
+    // 블랙보드 데이터 에셋을 레퍼런싱하기 위한 변수 (비헤이비어 트리에 종속될 수 있음)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+    TObjectPtr<UBlackboardData> BlackboardDataAsset; // 필요하다면 별도로 명시
+
+    // AI Perception Component
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+    TObjectPtr<UAIPerceptionComponent> AIPerceptionComponent;
+
+    // 시야 센스 설정
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+    TObjectPtr<UAISenseConfig_Sight> SightConfig;
+
+    // AI 특성 설정 변수 (블루프린트에서 편집 가능)
+    UPROPERTY(EditAnywhere, Category = "AI|Settings")
+    float MoveRadius = 1000.0f;
+
+    UPROPERTY(EditAnywhere, Category = "AI|Sight Settings - Chase")
+    float ChaseSightRadius = 1500.0f;
+    UPROPERTY(EditAnywhere, Category = "AI|Sight Settings - Chase")
+    float ChaseLoseSightRadius = 2000.0f;
+    UPROPERTY(EditAnywhere, Category = "AI|Sight Settings - Chase")
+    float ChasePeripheralVisionAngleDegrees = 90.0f;
+    UPROPERTY(EditAnywhere, Category = "AI|Sight Settings - Chase")
+    float ChaseMaxAge = 5.0f;
+
+    UPROPERTY(EditAnywhere, Category = "AI|Sight Settings - Flee")
+    float FleeSightRadius = 1000.0f;
+    UPROPERTY(EditAnywhere, Category = "AI|Sight Settings - Flee")
+    float FleeLoseSightRadius = 1500.0f;
+    UPROPERTY(EditAnywhere, Category = "AI|Sight Settings - Flee")
+    float FleePeripheralVisionAngleDegrees = 160.0f;
+    UPROPERTY(EditAnywhere, Category = "AI|Sight Settings - Flee")
+    float FleeMaxAge = 30.0f;
+
+    UPROPERTY(EditAnywhere, Category = "AI|Flee")
+    float FleeDistance = 2500.0f;
+
+private:
+    // AI Perception Component의 콜백 함수
+    UFUNCTION()
+    void OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus); // 이름 변경 (충돌 방지 및 명확성)
+
+public:
+    // 블랙보드 키 이름 (FName으로 정의)
+    // static const FName으로 선언하여 .cpp 파일에서 초기화하는 것이 좋습니다.
+    // 이렇게 해야 모든 AIController 인스턴스가 동일한 FName을 공유합니다.
+    static const FName TargetActorKeyName;
+    static const FName CanSeeTargetKeyName;
+    static const FName TargetLastKnownLocationKeyName;
+    static const FName IsInvestigatingKeyName;
+    static const FName PatrolLocationKeyName; // 추가된 패트롤 위치 키
 };
