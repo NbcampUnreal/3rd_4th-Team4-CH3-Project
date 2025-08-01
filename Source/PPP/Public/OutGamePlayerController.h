@@ -42,6 +42,11 @@ public:
     UFUNCTION(BlueprintCallable, Category = "UI")
     void QuitGame();
 
+    // 게임 오버
+    UFUNCTION(BlueprintCallable, Category = "UI")
+    void ShowGameOver();
+
+
 protected:
     // BeginPlay 오버라이드
     // - 현재 레벨이 MainMenuLevel이면 MainMenu UI 표시
@@ -77,6 +82,14 @@ protected:
     // ESC 키에 바인딩된 InputAction
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
     UInputAction* PauseMenuAction;
+
+    // GameOver 위젯 클래스
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+    TSubclassOf<UUserWidget> GameOverWidgetClass;
+
+    // GameOver 위젯 인스턴스
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+    UUserWidget* GameOverWidgetInstance;
 
     // ESC 키 입력 처리 함수
     UFUNCTION()

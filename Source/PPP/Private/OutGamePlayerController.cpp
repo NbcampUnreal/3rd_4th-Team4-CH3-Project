@@ -9,6 +9,7 @@
 #include "InputMappingContext.h"
 #include "InputAction.h"
 #include "InputTriggers.h"
+#include "PPPGameMode.h"
 
 // 생성자
 // - 위젯 클래스 및 인스턴스 초기화
@@ -34,6 +35,24 @@ void AOutGamePlayerController::BeginPlay()
 
     // 현재 레벨 이름 가져오기
     FString CurrentMapName = GetWorld()->GetMapName();
+
+    // TODO: GameInstance에서 GameOver 상태 확인
+    /*
+    bool bShouldShowGameOver = false;
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UGameInstancePPP* MyGI = Cast<UGameInstancePPP>(GI))
+        {
+            if (MyGI->IsGameOver)
+            {
+                bShouldShowGameOver = true;
+                MyGI->bIsGameOver = false;  //  한 번만 표시되게 리셋
+            }
+        }
+    }
+    */
+
+
     // 게임 실행 시 메인메뉴레벨에서 해당 UI 먼저 표시
     if (CurrentMapName.Contains("MainMenuLevel"))
     {
@@ -54,6 +73,8 @@ void AOutGamePlayerController::BeginPlay()
 // - 기존 위젯 제거 후 새로 생성
 // - 입력 모드는 UIOnly로 설정 & 마우스 커서 표시
 // - Start 버튼 텍스트는 bIsRestart 값에 따라 변경해서 Restart/Start 경우 분리
+// TODO:: HUD 통합되면 HUD 제거 처리 추가 예정
+// TODO: GameOver 상태에서 돌아올 때에도 여기 재활용할 것
 void AOutGamePlayerController::ShowMainMenu(bool bIsRestart)
 {
     // TODO: HUD 합치고 주석 해제하기
@@ -96,15 +117,10 @@ void AOutGamePlayerController::ShowMainMenu(bool bIsRestart)
         {
             QuitBtn->OnClicked.AddDynamic(this, &AOutGamePlayerController::QuitGame);
         }
-
-        // Start, Restart - 버튼 텍스트 변경하기
-        if (UTextBlock* ButtonText = Cast<UTextBlock>(MainMenuWidgetInstance->GetWidgetFromName(TEXT("Start_TEXT"))))
-        {
-            ButtonText->SetText(FText::FromString(bIsRestart? TEXT("Restart") : TEXT("Start")));
-        }
     }
 }
 
+// TODO: 추후 HUD 위에 Overlay로 Pause 띄우게 바꾸는 것도 고려
 // Pause Menu UI 표시
 void AOutGamePlayerController::ShowPauseMenu()
 {
@@ -152,9 +168,11 @@ void AOutGamePlayerController::StartGame()
 {
     // TODO: GameInstance 초기화 등은 나중에 추가
 
-    //  TODO: Stage1 완성되면 OpenLevel 활성화
+    // TODO: Stage1 완성되면 아래 줄로 교체
     // UGameplayStatics::OpenLevel(GetWorld(), FName("Stage1"));
-    UE_LOG(LogTemp, Warning, TEXT("StartGame() called - Stage1 연결 대기 중~"));
+    UGameplayStatics::OpenLevel(GetWorld(), FName("BasicLevel")); // ← 지금은 임시로 BasicLevel 테스트
+
+    UE_LOG(LogTemp, Warning, TEXT("StartGame() called - 임시로 BasicLevel로 이동 중 ~"));
 }
 
 // Quit 버튼 → 게임 종료
@@ -187,6 +205,24 @@ void AOutGamePlayerController::QuitGame()
         false
         );
     }
+
+// 게임 오버
+void AOutGamePlayerController::ShowGameOver()
+{
+    if (!GameOverWidgetInstance && GameOverWidgetClass)
+    {
+        GameOverWidgetInstance = CreateWidget<UUserWidget>(this, GameOverWidgetClass);
+        if (GameOverWidgetInstance)
+        {
+            GameOverWidgetInstance->AddToViewport();
+
+            SetInputMode(FInputModeUIOnly());
+            bShowMouseCursor = true;
+
+            SetPause(true);
+        }
+    }
+}
 
 // ESC 입력 바인딩 (PauseMenu)
 void AOutGamePlayerController::SetupInputComponent()
