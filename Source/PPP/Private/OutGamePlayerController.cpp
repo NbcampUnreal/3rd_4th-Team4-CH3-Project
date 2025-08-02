@@ -17,9 +17,11 @@ AOutGamePlayerController::AOutGamePlayerController()
     : MainMenuWidgetClass(nullptr),
       MainMenuWidgetInstance(nullptr),
       PauseMenuWidgetInstance(nullptr),
-      PauseMenuAction(nullptr),
+      QuitSound(nullptr),
       PauseMenuIMC(nullptr),
-      QuitSound(nullptr)
+      PauseMenuAction(nullptr) //초기화랑 선언순서 맞게 변경했습니다 gitak
+
+
 {
 }
 
