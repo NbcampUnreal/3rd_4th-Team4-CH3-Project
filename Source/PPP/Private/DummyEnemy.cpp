@@ -4,7 +4,7 @@
 #include "PPPGameMode.h"
 #include "PPPGameState.h" //score
 #include "Kismet/GameplayStatics.h"
-
+// asdasdasdasdasdasdasdsadasd
 ADummyEnemy::ADummyEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
