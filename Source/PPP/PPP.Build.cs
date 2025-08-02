@@ -17,7 +17,10 @@ public class PPP : ModuleRules
             "EnhancedInput",
             "AIModule",
             "NavigationSystem",
-            "GameplayTasks"
+            "GameplayTasks",
+            "UMG",
+            "Slate",
+            "SlateCore"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
