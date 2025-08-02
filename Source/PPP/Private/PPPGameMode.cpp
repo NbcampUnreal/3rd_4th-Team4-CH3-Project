@@ -6,6 +6,8 @@
 #include "GameDefines.h"
 #include "Engine/World.h"
 #include "EnemySpawnVolume.h"
+#include "TestPlayerController.h" // PlayerController 클래스를 사용
+
 
 
 
@@ -14,6 +16,9 @@ APPPGameMode::APPPGameMode()
     GameStateClass = APPPGameState::StaticClass(); // GameState를 우리가 만든 걸로 설정
     MaxRounds = 3;
     EnemiesPerRound = 5;
+
+    PlayerControllerClass = ATestPlayerController::StaticClass();
+
 }
 
 void APPPGameMode::BeginPlay()
