@@ -191,7 +191,7 @@ void APPPGameMode::CheckRewardCondition()
     if (bRewardGiven) return;
 
     // 점수 조건 충족 확인
-    if (GS->GetScore() >= 100)
+    if (GS->GetScore() >= 40)
     {
         bRewardGiven = true;
 
@@ -203,7 +203,7 @@ void APPPGameMode::CheckRewardCondition()
             FActorSpawnParameters SpawnParams;
 
             GetWorld()->SpawnActor<AActor>(RewardActorClass, SpawnLocation, SpawnRotation, SpawnParams);
-            UE_LOG(LogGame, Warning, TEXT("점수 100 달성! 보상 액터가 떨어졌습니다."));
+            UE_LOG(LogGame, Warning, TEXT("점수 100 달성! 보상 액터가 떨어졌습니다.")); //%d, 인자추가하기
         }
         else
         {

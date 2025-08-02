@@ -59,7 +59,7 @@ public:
     UFUNCTION(BlueprintCallable)
     int32 GetScore() const { return Score; } //reward 확인용
     UPROPERTY(EditAnywhere, Category="Score")
-    int32 ScoreToClearRound = 30; //라운드 클리어 점수
+    int32 ScoreToClearRound = 100; //라운드 클리어 점수
 
 
 
