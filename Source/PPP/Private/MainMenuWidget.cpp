@@ -2,7 +2,7 @@
 #include "Components/Button.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "OutGamePlayerController.h"
+#include "PppPlayerController.h"
 
 void UMainMenuWidget::NativeConstruct()
 {
@@ -23,7 +23,7 @@ void UMainMenuWidget::OnStartClicked()
 {
     UE_LOG(LogTemp, Log, TEXT("Start Clicked"));
 
-    if (AOutGamePlayerController* PC = Cast<AOutGamePlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
+    if (APppPlayerController* PC = Cast<APppPlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
     {
         PC->StartGame();
     }

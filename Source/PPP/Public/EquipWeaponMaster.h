@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "WeaponRow.h"
+#include "PppCharacter.h"
 #include "EquipWeaponMaster.generated.h"
 
 UCLASS()
@@ -15,7 +16,7 @@ public:
 
     // 캐릭터가 무기를 장착할 때 호출될 함수 (무기 정보와 캐릭터를 전달받음)
     UFUNCTION(BlueprintCallable)
-    virtual void OnEquipped(class ATestCharacter* NewOwner, const FWeaponRow& WeaponRow);
+    virtual void OnEquipped(class APppCharacter* NewOwner, const FWeaponRow& WeaponRow);
 
 protected:
 

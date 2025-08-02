@@ -1,7 +1,7 @@
 #include "PauseMenuWidget.h"
 #include "Components/Button.h"
 #include "Kismet/GameplayStatics.h"
-#include "OutGamePlayerController.h"
+#include "PppPlayerController.h"
 
 void UPauseMenuWidget::NativeConstruct()
 {
@@ -24,7 +24,7 @@ void UPauseMenuWidget::OnResumeClicked()
 {
     UE_LOG(LogTemp, Log, TEXT("Resume Clicked"));
 
-    if (AOutGamePlayerController* PC = Cast<AOutGamePlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
+    if (APppPlayerController* PC = Cast<APppPlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
     {
         PC->SetPause(false); // 게임 재개
         PC->bShowMouseCursor = false;
@@ -38,7 +38,7 @@ void UPauseMenuWidget::OnResumeClicked()
 void UPauseMenuWidget::OnReturnClicked()
 {
 
-    if (AOutGamePlayerController* PC = Cast<AOutGamePlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
+    if (APppPlayerController* PC = Cast<APppPlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
     {
         PC->ShowMainMenu(true); // MainMenu로 복귀
     }

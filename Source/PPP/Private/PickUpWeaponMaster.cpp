@@ -1,6 +1,6 @@
 #include "PickUpWeaponMaster.h"
 #include "PickUpComponent.h"
-#include "TestCharacter.h"
+#include "PppCharacter.h"
 #include "Engine/DataTable.h"
 
 APickUpWeaponMaster::APickUpWeaponMaster()
@@ -29,7 +29,7 @@ void APickUpWeaponMaster::BeginPlay()
 
 void APickUpWeaponMaster::HandlePickUp(AActor* PickUpActor)
 {
-    ATestCharacter* Character = Cast<ATestCharacter>(PickUpActor);
+    APppCharacter* Character = Cast<APppCharacter>(PickUpActor);
     if (Character)
     {
         OverlappingCharacter = Character;
@@ -45,3 +45,14 @@ void APickUpWeaponMaster::EquipWeapon()
         Destroy();
     }
 }
+//Test1추가
+void APickUpWeaponMaster::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+    Super::NotifyActorBeginOverlap(OtherActor);
+
+    if (APppCharacter* PppChar = Cast<APppCharacter>(OtherActor))
+    {
+        PppChar->OverlappingPickUpActor = this;
+    }
+}
+

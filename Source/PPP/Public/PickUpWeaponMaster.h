@@ -6,10 +6,11 @@
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/DataTable.h"
+#include "PppCharacter.h"
 #include "PickUpWeaponMaster.generated.h"
 
 class UPickUpComponent;
-class ATestCharacter;
+class APppCharacter;
 
 UCLASS()
 class PPP_API APickUpWeaponMaster : public AActor
@@ -27,10 +28,14 @@ public:
     FDataTableRowHandle WeaponData;
 
     // 현재 오버랩된 캐릭터 참조
-    ATestCharacter* OverlappingCharacter;
+    APppCharacter* OverlappingCharacter;
 
     UFUNCTION()
     void HandlePickUp(AActor* PickUpActor);
+
+    //Test1 추가
+    virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+
 
 protected:
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "PickUp")

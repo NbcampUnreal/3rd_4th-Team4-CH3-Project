@@ -1,5 +1,5 @@
 #include "PickUpComponent.h"
-#include "TestCharacter.h"
+#include "PppCharacter.h"
 #include "PickUpWeaponMaster.h"
 
 UPickUpComponent::UPickUpComponent()
@@ -28,8 +28,8 @@ void UPickUpComponent::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent,
                                       bool bFromSweep,
                                       const FHitResult& SweepResult)
 {
-    ATestCharacter* TestCharacter = Cast<ATestCharacter>(OtherActor);
-    if (TestCharacter)
+    APppCharacter* PppCharacter = Cast<APppCharacter>(OtherActor);
+    if (PppCharacter)
     {
         APickUpWeaponMaster* WeaponActor = Cast<APickUpWeaponMaster>(GetOwner());
         if (WeaponActor)
@@ -41,7 +41,7 @@ void UPickUpComponent::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent,
             }
 
             // F 키 입력이 들어오면 장착 시도하도록 델리게이트 브로드캐스트
-            WeaponPickUp.Broadcast(TestCharacter);
+            WeaponPickUp.Broadcast(PppCharacter);
         }
     }
 }
@@ -52,8 +52,8 @@ void UPickUpComponent::OnEndOverlap(UPrimitiveComponent* OverlappedComponent,
                                     int32 OtherBodyIndex)
 {
     // 현재 구조에서는 특별히 해줄 게 없지만, 로그는 남겨둠
-    ATestCharacter* TestCharacter = Cast<ATestCharacter>(OtherActor);
-    if (TestCharacter)
+    APppCharacter* PppCharacter = Cast<APppCharacter>(OtherActor);
+    if (PppCharacter)
     {
         UE_LOG(LogTemp, Warning, TEXT("EndOverlap 발생 - 캐릭터가 무기 범위를 벗어남"));
     }

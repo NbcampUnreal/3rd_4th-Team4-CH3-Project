@@ -2,6 +2,10 @@
 
 #include "PppCharacter.h"
 #include "PppPlayerController.h"
+#include "EquipWeaponMaster.h"
+#include "WeaponRow.h"
+#include "PickUpWeaponMaster.h"
+#include "Engine/DataTable.h"
 #include "PPPGameState.h"
 #include "EnhancedInputComponent.h"
 #include "Camera/CameraComponent.h"
@@ -85,7 +89,16 @@ void APppCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 				EnhancedInput->BindAction(PlayerController->MoveAction, ETriggerEvent::Triggered, this, &APppCharacter::Move);
 				UE_LOG(LogTemp, Warning, TEXT("YouCanMove"));
 			}
-
+//Test1추가
+		    if (PlayerController->PickUpAction)
+		    {
+		        EnhancedInput->BindAction(PlayerController->PickUpAction, ETriggerEvent::Started, this, &APppCharacter::OnInteract);
+		    }
+		    if (PlayerController->FireAction)
+		    {
+		        EnhancedInput->BindAction(PlayerController->FireAction, ETriggerEvent::Triggered, this, &APppCharacter::Fire);
+		    }
+		    // Test1추가 여기까지
 			if (PlayerController->JumpAction)
 			{
 				EnhancedInput->BindAction(
@@ -288,4 +301,69 @@ void APppCharacter::OnDeath()
 	{
 	    OnCharacterDead.Broadcast();
 	}
+}
+// -------------------------------
+// Test1추가 무기 장착
+// -------------------------------
+void APppCharacter::EquipWeaponFromRow(const FDataTableRowHandle& WeaponDataHandle)
+{
+    if (!WeaponDataHandle.DataTable || WeaponDataHandle.RowName.IsNone())
+    {
+        UE_LOG(LogTemp, Error, TEXT("Invalid weapon data handle provided."));
+        return;
+    }
+
+    const FWeaponRow* WeaponRow = WeaponDataHandle.GetRow<FWeaponRow>(TEXT("Equipping weapon from row"));
+
+    if (WeaponRow && WeaponRow->EquipWeapon)
+    {
+        if (EquippedWeapon)
+        {
+            EquippedWeapon->Destroy();
+            EquippedWeapon = nullptr;
+        }
+
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner = this;
+
+        AEquipWeaponMaster* NewWeapon = GetWorld()->SpawnActor<AEquipWeaponMaster>(
+            WeaponRow->EquipWeapon,
+            FVector::ZeroVector,
+            FRotator::ZeroRotator,
+            SpawnParams
+        );
+
+        if (NewWeapon)
+        {
+            NewWeapon->OnEquipped(this, *WeaponRow);
+            EquippedWeapon = NewWeapon;
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to find weapon data for row: %s"),*WeaponDataHandle.RowName.ToString());
+    }
+}
+// -------------------------------
+// Test1추가 상호작용 키
+// -------------------------------
+void APppCharacter::OnInteract()
+{
+    if (OverlappingPickUpActor)
+    {
+        APickUpWeaponMaster* Weapon = Cast<APickUpWeaponMaster>(OverlappingPickUpActor);
+        if (Weapon)
+        {
+            Weapon->EquipWeapon();
+            OverlappingPickUpActor = nullptr;
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("F key pressed but no weapon overlapped"));
+    }
+}
+void APppCharacter::Fire()
+{
+    UE_LOG(LogTemp, Warning, TEXT("빵야!"));
 }

@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "InputActionValue.h"
+#include "Engine/DataTable.h"
 #include "PPPCharacter.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterDead);
@@ -11,6 +13,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterDead);
 class USpringArmComponent;
 class UCameraComponent;
 struct FInputActionValue;
+class AEquipWeaponMaster;//Test1 추가
+struct FWeaponRow;//Test1 추가
 
 UCLASS()
 class PPP_API APppCharacter : public ACharacter
@@ -34,6 +38,20 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void AddHealth(float Amount);
+    //Test1 추가
+    UPROPERTY()
+    AActor* OverlappingPickUpActor = nullptr;
+    //Test1 추가
+    UPROPERTY()
+    AEquipWeaponMaster* EquippedWeapon;
+    //Test1 추가
+    UFUNCTION()
+    void OnInteract();
+    //Test1 추가
+    void EquipWeaponFromRow(const FDataTableRowHandle& WeaponDataHandle);
+    //Test1 추가
+    UFUNCTION()
+    void Fire();
 
 protected:
 	virtual void BeginPlay() override;
