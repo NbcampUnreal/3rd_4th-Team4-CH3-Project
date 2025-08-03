@@ -6,7 +6,7 @@
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/DataTable.h"
-#include "PppCharacter.h"
+#include "../Characters/PppCharacter.h"
 #include "PickUpWeaponMaster.generated.h"
 
 class UPickUpComponent;

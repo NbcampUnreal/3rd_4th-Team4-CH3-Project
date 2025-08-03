@@ -1,5 +1,5 @@
 #include "PickUpComponent.h"
-#include "PppCharacter.h"
+#include "../Characters/PppCharacter.h"
 #include "PickUpWeaponMaster.h"
 
 UPickUpComponent::UPickUpComponent()

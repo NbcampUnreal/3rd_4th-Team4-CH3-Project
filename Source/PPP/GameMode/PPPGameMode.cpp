@@ -6,7 +6,7 @@
 #include "GameDefines.h"
 #include "Engine/World.h"
 #include "EnemySpawnVolume.h"
-#include "PppPlayerController.h" // PlayerController 클래스를 사용
+#include "../characters/PppPlayerController.h" // PlayerController 클래스를 사용
 
 
 

@@ -7,7 +7,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
-#include "PPPGameMode.h"
+#include "../GameMode/PPPGameMode.h"
 
 APppPlayerController::APppPlayerController()
     : InputMappingContext(nullptr)

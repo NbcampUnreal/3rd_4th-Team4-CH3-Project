@@ -1,6 +1,6 @@
 #include "PickUpWeaponMaster.h"
 #include "PickUpComponent.h"
-#include "PppCharacter.h"
+#include "../Characters/PppCharacter.h"
 #include "Engine/DataTable.h"
 
 APickUpWeaponMaster::APickUpWeaponMaster()

@@ -1,6 +1,6 @@
 #include "EquipWeaponMaster.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "PppCharacter.h"
+#include "../Characters/PppCharacter.h"
 
 AEquipWeaponMaster::AEquipWeaponMaster()
 {

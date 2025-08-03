@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "WeaponRow.h"
-#include "PppCharacter.h"
+#include "../Characters/PppCharacter.h"
 #include "EquipWeaponMaster.generated.h"
 
 UCLASS()

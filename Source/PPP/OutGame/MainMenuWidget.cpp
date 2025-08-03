@@ -2,7 +2,7 @@
 #include "Components/Button.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "PppPlayerController.h"
+#include "../characters/PppPlayerController.h"
 
 void UMainMenuWidget::NativeConstruct()
 {
