@@ -2,14 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "PickUpComponent.h"
-#include "Components/SceneComponent.h"
-#include "Components/StaticMeshComponent.h"
 #include "Engine/DataTable.h"
-#include "../Characters/PppCharacter.h"
+#include "WeaponRow.h"
 #include "PickUpWeaponMaster.generated.h"
 
 class UPickUpComponent;
+class AEquipWeaponMaster;
 class APppCharacter;
 
 UCLASS()
@@ -25,22 +23,19 @@ public:
     UPickUpComponent* PickUpComp;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable")
-    FDataTableRowHandle WeaponData;
+    FWeaponRow WeaponRow;
 
-    // 현재 오버랩된 캐릭터 참조
     APppCharacter* OverlappingCharacter;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable")
+    FDataTableRowHandle WeaponData;
+
     UFUNCTION()
-    void HandlePickUp(AActor* PickUpActor);
+    void HandlePickUp(APppCharacter* PickUpCharacter);
 
-    //Test1 추가
-    virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
-
+    FWeaponRow GetWeaponDataRow() const { return WeaponRow; }
 
 protected:
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "PickUp")
     UStaticMeshComponent* StaticMesh;
-
-public:
-    void EquipWeapon();  // F 키 입력 시 호출할 함수
 };

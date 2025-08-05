@@ -2,12 +2,10 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Blueprint/UserWidget.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
-#include "../GameMode/PPPGameMode.h"
 
 APppPlayerController::APppPlayerController()
     : InputMappingContext(nullptr)
@@ -19,17 +17,18 @@ APppPlayerController::APppPlayerController()
     , PovChangeAction(nullptr)
     , PickUpAction(nullptr)
     , FireAction(nullptr)
-    , MainMenuWidgetClass(nullptr)
-    , MainMenuWidgetInstance(nullptr)
-    , PauseMenuWidgetClass(nullptr)
-    , PauseMenuWidgetInstance(nullptr)
-    , PauseMenuAction(nullptr)
     , PauseMenuIMC(nullptr)
-    , QuitSound(nullptr)
+    , PauseMenuAction(nullptr)
+    , MainMenuWidgetClass(nullptr)
+    , PauseMenuWidgetClass(nullptr)
     , GameOverWidgetClass(nullptr)
+    , MainMenuWidgetInstance(nullptr)
+    , PauseMenuWidgetInstance(nullptr)
     , GameOverWidgetInstance(nullptr)
+    , QuitSound(nullptr)
 {
 }
+
 
 void APppPlayerController::BeginPlay()
 {

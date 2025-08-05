@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -13,93 +11,95 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterDead);
 class USpringArmComponent;
 class UCameraComponent;
 struct FInputActionValue;
-class AEquipWeaponMaster;//Test1 추가
-struct FWeaponRow;//Test1 추가
+class AEquipWeaponMaster;
+struct FWeaponRow;
+class APickUpWeaponMaster;
+class UPickUpComponent;
 
 UCLASS()
 class PPP_API APppCharacter : public ACharacter
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	APppCharacter();
+    APppCharacter();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera")
-	USpringArmComponent* SpringArmComp;
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera")
+    USpringArmComponent* SpringArmComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	UCameraComponent* TpsCameraComp;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+    UCameraComponent* TpsCameraComp;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
     UCameraComponent* FpsCameraComp;
 
-	UFUNCTION(BlueprintPure, Category = "Health")
-	float GetHealth() const;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "health")
+    float MaxHealth;
 
-	UFUNCTION(BlueprintCallable, Category = "Health")
-	void AddHealth(float Amount);
-    //Test1 추가
-    UPROPERTY()
-    AActor* OverlappingPickUpActor = nullptr;
-    //Test1 추가
-    UPROPERTY()
-    AEquipWeaponMaster* EquippedWeapon;
-    //Test1 추가
-    UFUNCTION()
-    void OnInteract();
-    //Test1 추가
-    void EquipWeaponFromRow(const FDataTableRowHandle& WeaponDataHandle);
-    //Test1 추가
-    UFUNCTION()
-    void Fire();
-
-protected:
-	virtual void BeginPlay() override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	virtual float TakeDamage(
-		float DamageAmount,
-		struct FDamageEvent const& DamageEvent,
-		class AController* EventInstigator,
-		AActor* DamageCauser) override;
-
-	UFUNCTION()
-	void Move(const FInputActionValue& value);
-	UFUNCTION()
-	void StartJump(const FInputActionValue& value);
-	UFUNCTION()
-	void StopJump(const FInputActionValue& value);
-	UFUNCTION()
-	void Look(const FInputActionValue& value);
-	UFUNCTION()
-	void StartSprint(const FInputActionValue& value);
-	UFUNCTION()
-	void StopSprint(const FInputActionValue& value);
-    UFUNCTION()
-	void BeginCrouch(const FInputActionValue& value);
-    UFUNCTION()
-    void EndCrouch(const FInputActionValue& value);
-
-    UFUNCTION()
-    void ToggleCamera();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "health")
-	float MaxHealth;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "health")
-	float CurrentHealth;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "health")
+    float CurrentHealth;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
     bool bIsCameraChanged;
 
-	void OnDeath();
-
     UPROPERTY(BlueprintAssignable)
     FOnCharacterDead OnCharacterDead;
 
-public:
-	virtual void Tick(float DeltaTime) override;
+    // 무기 줍기/장착 시스템 필드들
+    UPROPERTY()
+    APickUpWeaponMaster* OverlappingPickUpActor;
+
+    UPROPERTY()
+    AEquipWeaponMaster* EquippedWeapon;
+
+    UFUNCTION()
+    void OnInteract();
+
+    UFUNCTION()
+    void Fire();
+
+    void DropWeaponToWorld(const FWeaponRow& WeaponRow, FVector DropLocation, FRotator DropRotation);
+
+    // 입력 및 캐릭터 조작
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    virtual void Tick(float DeltaTime) override;
+    virtual void BeginPlay() override;
+    virtual float TakeDamage(
+       float DamageAmount,
+       struct FDamageEvent const& DamageEvent,
+       class AController* EventInstigator,
+       AActor* DamageCauser) override;
+
+    UFUNCTION(BlueprintPure, Category = "Health")
+    float GetHealth() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Health")
+    void AddHealth(float Amount);
+
+    UFUNCTION()
+    void Move(const FInputActionValue& value);
+    UFUNCTION()
+    void StartJump(const FInputActionValue& value);
+    UFUNCTION()
+    void StopJump(const FInputActionValue& value);
+    UFUNCTION()
+    void Look(const FInputActionValue& value);
+    UFUNCTION()
+    void StartSprint(const FInputActionValue& value);
+    UFUNCTION()
+    void StopSprint(const FInputActionValue& value);
+    UFUNCTION()
+    void BeginCrouch(const FInputActionValue& value);
+    UFUNCTION()
+    void EndCrouch(const FInputActionValue& value);
+    UFUNCTION()
+    void ToggleCamera();
+
+    void OnDeath();
 
 private:
-	float NormalSpeed;
-	float SprintSpeedMultiplier;
-	float SprintSpeed;
+    float NormalSpeed;
+    float SprintSpeedMultiplier;
+    float SprintSpeed;
+    bool bIsCrouched;
 };
