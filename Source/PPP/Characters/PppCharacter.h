@@ -92,11 +92,12 @@ protected:
 
 	void OnDeath();
 
-    UPROPERTY(BlueprintAssignable)
-    FOnCharacterDead OnCharacterDead;
 
 public:
 	virtual void Tick(float DeltaTime) override;
+
+    UPROPERTY(BlueprintAssignable)
+    FOnCharacterDead OnCharacterDead;
 
 private:
 	float NormalSpeed;

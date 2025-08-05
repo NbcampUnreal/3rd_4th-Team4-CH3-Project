@@ -3,6 +3,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Components/Button.h"
 #include "InputMappingContext.h"
+#include "Blueprint/UserWidget.h"
 #include "InputAction.h"
 #include "PppPlayerController.generated.h"
 
@@ -69,6 +70,8 @@ public:
     void QuitGame();
     UFUNCTION(BlueprintCallable, Category = "UI")
     void ShowGameOver();
+    UFUNCTION()
+    void OnCharacterDead();
 private:
     UFUNCTION()
     void HandlePauseKey();

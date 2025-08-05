@@ -1,4 +1,5 @@
 #include "PppPlayerController.h"
+#include "PppCharacter.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Blueprint/UserWidget.h"
@@ -55,6 +56,15 @@ void APppPlayerController::BeginPlay()
             {
                 SubSystem->AddMappingContext(PauseMenuIMC, 0);
                 UE_LOG(LogTemp, Warning, TEXT("PauseMenuIMC 등록 완료"));
+            }
+            if (PauseMenuIMC)
+            {
+                SubSystem->AddMappingContext(PauseMenuIMC, 0);
+                UE_LOG(LogTemp, Warning, TEXT("PauseMenuIMC 등록 완료: %s"), *PauseMenuIMC->GetName());
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("PauseMenuIMC가 NULL입니다!"));
             }
         }
     }
@@ -148,10 +158,16 @@ void APppPlayerController::StartGame()
     SetInputMode(FInputModeGameOnly());
     bShowMouseCursor = false;
 
-    //맵 로딩
-    UGameplayStatics::OpenLevel(GetWorld(), FName("BasicMap"), true);
+    // 0.3초 후에 맵 로딩하도록 타이머 설정
+        FTimerHandle StartHandle;
+        GetWorld()->GetTimerManager().SetTimer(
+            StartHandle,
+            [this]() {
+                UGameplayStatics::OpenLevel(GetWorld(), FName("BasicMap"), true);
+            },
+            0.3f, false);
 
-    UE_LOG(LogTemp, Warning, TEXT("StartGame() called - BasicMap으로 이동 중"));
+        UE_LOG(LogTemp, Warning, TEXT("StartGame() called - 0.3초 후 BasicMap으로 이동"));
 }
 
 void APppPlayerController::QuitGame()
@@ -190,4 +206,21 @@ void APppPlayerController::SetupInputComponent()
 void APppPlayerController::HandlePauseKey()
 {
     ShowPauseMenu();
+}
+
+// 캐릭터 사망 후 GameOverWidget 띄우기
+// by Team4 (yeoul)
+void APppPlayerController::OnCharacterDead()
+{
+    if (GameOverWidgetClass && !GameOverWidgetInstance)
+    {
+        GameOverWidgetInstance = CreateWidget<UUserWidget>(this, GameOverWidgetClass);
+        if (GameOverWidgetInstance)
+        {
+            GameOverWidgetInstance->AddToViewport();    // 뷰포트에  UI 띄우기
+            SetInputMode(FInputModeUIOnly());   // UI 입력 전환
+            bShowMouseCursor = true;   // 마우스 커서 보이기
+            SetPause(true);    // 게임 일시정지
+        }
+    }
 }

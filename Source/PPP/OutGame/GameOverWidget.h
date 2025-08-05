@@ -8,6 +8,9 @@
 /**
  *
  */
+
+class APppCharacter;
+
 UCLASS()
 class PPP_API UGameOverWidget : public UUserWidget
 {
@@ -19,10 +22,14 @@ protected:
     UFUNCTION()
     void OnReturnToMainMenuClicked();
 
-    UFUNCTION()
-    void OnPlayerDead();
-
 public:
     UPROPERTY(meta = (BindWidget))
     UButton* Return_BTN;
+
+    UFUNCTION()
+    void HandlePlayerDeath();
+
+private:
+    APppCharacter* CachedCharacter;
+
 };
