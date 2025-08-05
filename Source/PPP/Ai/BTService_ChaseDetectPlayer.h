@@ -1,13 +1,15 @@
+// UBTService_ChaseDetectPlayer.h (수정)
 #pragma once
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTService.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "BTService_ChaseDetectPlayer.generated.h"
 
-UCLASS()
+UCLASS(Blueprintable)
 class PPP_API UBTService_ChaseDetectPlayer : public UBTService
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
     UBTService_ChaseDetectPlayer();
@@ -15,9 +17,12 @@ public:
 protected:
     virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
-    UPROPERTY(EditAnywhere, Category = "Blackboard")
-    FBlackboardKeySelector PlayerLocationKey;
-
-    UPROPERTY(EditAnywhere, Category = "Blackboard")
+private:
+    // 플레이어가 탐지되었는지 여부를 저장할 블랙보드 키
+    UPROPERTY(EditAnywhere, Category = "AI")
     FBlackboardKeySelector PlayerDetectedKey;
+
+    // 플레이어의 위치를 저장할 블랙보드 키
+    UPROPERTY(EditAnywhere, Category = "AI")
+    FBlackboardKeySelector PlayerLocationKey;
 };

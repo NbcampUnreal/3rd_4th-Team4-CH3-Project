@@ -44,11 +44,24 @@ void APppChaseAICharacter::ApplyMeleeDamage()
     TArray<AActor*> OverlappingActors;
     MeleeDamageCollision->GetOverlappingActors(OverlappingActors);
 
+    // 로그 추가: 오버랩된 액터가 있는지 확인
+    if (OverlappingActors.Num() > 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("MeleeDamageCollision에 오버랩된 액터가 %d개 있습니다."), OverlappingActors.Num());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("MeleeDamageCollision에 오버랩된 액터가 없습니다."));
+    }
+
     for (AActor* OverlappingActor : OverlappingActors)
     {
         APppCharacter* PlayerCharacter = Cast<APppCharacter>(OverlappingActor);
         if (PlayerCharacter && PlayerCharacter != Cast<APppCharacter>(this))
         {
+            // 로그 추가: 플레이어를 찾았는지 확인
+            UE_LOG(LogTemp, Warning, TEXT("플레이어 캐릭터를 찾았습니다. 피해를 적용합니다."));
+
             UGameplayStatics::ApplyDamage(
                 PlayerCharacter,
                 MeleeDamage,
@@ -56,6 +69,9 @@ void APppChaseAICharacter::ApplyMeleeDamage()
                 this,
                 UDamageType::StaticClass()
             );
+
+            // 로그 추가: 피해 적용 후 로그 출력
+            UE_LOG(LogTemp, Warning, TEXT("플레이어에게 피해 %f를 입혔습니다."), MeleeDamage);
 
             // 한 번만 데미지를 적용하고 루프를 빠져나감
             break;
