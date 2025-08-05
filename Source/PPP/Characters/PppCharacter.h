@@ -27,6 +27,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera")
 	USpringArmComponent* SpringArmComp;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera")
+    USpringArmComponent* FPsSpringArmComp;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	UCameraComponent* TpsCameraComp;
 
@@ -53,6 +56,9 @@ public:
     UFUNCTION()
     void Fire();
 
+    UPROPERTY()
+    int32 AttackDamage;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -75,9 +81,9 @@ protected:
 	UFUNCTION()
 	void StopSprint(const FInputActionValue& value);
     UFUNCTION()
-	void BeginCrouch(const FInputActionValue& value);
+	void OnCrouchPressed(const FInputActionValue& value);
     UFUNCTION()
-    void EndCrouch(const FInputActionValue& value);
+    void OnCrouchReleased(const FInputActionValue& value);
 
     UFUNCTION()
     void ToggleCamera();
@@ -102,4 +108,7 @@ private:
 	float NormalSpeed;
 	float SprintSpeedMultiplier;
 	float SprintSpeed;
+    float CrouchMovementSpeed;
+
+    bool bIsCrouchKeyPressed;
 };
