@@ -47,6 +47,9 @@ public:
     //Test1 추가
     UPROPERTY()
     AEquipWeaponMaster* EquippedWeapon;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+    int CurrentWeaponIndex;
     //Test1 추가
     UFUNCTION()
     void OnInteract();
@@ -55,6 +58,9 @@ public:
     //Test1 추가
     UFUNCTION()
     void Fire();
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    bool bIsZoomed;
 
     UPROPERTY()
     int32 AttackDamage;
@@ -76,6 +82,10 @@ protected:
 	void StopJump(const FInputActionValue& value);
 	UFUNCTION()
 	void Look(const FInputActionValue& value);
+    UFUNCTION()
+    void ZoomIn(const FInputActionValue& value);
+    UFUNCTION()
+    void ZoomOut(const FInputActionValue& value);
 	UFUNCTION()
 	void StartSprint(const FInputActionValue& value);
 	UFUNCTION()
@@ -98,15 +108,19 @@ protected:
 
 	void OnDeath();
 
-    UPROPERTY(BlueprintAssignable)
-    FOnCharacterDead OnCharacterDead;
-
 public:
 	virtual void Tick(float DeltaTime) override;
 
+    UPROPERTY(BlueprintAssignable)
+    FOnCharacterDead OnCharacterDead;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterSpeed")
+    float NormalSpeed;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterSpeed")
+    float SprintSpeedMultiplier;
+
 private:
-	float NormalSpeed;
-	float SprintSpeedMultiplier;
 	float SprintSpeed;
     float CrouchMovementSpeed;
 

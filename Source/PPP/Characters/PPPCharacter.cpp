@@ -18,12 +18,12 @@
 // Sets default values
 APppCharacter::APppCharacter()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
 	SpringArmComp->SetupAttachment(GetMesh(), FName("Neck"));
 	SpringArmComp->bUsePawnControlRotation = true;
-    SpringArmComp->TargetArmLength = 150.f;
+    SpringArmComp->TargetArmLength = 135.0f;
     SpringArmComp->SocketOffset = FVector(0.0f, 40.0f, 0.0f);
 
 	TpsCameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("TpsCameraComp"));
@@ -32,7 +32,7 @@ APppCharacter::APppCharacter()
 
     FPsSpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("FPsSpringArmComp"));
     FPsSpringArmComp->SetupAttachment(GetMesh(), FName("Head"));
-    FPsSpringArmComp->TargetArmLength = -20.f;
+    FPsSpringArmComp->TargetArmLength = -20.0f;
     FPsSpringArmComp->bUsePawnControlRotation = true;
 
     FpsCameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("FpsCameraComp"));
@@ -57,13 +57,16 @@ APppCharacter::APppCharacter()
 
 	GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
 
-
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
+
+    CurrentWeaponIndex = 0;
 
 	bIsCrouched = false;
     bIsCrouchKeyPressed = false;
     bIsCameraChanged = false; // 카메라 시점 변경 값. 3인칭 시점이 기본
+
+    bIsZoomed = false;
 }
 
 // Called when the game starts or when spawned
@@ -78,6 +81,7 @@ void APppCharacter::BeginPlay()
 void APppCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 }
 
 // Called to bind functionality to input
@@ -108,7 +112,7 @@ void APppCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 			{
 				EnhancedInput->BindAction(
 					PlayerController->JumpAction,
-					ETriggerEvent::Triggered,
+					ETriggerEvent::Started,
 					this,
 					&APppCharacter::StartJump
 				);
@@ -132,11 +136,28 @@ void APppCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 				);
 			}
 
+		    if (PlayerController->ZoomAction)
+		    {
+		        EnhancedInput->BindAction(
+                    PlayerController->ZoomAction,
+                    ETriggerEvent::Started,
+                    this,
+                    &APppCharacter::ZoomIn
+                );
+
+		        EnhancedInput->BindAction(
+                    PlayerController->ZoomAction,
+                    ETriggerEvent::Completed,
+                    this,
+                    &APppCharacter::ZoomOut
+                );
+		    }
+
 			if (PlayerController->SprintAction)
 			{
 				EnhancedInput->BindAction(
 					PlayerController->SprintAction,
-					ETriggerEvent::Triggered,
+					ETriggerEvent::Started,
 					this,
 					&APppCharacter::StartSprint
 				);
@@ -153,7 +174,7 @@ void APppCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		    {
 		        EnhancedInput->BindAction(
                     PlayerController->CrouchAction,
-                    ETriggerEvent::Started,
+                    ETriggerEvent::Triggered,
                     this,
                     &APppCharacter::OnCrouchPressed
 		        );
@@ -205,9 +226,10 @@ void APppCharacter::Move(const FInputActionValue& value)
 void APppCharacter::StartJump(const FInputActionValue& value)
 {
     if (bIsCrouched) return;
-	if (value.Get<bool>())
+	if (CanJump())
 	{
 		Jump();
+
 		UE_LOG(LogTemp, Warning, TEXT("Jump"));
 	}
 }
@@ -269,21 +291,47 @@ void APppCharacter::Look(const FInputActionValue& value)
         }
     }
 }
+void APppCharacter::ZoomIn(const FInputActionValue& value)
+{
+    if (value.Get<bool>() == false)
+    {
+        if (FpsCameraComp)
+        {
+            FpsCameraComp->SetFieldOfView(45.0f);
+        }
+        UE_LOG(LogTemp, Warning, TEXT("Zoom In"));
+        bIsZoomed = true;
+    }
+}
+
+void APppCharacter::ZoomOut(const FInputActionValue& value)
+{
+    if (value.Get<bool>() == true)
+    {
+        if (FpsCameraComp)
+        {
+            FpsCameraComp->SetFieldOfView(90.0f);
+        }
+        UE_LOG(LogTemp, Warning, TEXT("Zoom Out"));
+        bIsZoomed = false;
+    }
+}
+
 void APppCharacter::StartSprint(const FInputActionValue& value)
 {
     if (bIsCrouched) return;
 	if (GetCharacterMovement())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-		UE_LOG(LogTemp, Warning, TEXT("Fast"));
+		UE_LOG(LogTemp, Warning, TEXT("Fast : %f"), GetCharacterMovement()->MaxWalkSpeed);
 	}
 }
 void APppCharacter::StopSprint(const FInputActionValue& value)
 {
 	if (GetCharacterMovement())
 	{
-		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-		UE_LOG(LogTemp, Warning, TEXT("Slow"));
+		GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
+		UE_LOG(LogTemp, Warning, TEXT("Slow : %f"), GetCharacterMovement()->MaxWalkSpeed);
 	}
 }
 
