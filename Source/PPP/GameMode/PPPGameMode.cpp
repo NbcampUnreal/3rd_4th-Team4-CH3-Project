@@ -169,7 +169,7 @@ void APPPGameMode::SpawnEnemies()
     for (AActor* Actor : FoundVolumes)
     {
         AEnemySpawnVolume* SpawnVolume = Cast<AEnemySpawnVolume>(Actor);
-        if (SpawnVolume && SpawnVolume->EnemyClass)
+        if (SpawnVolume)
         {
             SpawnVolume->SpawnEnemies(EnemiesPerRound);
             UE_LOG(LogEnemy, Log, TEXT("%s에서 %d마리 적 스폰"), *SpawnVolume->GetName(), EnemiesPerRound);
@@ -203,16 +203,19 @@ void APPPGameMode::CheckRewardCondition()
         // 보상 액터 클래스가 유효한지 확인
         if (RewardActorClass)
         {
-            FVector SpawnLocation = FVector(0.0f, 0.0f, 1000.0f); // 하늘 위
+            //플레이어 위치
+            APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+            //FVector SpawnLocation = PlayerPawn->GetActorLocation() + FVector(200, 0, 500); // 플레이어 위치 위에 스폰
+            FVector SpawnLocation = FVector(-500.0f, 500.0f, 0.0f);//특정 위치에 스폰
             FRotator SpawnRotation = FRotator::ZeroRotator;
             FActorSpawnParameters SpawnParams;
 
             GetWorld()->SpawnActor<AActor>(RewardActorClass, SpawnLocation, SpawnRotation, SpawnParams);
-            UE_LOG(LogGame, Warning, TEXT("점수 100 달성! 보상 액터가 떨어졌습니다.")); //%d, 인자추가하기
+            UE_LOG(LogGame, Warning, TEXT("점수 40 달성! 보상 액터 스폰")); //%d, 인자추가하기
         }
         else
         {
-            UE_LOG(LogGame, Warning, TEXT("RewardActorClass가 설정되지 않았습니다."));
+            UE_LOG(LogGame, Warning, TEXT("RewardActor가 설정되지 않았습니다."));
         }
 
         // ✅ 점수 조건 만족 시 라운드 종료 조건 추가
