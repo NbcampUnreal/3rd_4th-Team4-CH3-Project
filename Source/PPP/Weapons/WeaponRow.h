@@ -22,20 +22,35 @@ struct FWeaponRow : public FTableRowBase
 
 // 데이터 테이블의 행 설정
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    FName WeaponName;
+    FName WeaponName;  // 무기 이름
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    EWeaponType WeaponType;
+    int32 WeaponIndex = 0;  // 무기 고유 번호
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float Damage;
+    EWeaponType WeaponType;  // 무기 종류
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    int32 MagazineSize;
+    float Damage;  // 무기 데미지
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TSubclassOf<AActor> PickUpWeapon;
+    int32 MagazineSize;  // 무기 1탄찬당 총알 개수
+
+    UPROPERTY(EDITANYWHERE, BlueprintReadWrite)
+    float ReloadTime;  // 장전 시간
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TSubclassOf<AActor> EquipWeapon;
+    float FireRange;  // 유효 사거리
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TSubclassOf<class APickUpWeaponMaster> PickUpWeapon;  // 줍는 무기 종류, Static Mesh 타입
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TSubclassOf<class AEquipWeaponMaster> EquipWeapon;  // 장착 중인 무기, Skeletal Mesh 타입
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FVector WeaponOffset = FVector::ZeroVector;  // 무기 잡는 손 위치 값 저장 타입
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FRotator WeaponRotation = FRotator::ZeroRotator;  // 무기 잡는 손 위치 값 저장 타입
 };

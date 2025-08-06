@@ -13,6 +13,7 @@ APppChaseAICharacter::APppChaseAICharacter()
     // 월드에 배치되거나 스폰될 때 자동 Possess
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
+
     // 근접 공격 데미지 판정용 콜리전 컴포넌트 생성
     MeleeDamageCollision = CreateDefaultSubobject<USphereComponent>(TEXT("MeleeDamageCollision"));
     MeleeDamageCollision->SetupAttachment(RootComponent);
@@ -20,6 +21,12 @@ APppChaseAICharacter::APppChaseAICharacter()
     MeleeDamageCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision); // 기본적으로 비활성화
     MeleeDamageCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     MeleeDamageCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+
+    // 임시 체력설정
+    MaxHealth = 150.f;
+    CurrentHealth = MaxHealth; // 또는 필요하다면 설정
+    Defense = 10.f;
+
 }
 
 void APppChaseAICharacter::BeginPlay()
