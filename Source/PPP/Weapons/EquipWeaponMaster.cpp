@@ -2,6 +2,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "../Characters/PppCharacter.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/GameplayStatics.h"
 #include "PPP/Ai/PppBaseAICharacter.h"
 
 AEquipWeaponMaster::AEquipWeaponMaster()
@@ -22,6 +23,12 @@ void AEquipWeaponMaster::Fire()
 
     APlayerController* PlayerController = Cast<APlayerController>(OwnerCharacter->GetController());
     if (!PlayerController) return;
+
+    // 총 발사 시 총구 앞 화염 이펙트 재생
+    if (SkeletalMesh && FireAnim)
+    {
+        SkeletalMesh->PlayAnimation(FireAnim, false);
+    }
 
     FVector MuzzleLocation = FVector::ZeroVector;
     if (SkeletalMesh && SkeletalMesh->DoesSocketExist(FName("MuzzleFlash")))
@@ -106,6 +113,7 @@ void AEquipWeaponMaster::OnEquipped(APppCharacter* NewOwner, const FWeaponRow& I
     WeaponName = InWeaponRow.WeaponName;
     FireRange = InWeaponRow.FireRange;
     WeaponDataRow = InWeaponRow;
+    WeaponIndex = InWeaponRow.WeaponIndex;
 
     AttachToComponent(
        NewOwner->GetMesh(),
@@ -113,7 +121,7 @@ void AEquipWeaponMaster::OnEquipped(APppCharacter* NewOwner, const FWeaponRow& I
        FName(TEXT("hand_r"))
    );
 
-    // [수정된 부분] 각 무기별 위치/회전 오프셋 적용
+    // 각 무기별 위치, 회전 오프셋 적용
     SetActorRelativeLocation(InWeaponRow.WeaponOffset);
     SetActorRelativeRotation(InWeaponRow.WeaponRotation);
 

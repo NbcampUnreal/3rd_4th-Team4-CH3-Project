@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Sound/SoundBase.h"
 #include "WeaponRow.h"
 #include "EquipWeaponMaster.generated.h"
 
@@ -35,6 +36,10 @@ public:
 
     FWeaponRow GetWeaponDataRow() const { return WeaponDataRow; }
 
+    // 총기 발사 애니메이션 시퀀스 선언
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Animation")
+    UAnimSequence* FireAnim;
+
 protected:
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Equip")
     USceneComponent* Scene;
@@ -50,4 +55,5 @@ protected:
     float ReloadTime;
     FName WeaponName;
     float FireRange;
+    int32 WeaponIndex;
 };

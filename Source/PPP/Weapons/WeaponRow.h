@@ -25,6 +25,9 @@ struct FWeaponRow : public FTableRowBase
     FName WeaponName;  // 무기 이름
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 WeaponIndex = 0;  // 무기 고유 번호
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     EWeaponType WeaponType;  // 무기 종류
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -46,8 +49,8 @@ struct FWeaponRow : public FTableRowBase
     TSubclassOf<class AEquipWeaponMaster> EquipWeapon;  // 장착 중인 무기, Skeletal Mesh 타입
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    FVector WeaponOffset = FVector::ZeroVector;
+    FVector WeaponOffset = FVector::ZeroVector;  // 무기 잡는 손 위치 값 저장 타입
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    FRotator WeaponRotation = FRotator::ZeroRotator;
+    FRotator WeaponRotation = FRotator::ZeroRotator;  // 무기 잡는 손 위치 값 저장 타입
 };

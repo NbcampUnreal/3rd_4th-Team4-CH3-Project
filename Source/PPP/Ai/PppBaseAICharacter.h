@@ -26,5 +26,5 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
     float SightRadius;
 
-    // 이 밑에는 추후 체력, 방어력, 피격/사망 처리가 들어갈 예정
+
 };
