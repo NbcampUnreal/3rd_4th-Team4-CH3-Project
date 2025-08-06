@@ -36,7 +36,7 @@ APppCharacter::APppCharacter()
     FpsCameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("FpsCameraComp"));
     FpsCameraComp->SetupAttachment(FPsSpringArmComp);
     FpsCameraComp->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-    FpsCameraComp->SetRelativeRotation(FRotator(-90.0f,0.0f,90.0f));// 월드나 상대 회전이 명확해야 할 때는 SetRelativeRotation
+    FpsCameraComp->SetRelativeRotation(FRotator(0.0f,0.0f,90.0f));// 월드나 상대 회전이 명확해야 할 때는 SetRelativeRotation
     FpsCameraComp->bUsePawnControlRotation = false;
 
     //캡슐, 메시 위치
@@ -256,7 +256,7 @@ void APppCharacter::Look(const FInputActionValue& value)
                 PithRotation = CurrentRotation.Pitch - PithRotation;
                 PithRotation = FMath::Clamp(PithRotation, -40.f, 40.f);
                 CurrentRotation.Pitch = PithRotation;
-                SpringArmComp->SetRelativeRotation(CurrentRotation);
+                FPsSpringArmComp->SetRelativeRotation(CurrentRotation); //기탁 테스트 수정
                 //UE_LOG(LogTemp, Warning, TEXT("회전"));
             }
         }

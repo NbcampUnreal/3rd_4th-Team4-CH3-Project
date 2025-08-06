@@ -4,9 +4,9 @@
 #include "GameFramework/Character.h"
 #include "PppBaseAICharacter.generated.h"
 
-// [델리게이트 선언]
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthChanged);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
+// // [델리게이트 선언]
+// DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthChanged);
+// DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
 
 class UBehaviorTree;
 class UAniMontage; // 사망 애니메이션 몽타주를 위한 선언
@@ -125,4 +125,5 @@ protected:
 //
 //
 // >>>>>>> dev
-// };
+//
+};
