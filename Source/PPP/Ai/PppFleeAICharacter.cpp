@@ -34,6 +34,11 @@ APppFleeAICharacter::APppFleeAICharacter()
 
     // 4. 감지 이벤트 콜백 함수 바인딩
     PerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &APppFleeAICharacter::OnTargetPerceptionUpdated);
+
+    // 임시 체력설정
+    MaxHealth = 150.f;
+    CurrentHealth = MaxHealth; // 또는 필요하다면 설정
+    Defense = 10.f;
 }
 
 void APppFleeAICharacter::BeginPlay()

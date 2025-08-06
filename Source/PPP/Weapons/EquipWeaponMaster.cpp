@@ -2,6 +2,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "../Characters/PppCharacter.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/DamageEvents.h"
 #include "Kismet/GameplayStatics.h"
 #include "PPP/Ai/PppBaseAICharacter.h"
 
@@ -77,13 +78,13 @@ void AEquipWeaponMaster::Fire()
 
     if (bHit && Hit.GetActor())
     {
-        UE_LOG(LogTemp, Warning, TEXT("피격된 액터 이름 : %s"), *Hit.GetActor()->GetName());
-        UE_LOG(LogTemp, Warning, TEXT("피격된 액터 클래스 이름 : %s"), *Hit.GetActor()->GetClass()->GetName());
-
-        if (Hit.GetActor()->IsA(APppBaseAICharacter::StaticClass()))
+        APppBaseAICharacter* HitAI = Cast<APppBaseAICharacter>(Hit.GetActor());
+        if (HitAI)
         {
-            UE_LOG(LogTemp, Warning, TEXT("AI 피격했습니다 !!! 레이저 선이 초록색으로 바뀝니다 !!!"));
+            // 데미지 전달
+            HitAI->TakeDamage(Damage, FDamageEvent(), nullptr, this);   // 또는 필요한 인자 대로
             LineColor = FColor::Green;
+            UE_LOG(LogTemp, Warning, TEXT("AI를 피격하여 데미지를 입혔습니다."));
         }
         else
         {
