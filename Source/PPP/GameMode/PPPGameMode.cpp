@@ -6,6 +6,7 @@
 #include "GameDefines.h"
 #include "Engine/World.h"
 #include "EnemySpawnVolume.h"
+#include "PPPCharacter.h" // 캐릭터 클래스를 사용
 #include "../characters/PppPlayerController.h" // PlayerController 클래스를 사용
 
 
@@ -21,18 +22,29 @@ APPPGameMode::APPPGameMode()
 
 }
 
+// void APPPGameMode::BeginPlay()
+// {
+//     Super::BeginPlay();
+//
+//     UE_LOG(LogGame, Warning, TEXT("BeginPlay 호출됨"));
+//
+//     // 초기 게임 상태 설정
+//     SetGameState(EGameState::WaitingToStart);
+//
+//     // 테스트용 자동 라운드 시작 (추후 타이머 지연 가능)
+//     StartRound();
+// }
 void APPPGameMode::BeginPlay()
 {
     Super::BeginPlay();
 
-    UE_LOG(LogGame, Warning, TEXT("BeginPlay 호출됨"));
-
-    // 초기 게임 상태 설정
-    SetGameState(EGameState::WaitingToStart);
-
-    // 테스트용 자동 라운드 시작 (추후 타이머 지연 가능)
-    StartRound();
+    APppCharacter* PppCharacter = Cast<APppCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+    if (PppCharacter)
+    {
+        PppCharacter->OnCharacterDead.AddDynamic(this, &APPPGameMode::OnGameOver);
+    }
 }
+
 
 void APPPGameMode::SetGameState(EGameState NewState)
 {
@@ -247,6 +259,14 @@ void APPPGameMode::OnGameOver()
 {
     UE_LOG(LogGame, Warning, TEXT("게임 오버"));
     //게임 오버 상태로
-    //TODO : UI에 추가
+    APppPlayerController* PC = Cast<APppPlayerController>(UGameplayStatics::GetPlayerController(this, 0));
+    if (PC)
+    {
+        PC->ShowGameOver();
+    }
 }
 
+
+// -------------------------------
+// 델리게이트 바인딩
+// -------------------------------

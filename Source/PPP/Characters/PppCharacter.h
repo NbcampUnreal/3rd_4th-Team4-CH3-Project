@@ -126,13 +126,6 @@ protected:
     void ToggleCamera();
     void OnDeath();
 
-public:
-	virtual void Tick(float DeltaTime) override;
-
-
-    UPROPERTY(BlueprintAssignable)
-    FOnCharacterDead OnCharacterDead;
-
 private:
 
 	float SprintSpeed; //스프린트 속도
