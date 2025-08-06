@@ -325,8 +325,11 @@ void APppCharacter::ToggleCamera()
 /**무기 관련 */
 void APppCharacter::OnInteract()
 {
+    UE_LOG(LogTemp, Warning, TEXT("OnInteract() 호출됨"));
+
     if (OverlappingPickUpActor && OverlappingPickUpActor->PickUpComp)
     {
+        UE_LOG(LogTemp, Warning, TEXT("OverlappingPickUpActor 존재, TryPickUp 실행"));
         OverlappingPickUpActor->PickUpComp->TryPickUp(this);
     }
     else
@@ -399,3 +402,13 @@ void APppCharacter::OnDeath()
 
 }
 
+//오류 수정
+void APppCharacter::BeginCrouch(const FInputActionValue& Value)
+{
+    Crouch();
+}
+
+void APppCharacter::EndCrouch(const FInputActionValue& Value)
+{
+    UnCrouch();
+}

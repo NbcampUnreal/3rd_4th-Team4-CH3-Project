@@ -85,6 +85,7 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterSpeed")
     float SprintSpeedMultiplier;
 
+    void DropWeaponToWorld(const FWeaponRow& WeaponRow, FVector DropLocation, FRotator DropRotation);
 protected:
 	virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
@@ -126,7 +127,7 @@ protected:
 
     void OnDeath();
 
-    void DropWeaponToWorld(const FWeaponRow& WeaponRow, FVector DropLocation, FRotator DropRotation);
+
 
 private:
 

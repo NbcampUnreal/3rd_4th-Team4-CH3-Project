@@ -30,6 +30,7 @@ void UPickUpComponent::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent,
     APickUpWeaponMaster* WeaponActor = Cast<APickUpWeaponMaster>(GetOwner());
     if (PppCharacter && WeaponActor)
     {
+        UE_LOG(LogTemp, Warning, TEXT("PickUpComponent: Overlap 감지됨!"));
         WeaponActor->OverlappingCharacter = PppCharacter;
         PppCharacter->OverlappingPickUpActor = WeaponActor;
     }
