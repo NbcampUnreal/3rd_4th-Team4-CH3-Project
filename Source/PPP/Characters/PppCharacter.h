@@ -124,10 +124,14 @@ protected:
     void EndCrouch(const FInputActionValue& value);
     UFUNCTION()
     void ToggleCamera();
-
     void OnDeath();
 
+public:
+	virtual void Tick(float DeltaTime) override;
 
+
+    UPROPERTY(BlueprintAssignable)
+    FOnCharacterDead OnCharacterDead;
 
 private:
 
