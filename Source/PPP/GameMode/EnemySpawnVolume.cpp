@@ -1,49 +1,80 @@
-// EnemySpawnVolume.cpp
-
 #include "EnemySpawnVolume.h"
-
 #include "GameDefines.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/World.h"
 
-// 생성자 - Box 컴포넌트 생성 및 루트로 설정
 AEnemySpawnVolume::AEnemySpawnVolume()
 {
-	PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = false;
 
-	// 박스 컴포넌트 생성 및 루트 설정
-	SpawnBox = CreateDefaultSubobject<UBoxComponent>(TEXT("SpawnBox"));
-	SetRootComponent(SpawnBox);
+    SpawnBox = CreateDefaultSubobject<UBoxComponent>(TEXT("SpawnBox"));
+    SetRootComponent(SpawnBox);
 }
 
-// 박스 영역 내에서 랜덤 위치 반환
 FVector AEnemySpawnVolume::GetRandomPointInVolume() const
 {
-	FVector Origin = SpawnBox->Bounds.Origin;
-	FVector Extent = SpawnBox->Bounds.BoxExtent;
+    FVector Origin = SpawnBox->Bounds.Origin;
+    FVector Extent = SpawnBox->Bounds.BoxExtent;
 
-	// UKismetMathLibrary를 사용해 박스 내부의 무작위 위치 계산
-	return UKismetMathLibrary::RandomPointInBoundingBox(Origin, Extent);
+    return UKismetMathLibrary::RandomPointInBoundingBox(Origin, Extent);
 }
 
-// 지정된 수만큼 적을 스폰함
+// 가중치 기반 적 클래스 선택 함수
+TSubclassOf<AActor> AEnemySpawnVolume::GetRandomWeightedEnemyClass() const
+{
+    if (EnemyClasses.Num() == 0 || SpawnWeights.Num() != EnemyClasses.Num())
+    {
+        UE_LOG(LogDebug, Error, TEXT("EnemyClasses 또는 SpawnWeights 설정 오류"));
+        return nullptr;
+    }
+
+    float TotalWeight = 0.0f;
+    for (float Weight : SpawnWeights)
+    {
+        TotalWeight += Weight;
+    }
+
+    if (TotalWeight <= 0.0f)
+    {
+        UE_LOG(LogDebug, Error, TEXT("SpawnWeights 총합이 0입니다."));
+        return nullptr;
+    }
+
+    float RandomValue = FMath::FRandRange(0.0f, TotalWeight);
+    float AccumulatedWeight = 0.0f;
+
+    for (int32 i = 0; i < EnemyClasses.Num(); ++i)
+    {
+        AccumulatedWeight += SpawnWeights[i];
+        if (RandomValue <= AccumulatedWeight)
+        {
+            return EnemyClasses[i];
+        }
+    }
+
+    // 예외 처리 (마지막 클래스)
+    return EnemyClasses.Last();
+}
+
 void AEnemySpawnVolume::SpawnEnemies(int32 Count)
 {
-	if (!EnemyClass)
-	{
-		UE_LOG(LogDebug, Error, TEXT("EnemyClass가 설정되지 않았습니다."));
-		return;
-	}
+    if (EnemyClasses.Num() == 0 || SpawnWeights.Num() != EnemyClasses.Num())
+    {
+        UE_LOG(LogDebug, Error, TEXT("EnemyClasses와 SpawnWeights 수가 일치하지 않습니다."));
+        return;
+    }
 
-	UWorld* World = GetWorld();
-	if (!World) return;
+    UWorld* World = GetWorld();
+    if (!World) return;
 
-	for (int32 i = 0; i < Count; ++i)
-	{
-		FVector SpawnLocation = GetRandomPointInVolume();
-		FRotator SpawnRotation = FRotator::ZeroRotator;
+    for (int32 i = 0; i < Count; ++i)
+    {
+        TSubclassOf<AActor> SelectedClass = GetRandomWeightedEnemyClass();
+        if (!SelectedClass) continue;
 
-		// 적 스폰
-		World->SpawnActor<AActor>(EnemyClass, SpawnLocation, SpawnRotation);
-	}
+        FVector SpawnLocation = GetRandomPointInVolume();
+        FRotator SpawnRotation = FRotator::ZeroRotator;
+
+        World->SpawnActor<AActor>(SelectedClass, SpawnLocation, SpawnRotation);
+    }
 }
