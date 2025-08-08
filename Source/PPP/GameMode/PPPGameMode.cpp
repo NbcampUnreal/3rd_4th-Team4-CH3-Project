@@ -39,9 +39,13 @@ void APPPGameMode::BeginPlay()
     Super::BeginPlay();
 
     APppCharacter* PppCharacter = Cast<APppCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
-    if (PppCharacter)
+    if (IsValid(PppCharacter))
     {
         PppCharacter->OnCharacterDead.AddDynamic(this, &APPPGameMode::OnGameOver);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("APppCharacter not found in GameMode::BeginPlay"));
     }
 }
 

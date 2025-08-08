@@ -39,6 +39,7 @@ public:
 	void SpawnEnemies();
 
     void OnRoundCleared(); //라운드 성공
+    UFUNCTION()
     void OnGameOver(); // 게임 오버
 
 	UFUNCTION(BlueprintCallable)
