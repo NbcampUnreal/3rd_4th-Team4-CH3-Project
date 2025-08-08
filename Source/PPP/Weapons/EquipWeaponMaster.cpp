@@ -17,6 +17,11 @@ AEquipWeaponMaster::AEquipWeaponMaster()
     SkeletalMesh->SetupAttachment(Scene);
 }
 
+// 발사 절차:
+// - 소유 캐릭터/플레이어컨트롤러 확인
+// - 총구 소켓 위치 획득 후 화면 중앙 디프로젝션 방향으로 라인트레이스
+// - 피격 시 AI 데미지 처리, 디버그 라인 색상 변경
+// - 발사 애니메이션 재생 및 OnWeaponFired 이벤트 브로드캐스트
 void AEquipWeaponMaster::Fire()
 {
     APppCharacter* OwnerCharacter = Cast<APppCharacter>(GetOwner());
@@ -25,7 +30,7 @@ void AEquipWeaponMaster::Fire()
     APlayerController* PlayerController = Cast<APlayerController>(OwnerCharacter->GetController());
     if (!PlayerController) return;
 
-    // 총 발사 시 총구 앞 화염 이펙트 재생
+    // 발사 애니메이션 재생
     if (SkeletalMesh && FireAnim)
     {
         SkeletalMesh->PlayAnimation(FireAnim, false);
@@ -42,6 +47,7 @@ void AEquipWeaponMaster::Fire()
         return;
     }
 
+    // 화면 중앙 좌표 → 월드 위치/방향으로 디프로젝션
     int32 SizeX, SizeY;
     PlayerController->GetViewportSize(SizeX, SizeY);
     FVector2D ViewportCenter(SizeX / 2.f, SizeY / 2.f);
@@ -54,6 +60,7 @@ void AEquipWeaponMaster::Fire()
         return;
     }
 
+    // 총구에서 화면 중앙 방향(FireRange만큼)으로 라인트레이스
     FVector Start = MuzzleLocation;
     FVector End = Start + (WorldDirection * FireRange);
 
@@ -64,8 +71,10 @@ void AEquipWeaponMaster::Fire()
 
     bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
 
+    // 기본 라인 색상: 적중 시 Green, 미적중/비AI 시 Red
     FColor LineColor = FColor::Red;
 
+    // 디버깅: 피격 컴포넌트 정보 출력
     if (bHit && Hit.Component.IsValid())
     {
         UE_LOG(LogTemp, Warning, TEXT("피격된 컴포넌트 이름 : %s"), *Hit.Component->GetName());
@@ -76,6 +85,7 @@ void AEquipWeaponMaster::Fire()
         UE_LOG(LogTemp, Warning, TEXT("피격된 것 없음"));
     }
 
+    // 피격 액터가 AI라면 데미지 적용
     if (bHit && Hit.GetActor())
     {
         APppBaseAICharacter* HitAI = Cast<APppBaseAICharacter>(Hit.GetActor());
@@ -92,6 +102,7 @@ void AEquipWeaponMaster::Fire()
         }
     }
 
+    // 시각적 디버그 라인, 라인 트레이스 레이저 시각화
     DrawDebugLine(
         GetWorld(),
         Start,
@@ -103,9 +114,15 @@ void AEquipWeaponMaster::Fire()
         2.0f
     );
 
+    // 발사 이벤트 브로드캐스트(히트 결과 전달)
     OnWeaponFired.Broadcast(Hit);
 }
 
+// 장착 처리:
+// - WeaponRow에서 스탯 세팅
+// - 오너 캐릭터의 손 소켓(hand_r)에 부착(Snap)
+// - 무기별 위치/회전 오프셋 적용
+// - 오너 설정 및 로그 출력
 void AEquipWeaponMaster::OnEquipped(APppCharacter* NewOwner, const FWeaponRow& InWeaponRow)
 {
     Damage = InWeaponRow.Damage;
@@ -122,7 +139,7 @@ void AEquipWeaponMaster::OnEquipped(APppCharacter* NewOwner, const FWeaponRow& I
        FName(TEXT("hand_r"))
    );
 
-    // 각 무기별 위치, 회전 오프셋 적용
+    // 무기별 위치, 회전 오프셋(데이터테이블 설정값) 적용
     SetActorRelativeLocation(InWeaponRow.WeaponOffset);
     SetActorRelativeRotation(InWeaponRow.WeaponRotation);
 
@@ -131,6 +148,10 @@ void AEquipWeaponMaster::OnEquipped(APppCharacter* NewOwner, const FWeaponRow& I
     UE_LOG(LogTemp, Warning, TEXT("무기 장착 완료: %s"), *InWeaponRow.WeaponName.ToString());
 }
 
+// 드랍 처리:
+// - 부모 분리(월드 트랜스폼 유지), 소유자 해제
+// - 물리 시뮬레이션/중력 활성화로 바닥으로 떨어지게 함
+// - 드랍 이벤트 브로드캐스트
 void AEquipWeaponMaster::Drop()
 {
     DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
