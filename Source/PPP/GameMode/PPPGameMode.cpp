@@ -39,7 +39,7 @@ void APPPGameMode::BeginPlay()
     Super::BeginPlay();
 
     APppCharacter* PppCharacter = Cast<APppCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
-    if (IsValid(PppCharacter))
+    if (PppCharacter)
     {
         PppCharacter->OnCharacterDead.AddDynamic(this, &APPPGameMode::OnGameOver);
     }
