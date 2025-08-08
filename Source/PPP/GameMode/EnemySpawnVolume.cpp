@@ -78,3 +78,13 @@ void AEnemySpawnVolume::SpawnEnemies(int32 Count)
         World->SpawnActor<AActor>(SelectedClass, SpawnLocation, SpawnRotation);
     }
 }
+void AEnemySpawnVolume::BeginPlay()
+{
+    Super::BeginPlay();
+
+    // 디버깅용 로그
+    UE_LOG(LogTemp, Warning, TEXT("SpawnVolume BeginPlay 호출됨"));
+
+    // 원하는 수만큼 적 스폰 (임시로 3마리)
+    SpawnEnemies(3);
+}

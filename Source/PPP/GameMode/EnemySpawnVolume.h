@@ -37,4 +37,6 @@ protected:
 
     // 가중치 기반 적 클래스 선택
     TSubclassOf<AActor> GetRandomWeightedEnemyClass() const;
+
+    virtual void BeginPlay() override;
 };
