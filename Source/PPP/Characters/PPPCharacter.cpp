@@ -322,6 +322,45 @@ void APppCharacter::ToggleCamera()
         TpsCameraComp->SetActive(true);
     }
 }
+
+// by Yeoul
+// 무기 변경 델리게이트
+void APppCharacter::SetEquippedWeapon(AEquipWeaponMaster* NewWeapon)
+{
+    // 현재 무기와 새로 지정하려는 무기가 같으면 아무것도 안 함
+    if (EquippedWeapon == NewWeapon)
+    {
+        return; // 중복 변경 방지
+    }
+
+    // 기존 무기 델리게이트 언바인드
+    if (EquippedWeapon != nullptr)
+    {
+        EquippedWeapon->OnAmmoChanged.RemoveDynamic(this, &APppCharacter::OnWeaponAmmoChanged);
+    }
+
+    // 교체
+    EquippedWeapon = NewWeapon;
+
+    // 무기 변경 알림
+    OnWeaponChanged.Broadcast(NewWeapon);
+
+    // 새 무기 델리게이트 바인드
+    if (EquippedWeapon != nullptr)
+    {
+        EquippedWeapon->OnAmmoChanged.AddDynamic(this, &APppCharacter::OnWeaponAmmoChanged);
+
+        // 즉시 현재 탄약 상태를 UI에 반영 (안전빵)
+        OnWeaponAmmoChanged(EquippedWeapon->CurrentAmmoInMag,
+                            EquippedWeapon->ReserveAmmo);
+    }
+    else
+    {
+        // 맨손 등
+        OnWeaponAmmoChanged(0, 0);
+    }
+}
+
 /**무기 관련 */
 void APppCharacter::OnInteract()
 {
@@ -343,6 +382,7 @@ void APppCharacter::Fire()
     // <<<<<<< HEAD
     if (EquippedWeapon)
         EquippedWeapon->Fire();
+
     else
         UE_LOG(LogTemp, Warning, TEXT("No weapon equipped!"));
 }
@@ -411,4 +451,13 @@ void APppCharacter::BeginCrouch(const FInputActionValue& Value)
 void APppCharacter::EndCrouch(const FInputActionValue& Value)
 {
     UnCrouch();
+}
+
+// by Yeoul
+// 탄약 변경 이벤트 콜백 구현
+void APppCharacter::OnWeaponAmmoChanged(int32 CurrentAmmoInMag, int32 ReserveAmmo)
+{
+    // 탄약 변경 이벤트 발생
+    OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
+    UE_LOG(LogTemp, Warning, TEXT("탄약 변경: 현재 탄창 %d, 예비 탄약 %d"), CurrentAmmoInMag, ReserveAmmo);
 }

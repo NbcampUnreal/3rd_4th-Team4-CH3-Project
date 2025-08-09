@@ -6,11 +6,31 @@
 #include "WeaponRow.h"
 #include "EquipWeaponMaster.generated.h"
 
+// by Yeoul
+// 발사 모드 ENUM으로 관리해 UI 표시
+// UENUM은 generated.h 포함 전에 전역 스코프에 선언
+UENUM(BlueprintType)
+enum class EFireMode : uint8
+{
+    Single  UMETA(DisplayName = "Single"),
+    Burst   UMETA(DisplayName = "Burst"),
+    Auto    UMETA(DisplayName = "Auto"),
+};
+
+// by Yeoul
+// 전방 선언
+class UTexture2D;
+
+
 // 무기 발사 시 피격(라인 트레이스 결과) 정보를 브로드캐스트하는 델리게이트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponFired, const FHitResult&, HitResult);
 
 // 무기 드랍 시, 드랍된 무기 자신을 브로드캐스트하는 델리게이트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponDropped, AEquipWeaponMaster*, DroppedWeapon);
+
+// by Yeoul
+// 탄약 변경 델리게이트
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAmmoChanged, int32, AmmoInMag, int32, Reserve);
 
 // 플레이어가 장착하는 무기(장착/발사/드랍 동작과 스탯 적용을 담당)
 UCLASS()
@@ -29,6 +49,11 @@ public:
     UPROPERTY(BlueprintAssignable)
     FOnWeaponDropped OnWeaponDropped;
 
+    // by Yeoul
+    // 탄약 변경 이벤트: 블루프린트에서 바인딩 가능
+    UPROPERTY(BlueprintAssignable, Category = "Weapon")
+    FOnWeaponAmmoChanged OnAmmoChanged;
+
     // 무기 발사: 화면 중앙 기준 라인트레이스, 피격 처리 및 이펙트/디버그 라인 출력
     UFUNCTION(BlueprintCallable)
     void Fire();
@@ -41,6 +66,11 @@ public:
     UFUNCTION(BlueprintCallable)
     void Drop();
 
+    // by Yeoul
+    // 재장전 함수
+    UFUNCTION(BlueprintCallable)
+    void Reload();
+
     // 현재 무기 정보(행 데이터) 보관 및 접근자 제공
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WeaponData")
     FWeaponRow WeaponDataRow;
@@ -51,6 +81,35 @@ public:
     // 발사 시 재생할 스켈레탈 애니메이션(총구 반동/화염 등 표현)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Animation")
     UAnimSequence* FireAnim;
+
+    // by Yeoul
+    // 탄약 변수
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+    int32 CurrentAmmoInMag;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+    int32 ReserveAmmo;
+
+    // by Yeoul
+    // UI 표시용
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+    UTexture2D* WeaponImage = nullptr;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+    UTexture2D* AmmoImage = nullptr;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+    FText WeaponDisplayName;
+
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+    EFireMode FireMode = EFireMode::Single;
+
+    UFUNCTION(BlueprintPure, Category="UI")
+    UTexture2D* GetIcon() const
+    {
+        return WeaponImage;
+    }
 
 protected:
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Equip")

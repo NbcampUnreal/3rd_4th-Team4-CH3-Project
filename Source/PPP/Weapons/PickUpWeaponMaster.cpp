@@ -66,7 +66,7 @@ void APickUpWeaponMaster::HandlePickUp(APppCharacter* Character)
         Character->DropWeaponToWorld(PrevWeaponRow, DropLocation, DropRotation);
 
         Character->EquippedWeapon->Destroy();
-        Character->EquippedWeapon = nullptr;
+        // Character->EquippedWeapon = nullptr; // 준모님 여기 빼도 돼요?
     }
 
     // 신규 장비가 존재하면 스폰 후 장착 및 OnEquipped 호출 (무기 장착 기능)
@@ -86,7 +86,10 @@ void APickUpWeaponMaster::HandlePickUp(APppCharacter* Character)
         {
             UE_LOG(LogTemp, Warning, TEXT("NewWeapon 스폰 성공! OnEquipped 호출"));
             NewWeapon->OnEquipped(Character, WeaponRow);
-            Character->EquippedWeapon = NewWeapon;
+            // Character->EquippedWeapon = NewWeapon;   // 준모님 아랫줄의 세터로 바꿔도 돼요?
+            // by Yeoul
+            // 세터로 교체 (여기서 OnWeaponChanced 브로드캐스트됨)
+            Character->SetEquippedWeapon(NewWeapon);
         }
         else
         {

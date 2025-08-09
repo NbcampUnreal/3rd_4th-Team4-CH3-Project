@@ -8,6 +8,11 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterDead);
 
+// by Yeoul
+// 무기 교체 델리게이트
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChanged, class AEquipWeaponMaster*, NewWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, int32, InMag, int32, Reserve);
+
 class USpringArmComponent;
 class UCameraComponent;
 struct FInputActionValue;
@@ -64,6 +69,23 @@ public:
     APickUpWeaponMaster* OverlappingPickUpActor = nullptr;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
     AEquipWeaponMaster* EquippedWeapon;
+
+    // by Yeoul
+    // 무기 변경 델리게이트
+    // 블루프린트에서 바인드할 수 있게 공개 프로퍼티
+    UPROPERTY(BlueprintAssignable, Category = "Weapon")
+    FOnWeaponChanged OnWeaponChanged;
+    /**
+     *
+     */
+    UPROPERTY(BlueprintAssignable)
+    FOnAmmoChanged OnAmmoChanged;
+
+    // by Yeoul
+    // 무기 장착 처리 함수
+    UFUNCTION(BlueprintCallable, Category = "Weapon")
+    void SetEquippedWeapon(AEquipWeaponMaster* NewWeapon);
+
     UFUNCTION()
     void OnInteract();
 
@@ -131,5 +153,9 @@ private:
 	float SprintSpeed; //스프린트 속도
     float CrouchMovementSpeed;//앉은 상태 속도
     bool bIsCrouchKeyPressed;//crouch 키가 눌렸는지 여부
+
+    // by Yeoul
+    UFUNCTION()
+    void OnWeaponAmmoChanged(int32 InMag, int32 Reserve);
 
 };
