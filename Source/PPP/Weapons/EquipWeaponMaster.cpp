@@ -15,6 +15,10 @@ AEquipWeaponMaster::AEquipWeaponMaster()
 
     SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
     SkeletalMesh->SetupAttachment(Scene);
+
+    // by Yeoul
+    CurrentAmmoInMag = 0;
+    ReserveAmmo = 0;
 }
 
 // 발사 절차:
@@ -24,6 +28,14 @@ AEquipWeaponMaster::AEquipWeaponMaster()
 // - 발사 애니메이션 재생 및 OnWeaponFired 이벤트 브로드캐스트
 void AEquipWeaponMaster::Fire()
 {
+    // by Yeoul
+    // 탄약 없으면 발사 중단
+    if (CurrentAmmoInMag <= 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("탄약이 없습니다!"));
+        return;
+    }
+
     APppCharacter* OwnerCharacter = Cast<APppCharacter>(GetOwner());
     if (!OwnerCharacter) return;
 
@@ -114,8 +126,16 @@ void AEquipWeaponMaster::Fire()
         2.0f
     );
 
+    // by Yeoul
+    // 실제 발사 성공 시 탄약 1 감소 -> 이벤트 송출
+    -- CurrentAmmoInMag;
+
     // 발사 이벤트 브로드캐스트(히트 결과 전달)
     OnWeaponFired.Broadcast(Hit);
+
+    // by Yeoul
+    // 탄약 변경 이벤트 -> UI 갱신
+    OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
 }
 
 // 장착 처리:
@@ -145,6 +165,16 @@ void AEquipWeaponMaster::OnEquipped(APppCharacter* NewOwner, const FWeaponRow& I
 
     SetOwner(NewOwner);
 
+    // by Yeoul
+    // 현재탄 = DT의 MagazineSize
+    CurrentAmmoInMag = MagazineSize;
+    // 예비탄 = DT의 ReserveAmmo
+    ReserveAmmo = InWeaponRow.ReserveAmmo;
+
+    // by Yeoul
+    // 무기 장착 시 초기 탄약값 Broadcast
+    OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
+
     UE_LOG(LogTemp, Warning, TEXT("무기 장착 완료: %s"), *InWeaponRow.WeaponName.ToString());
 }
 
@@ -164,4 +194,39 @@ void AEquipWeaponMaster::Drop()
     }
 
     OnWeaponDropped.Broadcast(this);
+}
+
+// by Yeoul
+// 재장선 함수
+void AEquipWeaponMaster::Reload()
+{
+    // 최대 탄창 크기
+    int32 MaxAmmoInMag = WeaponDataRow.MagazineSize;
+    // 탄창에 채울 필요가 있는 탄약 수
+    int32 AmmoNeeded = MaxAmmoInMag - CurrentAmmoInMag;
+
+    // 예비 탄약이 없거나, 탄창이 가득 찼으면 재장전 중단
+    if (ReserveAmmo <= 0 || AmmoNeeded <= 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("재장전할 탄약이 없거나, 탄창이 이미 가득 찼습니다."));
+        return;
+    }
+
+    // 예비 탄약이 필요한 탄약보다 적으면
+    if (ReserveAmmo < AmmoNeeded)
+    {
+        CurrentAmmoInMag += ReserveAmmo;
+        ReserveAmmo = 0;
+    }
+    else
+    {
+        ReserveAmmo -= AmmoNeeded;
+        CurrentAmmoInMag = MaxAmmoInMag;
+    }
+
+    // 탄약 변경 델리게이트 호출
+    if (OnAmmoChanged.IsBound())
+    {
+        OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
+    }
 }

@@ -53,4 +53,9 @@ struct FWeaponRow : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FRotator WeaponRotation = FRotator::ZeroRotator;  // 무기 잡는 손 위치 값 저장 타입
+
+    // by Yeoul
+    // 현재 탄약 수
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 ReserveAmmo;
 };
