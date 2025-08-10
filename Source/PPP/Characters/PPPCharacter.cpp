@@ -72,6 +72,11 @@ void APppCharacter::BeginPlay()
 {
     Super::BeginPlay();
     ToggleCamera();
+
+    // 정현성
+    // 게임 시작 시 초기 체력 값을 블루프린트로 보냄
+    OnHealthChanged.Broadcast(CurrentHealth / MaxHealth);
+
 }
 
 void APppCharacter::Tick(float DeltaTime)
@@ -412,6 +417,13 @@ float APppCharacter::GetHealth() const
 void APppCharacter::AddHealth(float Amount)
 {
     CurrentHealth = FMath::Clamp(CurrentHealth + Amount, 0.0f, MaxHealth);
+
+    // 정현성
+    // 체력이 변경될 때마다 Event Dispatcher 호출
+    float HealthPercentage = CurrentHealth / MaxHealth;
+    OnHealthChanged.Broadcast(HealthPercentage);
+
+
 }
 
 float APppCharacter::TakeDamage(
@@ -423,6 +435,11 @@ float APppCharacter::TakeDamage(
     float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
     CurrentHealth = FMath::Clamp(CurrentHealth - DamageAmount, 0.0f, MaxHealth);
+
+    // 정현성
+    // 체력이 변경될 때마다 Event Dispatcher 호출
+    float HealthPercentage = CurrentHealth / MaxHealth;
+    OnHealthChanged.Broadcast(HealthPercentage);
 
     if (CurrentHealth <= 0.0f)
         OnDeath();
