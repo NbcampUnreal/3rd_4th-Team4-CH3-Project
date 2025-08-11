@@ -82,6 +82,27 @@ void APppCharacter::BeginPlay()
     // 게임 시작 시 초기 체력 값을 블루프린트로 보냄
     OnHealthChanged.Broadcast(CurrentHealth / MaxHealth);
 
+    // 정현성
+    // 게임 시작 시 킬마커, 히트마커 생성 하지만 처음에는 보이지 않게 설정
+    if (HitMarkerWidgetClass)
+    {
+        HitMarkerWidget = CreateWidget<UUserWidget>(GetWorld(), HitMarkerWidgetClass);
+        if (HitMarkerWidget)
+        {
+            HitMarkerWidget->AddToViewport();
+            HitMarkerWidget->SetVisibility(ESlateVisibility::Hidden);
+        }
+    }
+    if (KillMarkerWidgetClass)
+    {
+        KillMarkerWidget = CreateWidget<UUserWidget>(GetWorld(), KillMarkerWidgetClass);
+        if (KillMarkerWidget)
+        {
+            KillMarkerWidget->AddToViewport();
+            KillMarkerWidget->SetVisibility(ESlateVisibility::Hidden);
+        }
+    }
+
 }
 
 void APppCharacter::Tick(float DeltaTime)
@@ -562,3 +583,41 @@ void APppCharacter::FinishReload()
     UE_LOG(LogTemp, Log, TEXT("재장전 완료"));
 }
 
+
+// 정현성
+// 히트마커 보임, 숨김 여부의 함수 구현
+
+void APppCharacter::ShowHitMarker()
+{
+    if (HitMarkerWidget)
+    {
+        HitMarkerWidget->SetVisibility(ESlateVisibility::Visible);
+        GetWorld()->GetTimerManager().SetTimer(HitMarkerTimer, this, &APppCharacter::HideHitMarker, 0.2f, false);
+    }
+}
+void APppCharacter::HideHitMarker()
+{
+    if (HitMarkerWidget)
+    {
+        HitMarkerWidget->SetVisibility(ESlateVisibility::Hidden);
+    }
+}
+
+// 정현성
+// 킬마커 보임, 숨김 여부의 함수 구현
+
+void APppCharacter::ShowKillMarker()
+{
+    if (KillMarkerWidget)
+    {
+        KillMarkerWidget->SetVisibility(ESlateVisibility::Visible);
+        GetWorld()->GetTimerManager().SetTimer(KillMarkerTimer, this, &APppCharacter::HideKillMarker, 0.5f, false);
+    }
+}
+void APppCharacter::HideKillMarker()
+{
+    if (KillMarkerWidget)
+    {
+        KillMarkerWidget->SetVisibility(ESlateVisibility::Hidden);
+    }
+}

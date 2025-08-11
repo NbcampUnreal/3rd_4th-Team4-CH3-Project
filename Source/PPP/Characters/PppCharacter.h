@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Blueprint/UserWidget.h" // 정현성 사용
 #include "InputActionValue.h"
 #include "Engine/DataTable.h"
 #include "PPPCharacter.generated.h"
@@ -131,6 +132,28 @@ public:
     void EpuipRifle();
     void UnEquipRifle();
 
+    // 정현성
+    // 히트마커 위젯 클래스
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UUserWidget> HitMarkerWidgetClass;
+    UPROPERTY()
+    UUserWidget* HitMarkerWidget;
+
+    // 정현성
+    // 킬마커 위젯 클래스
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UUserWidget> KillMarkerWidgetClass;
+    UPROPERTY()
+    UUserWidget* KillMarkerWidget;
+
+    // 정현성
+    // 위젯 보임, 숨김 함수 선언
+    void ShowHitMarker();
+    void HideHitMarker();
+    void ShowKillMarker();
+    void HideKillMarker();
+
+
 protected:
 	virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
@@ -192,5 +215,10 @@ private:
     // 성준모, 장전 완료 콜백
     UFUNCTION()
     void FinishReload();
+
+    // 정현성
+    // 위젯 타이머 설정
+    FTimerHandle HitMarkerTimer;
+    FTimerHandle KillMarkerTimer;
 
 };
