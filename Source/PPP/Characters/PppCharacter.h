@@ -125,6 +125,12 @@ public:
     UFUNCTION()
     void OnReload();
 
+
+    UFUNCTION()
+    bool GetIsRifleEquipped() const {return bIsRifleEquipped; }
+    void EpuipRifle();
+    void UnEquipRifle();
+
 protected:
 	virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
@@ -170,6 +176,8 @@ private:
 	float SprintSpeed; //스프린트 속도
     float CrouchMovementSpeed;//앉은 상태 속도
     bool bIsCrouchKeyPressed;//crouch 키가 눌렸는지 여부
+
+    bool bIsRifleEquipped; // 총기 애니메이션 적용
 
     // by Yeoul
     UFUNCTION()
