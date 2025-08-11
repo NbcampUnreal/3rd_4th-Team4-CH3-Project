@@ -433,6 +433,43 @@ void APppCharacter::DropWeaponToWorld(const FWeaponRow& StaticWeaponRow, FVector
 
     UE_LOG(LogTemp, Warning, TEXT("빵야!"));
 }
+
+void APppCharacter::OnReload()
+{
+    UE_LOG(LogTemp, Warning, TEXT("[Check] OnReload pressed"));
+
+    // 장착된 무기가 없을 때 실행
+    if (!EquippedWeapon)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Reload 실패 : 장착된 무기가 없습니다."));
+        return;
+    }
+
+    // 재장전 중복 방지
+    if (bIsReloading)
+    {
+        // Verbose : 상세 로그 레벨로, 매우 세부적인 진단용 메세지.
+        UE_LOG(LogTemp, Verbose, TEXT("이미 재장전 중입니다."));
+        return;
+    }
+
+    // 데이터 테이블에서 온 ReloadTime 사용
+    float ReloadTime = EquippedWeapon->WeaponDataRow.ReloadTime;
+
+    bIsReloading = true;  // 핵심 함수, 무기 재장전 (무기 Reload 호출)
+
+    // 유효한 장전 시간이면 타이머, 아니면 즉시 완료
+    if (ReloadTime > 0.f)
+    {
+        GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &APppCharacter::FinishReload, ReloadTime, false);
+    }
+    else
+    {
+        // 장전 시간이 0이거나 잘못된 경우 즉시 완료 처리
+        FinishReload();
+    }
+}
+
 /**체력 관련 */
 float APppCharacter::GetHealth() const
 {
@@ -502,4 +539,23 @@ void APppCharacter::OnWeaponAmmoChanged(int32 CurrentAmmoInMag, int32 ReserveAmm
     // 탄약 변경 이벤트 발생
     OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
     UE_LOG(LogTemp, Warning, TEXT("탄약 변경: 현재 탄창 %d, 예비 탄약 %d"), CurrentAmmoInMag, ReserveAmmo);
+}
+
+void APppCharacter::FinishReload()
+{
+    GetWorldTimerManager().ClearTimer(ReloadTimerHandle);
+
+    // 장착된 무기가 없을 때 실행
+    if (!EquippedWeapon)
+    {
+        bIsReloading = false;
+        UE_LOG(LogTemp, Warning, TEXT("재장전 실패: 무기가 해제되었습니다."));
+        return;
+    }
+
+    // 실제 탄창 채우기, OnAmmoChanged 브로드 캐스트 까지 수행
+    EquippedWeapon->Reload();
+
+    bIsReloading = false;
+    UE_LOG(LogTemp, Log, TEXT("재장전 완료"));
 }
