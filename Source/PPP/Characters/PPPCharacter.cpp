@@ -68,6 +68,9 @@ APppCharacter::APppCharacter()
     EquippedWeapon = nullptr;
 
     bIsReloading = false;
+
+    // 총 없는 상태에서 시작
+    //bIsRifleEquipped = false;
 }
 
 void APppCharacter::BeginPlay()

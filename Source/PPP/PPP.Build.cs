@@ -24,7 +24,10 @@ public class PPP : ModuleRules
             "SlateCore"
         });
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+		PrivateDependencyModuleNames.AddRange(new string[]
+        {
+            "AnimGraphRuntime"
+        });
 
         // GameOver 캐릭터 델리게이트 위해 추가함
         // by Team4 (yeoul)
