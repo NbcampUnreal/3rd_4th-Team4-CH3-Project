@@ -15,12 +15,10 @@ FVector AEnemySpawnVolume::GetRandomPointInVolume() const
 {
     FVector Origin = SpawnBox->Bounds.Origin;
     FVector Extent = SpawnBox->Bounds.BoxExtent;
-
     return UKismetMathLibrary::RandomPointInBoundingBox(Origin, Extent);
 }
 
-// 가중치 기반 적 클래스 선택 함수
-TSubclassOf<AActor> AEnemySpawnVolume::GetRandomWeightedEnemyClass() const
+TSubclassOf<APppBaseAICharacter> AEnemySpawnVolume::GetRandomWeightedEnemyClass() const
 {
     if (EnemyClasses.Num() == 0 || SpawnWeights.Num() != EnemyClasses.Num())
     {
@@ -29,10 +27,7 @@ TSubclassOf<AActor> AEnemySpawnVolume::GetRandomWeightedEnemyClass() const
     }
 
     float TotalWeight = 0.0f;
-    for (float Weight : SpawnWeights)
-    {
-        TotalWeight += Weight;
-    }
+    for (float Weight : SpawnWeights) { TotalWeight += Weight; }
 
     if (TotalWeight <= 0.0f)
     {
@@ -52,7 +47,6 @@ TSubclassOf<AActor> AEnemySpawnVolume::GetRandomWeightedEnemyClass() const
         }
     }
 
-    // 예외 처리 (마지막 클래스)
     return EnemyClasses.Last();
 }
 
@@ -67,24 +61,30 @@ void AEnemySpawnVolume::SpawnEnemies(int32 Count)
     UWorld* World = GetWorld();
     if (!World) return;
 
+    int32 SpawnedCount = 0;
+
     for (int32 i = 0; i < Count; ++i)
     {
-        TSubclassOf<AActor> SelectedClass = GetRandomWeightedEnemyClass();
+        TSubclassOf<APppBaseAICharacter> SelectedClass = GetRandomWeightedEnemyClass();
         if (!SelectedClass) continue;
 
         FVector SpawnLocation = GetRandomPointInVolume();
         FRotator SpawnRotation = FRotator::ZeroRotator;
 
-        World->SpawnActor<AActor>(SelectedClass, SpawnLocation, SpawnRotation);
+        APppBaseAICharacter* SpawnedAI = World->SpawnActor<APppBaseAICharacter>(SelectedClass, SpawnLocation, SpawnRotation);
+        if (SpawnedAI)
+        {
+            SpawnedAI->SpawnDefaultController();
+            SpawnedCount++;
+        }
     }
+
+    UE_LOG(LogTemp, Warning, TEXT("[SpawnEnemies] 요청: %d, 스폰됨: %d"), Count, SpawnedCount);
 }
+
 void AEnemySpawnVolume::BeginPlay()
 {
     Super::BeginPlay();
-
-    // 디버깅용 로그
     UE_LOG(LogTemp, Warning, TEXT("SpawnVolume BeginPlay 호출됨"));
-
-    // 원하는 수만큼 적 스폰 (임시로 3마리)
-    SpawnEnemies(3);
+    SpawnEnemies(10);
 }

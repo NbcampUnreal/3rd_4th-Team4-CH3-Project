@@ -5,6 +5,7 @@
 #include "DummyEnemy.h"
 #include "GameDefines.h"
 #include "PPPGameState.h" // ✅ GameState 클래스 참조 추가
+#include "../Ai/PppBaseAICharacter.h" // Base AI Character
 #include "PPPGameMode.generated.h"
 
 UCLASS()
@@ -75,13 +76,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Round")
 	int32 EnemiesPerRound = 5;
 
-	/** 적 스폰용 클래스 */
-	UPROPERTY(EditDefaultsOnly, Category="Enemy")
-	TSubclassOf<ADummyEnemy> EnemyClass;
+	// 테스트용이라 주석처리
+	// UPROPERTY(EditDefaultsOnly, Category="Enemy")
+	// TSubclassOf<ADummyEnemy> EnemyClass;
 
     // [1단계] 보상으로 떨어질 액터 클래스 (블루프린트에서 설정)
     UPROPERTY(EditAnywhere, Category = "Reward")
     TSubclassOf<AActor> RewardActorClass;
+    /** 적 스폰용 클래스 */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
+    TSubclassOf<APppBaseAICharacter> EnemyClass;
 
     // [1단계] 이미 보상을 줬는지 여부 (중복 스폰 방지용)
     bool bRewardGiven = false;

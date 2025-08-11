@@ -170,8 +170,20 @@ void APPPGameMode::SpawnEnemies()
     {
         if (AEnemySpawnVolume* SpawnVolume = Cast<AEnemySpawnVolume>(Actor))
         {
+            // 여기서 EnemyClass 강제 주입
+            if (EnemyClass)
+            {
+                SpawnVolume->EnemyClasses.Empty();
+                SpawnVolume->EnemyClasses.Add(EnemyClass); // Chase, Flee 등 중 원하는 클래스
+                SpawnVolume->SpawnWeights.Empty();
+                SpawnVolume->SpawnWeights.Add(1.0f); // 확률 100%
+            }
+
             SpawnVolume->SpawnEnemies(EnemiesPerRound);
-            UE_LOG(LogEnemy, Log, TEXT("%s에서 %d마리 적 스폰"), *SpawnVolume->GetName(), EnemiesPerRound);
+            UE_LOG(LogEnemy, Log, TEXT("%s에서 %d마리 적 스폰 (강제 EnemyClass: %s)"),
+                   *SpawnVolume->GetName(),
+                   EnemiesPerRound,
+                   EnemyClass ? *EnemyClass->GetName() : TEXT("기본"));
         }
         else
         {
@@ -179,6 +191,7 @@ void APPPGameMode::SpawnEnemies()
         }
     }
 }
+
 
 int32 APPPGameMode::GetMaxRounds() const
 {
