@@ -46,7 +46,27 @@ public:
 	int32 GetMaxRounds() const;
     /**점수 보상 조건 확인 */
     void CheckRewardCondition();
+
+    /**stage(라운드) 관리 */
+    UFUNCTION(BlueprintPure, Category="Round")
+    int32 GetCurrentFloor() const { return CurrentFloor; }
+
+    UFUNCTION(BlueprintCallable, Category="Round")
+    void SetCurrentFloor(int32 NewFloor) { CurrentFloor = NewFloor; }
+
+    // 라운드 클리어 시 다음 층으로 이동 가능 신호(디자이너가 바인딩)
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRoundClearedSignal);
+
+    UPROPERTY(BlueprintAssignable, Category="Round")
+    FOnRoundClearedSignal OnRoundClearedSignal;
 protected:
+    /**stage1 층(라운드) 관리 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Round")
+    int32 CurrentFloor = 1;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Round")
+    int32 MaxFloors = 3;
+
 	/** 최대 라운드 수 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Round", meta=(AllowPrivateAccess = "true"))
 	int32 MaxRounds = 3;
