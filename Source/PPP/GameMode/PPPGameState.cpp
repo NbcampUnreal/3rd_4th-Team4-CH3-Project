@@ -13,6 +13,7 @@ APPPGameState::APPPGameState()
     PrimaryActorTick.bCanEverTick = true;// 타이머 작동을 위해 Tick 활성화
     RemainingTime = 0.0f; //타이머
     bIsTimerRunning = false;//작동중?
+    bTimedOut = false; //스테이지 타임아웃 여부
 }
 EGameState APPPGameState::GetCurrentState() const
 {
@@ -79,8 +80,11 @@ bool APPPGameState::IsRoundCleared() const
 // -------------------------------
 void APPPGameState::StartRoundTimer(float Duration)
 {
+    RemainingTime = FMath::Max(0.0f, Duration); //음수 방지
     RemainingTime = Duration;
     bIsTimerRunning = true;
+    bTimedOut = false; //시작시 리셋
+    PreviousDisplaySeconds = -1;  //표시될 초 리셋
 }
 
 void APPPGameState::StopRoundTimer()
@@ -92,6 +96,8 @@ void APPPGameState::OnRoundTimerFinished()
 {
     UE_LOG(LogGame, Warning, TEXT("라운드 제한 시간 종료됨"));
 
+    bIsTimerRunning = false; //타이머 중단
+    bTimedOut = true; //스테이지 타임아웃 세팅
 
     // GameMode에서 라운드 종료 함수 호출
     APPPGameMode* GameMode = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this));
@@ -99,12 +105,12 @@ void APPPGameState::OnRoundTimerFinished()
     {
         GameMode->EndRound(); // GameMode 쪽에 함수 있어야 작동함
     }
-    bIsTimerRunning = false; //타이머 중단
+
 }
 
 float APPPGameState::GetRemainingTime() const
 {
-    return RemainingTime;
+    return FMath::Max(0.0f, RemainingTime);
 }
 
 void APPPGameState::Tick(float DeltaTime)
@@ -116,8 +122,8 @@ void APPPGameState::Tick(float DeltaTime)
         // 매 프레임마다 시간 감소
         RemainingTime -= DeltaTime;
 
-        // 현재 남은 초 단위 시간 구함 (올림 처리)
-        int32 CurrentSeconds = FMath::CeilToInt(RemainingTime);
+        const int32 CurrentSeconds = FMath::Max(0, FMath::CeilToInt(RemainingTime));
+
 
         // 초 단위가 바뀌었을 때만 로그 출력 (중복 출력 방지)
         if (CurrentSeconds != PreviousDisplaySeconds)
@@ -125,7 +131,16 @@ void APPPGameState::Tick(float DeltaTime)
             PreviousDisplaySeconds = CurrentSeconds;
             //UE_LOG(LogGame, Log, TEXT("Tick 작동 중 - 남은 시간(초): %d"), CurrentSeconds);
         }
-
+        // 화면에 표시
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(
+                123456, // 고정 키(같은 메시지 갱신)
+                1.0f,   // 1초 표시
+                FColor::Yellow,
+                FString::Printf(TEXT("TIME LEFT: %d s"), CurrentSeconds)
+            );
+        }
         // 시간이 0 이하로 떨어졌을 경우 라운드 종료 처리
         if (RemainingTime <= 0.0f)
         {

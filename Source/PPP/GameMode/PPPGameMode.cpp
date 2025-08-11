@@ -27,6 +27,11 @@ void APPPGameMode::BeginPlay()
 {
     Super::BeginPlay();
 
+    if (APPPGameState* GS = GetGameState<APPPGameState>())
+    {
+        GS->StartRoundTimer(120.f); // 2분 타이머 시작
+    }
+
     // 플레이어 사망 시 GameMode -> OnGameOver()로 연결
     APppCharacter* PppCharacter = Cast<APppCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
     if (IsValid(PppCharacter))
@@ -36,6 +41,25 @@ void APPPGameMode::BeginPlay()
     else
     {
         UE_LOG(LogTemp, Warning, TEXT("APppCharacter not found in GameMode::BeginPlay"));
+    }
+
+    // [추가] Stage2 맵이면 스테이지 타이머 사용 플래그 자동 활성화 (BP에서 직접 켜도 됨)
+    {
+        const FString LevelName = UGameplayStatics::GetCurrentLevelName(this, /*bRemovePrefixString=*/true);
+        if (LevelName.Contains(TEXT("Stage2")))
+        {
+            bUseStageTimer = true;
+        }
+    }
+
+    // [추가] 스테이지 타이머 시작 (예: 120초). GameState의 라운드 타이머를 재사용.
+    if (bUseStageTimer)
+    {
+        if (APPPGameState* GS = GetGameState<APPPGameState>())
+        {
+            GS->StartRoundTimer(StageTimerSeconds);
+            UE_LOG(LogGame, Log, TEXT("스테이지 타이머 시작: %.1f초"), StageTimerSeconds);
+        }
     }
 }
 
@@ -88,7 +112,11 @@ void APPPGameMode::StartRound()
         UE_LOG(LogWave, Log, TEXT("Wave %d 시작!"), GS->CurrentRound);
 
         // 3) 타이머 시작 (GS 널 체크 내부에서 안전하게 처리)
-        GS->StartRoundTimer(20.0f);
+        // [변경] 스테이지 타이머 사용 중이면 라운드 타이머는 켜지지 않음
+        if (!bUseStageTimer)
+        {
+            GS->StartRoundTimer(20.0f);
+        }
     }
 
     // 4) 적 스폰
@@ -104,6 +132,15 @@ void APPPGameMode::EndRound()
 
     APPPGameState* GS = GetGameState<APPPGameState>();
     if (!GS) return;
+
+
+    // [추가] 시간 초과는 무조건 게임 오버
+    if (GS->HasTimedOut())
+    {
+        UE_LOG(LogGame, Warning, TEXT("시간 초과 → 게임 오버"));
+        OnGameOver();
+        return;
+    }
 
     UE_LOG(LogWave, Log, TEXT("라운드 %d 종료!"), GS->CurrentRound);
 
@@ -170,8 +207,20 @@ void APPPGameMode::SpawnEnemies()
     {
         if (AEnemySpawnVolume* SpawnVolume = Cast<AEnemySpawnVolume>(Actor))
         {
+            // 여기서 EnemyClass 강제 주입
+            if (EnemyClass)
+            {
+                SpawnVolume->EnemyClasses.Empty();
+                SpawnVolume->EnemyClasses.Add(EnemyClass); // Chase, Flee 등 중 원하는 클래스
+                SpawnVolume->SpawnWeights.Empty();
+                SpawnVolume->SpawnWeights.Add(1.0f); // 확률 100%
+            }
+
             SpawnVolume->SpawnEnemies(EnemiesPerRound);
-            UE_LOG(LogEnemy, Log, TEXT("%s에서 %d마리 적 스폰"), *SpawnVolume->GetName(), EnemiesPerRound);
+            UE_LOG(LogEnemy, Log, TEXT("%s에서 %d마리 적 스폰 (강제 EnemyClass: %s)"),
+                   *SpawnVolume->GetName(),
+                   EnemiesPerRound,
+                   EnemyClass ? *EnemyClass->GetName() : TEXT("기본"));
         }
         else
         {
@@ -179,6 +228,7 @@ void APPPGameMode::SpawnEnemies()
         }
     }
 }
+
 
 int32 APPPGameMode::GetMaxRounds() const
 {

@@ -5,6 +5,7 @@
 #include "DummyEnemy.h"
 #include "GameDefines.h"
 #include "PPPGameState.h" // ✅ GameState 클래스 참조 추가
+#include "../Ai/PppBaseAICharacter.h" // Base AI Character
 #include "PPPGameMode.generated.h"
 
 UCLASS()
@@ -16,6 +17,14 @@ public:
 	APPPGameMode();
 
 	virtual void BeginPlay() override;
+
+    // 현재 라운드 번호 반환
+    UFUNCTION(BlueprintCallable, Category="Round")
+    int32 GetCurrentRound() const { return CurrentRound; }
+
+    // 현재 라운드 진행 여부 반환
+    UFUNCTION(BlueprintCallable, Category="Round")
+    bool IsRoundActive() const { return bRoundActive; }
 
 	/** 게임 상태 전환 */
 	void SetGameState(EGameState NewState);
@@ -60,6 +69,15 @@ public:
     UPROPERTY(BlueprintAssignable, Category="Round")
     FOnRoundClearedSignal OnRoundClearedSignal;
 protected:
+
+    // 현재 라운드 번호
+    UPROPERTY(VisibleAnywhere, Category="Round")
+    int32 CurrentRound = 1;
+
+    // 라운드 진행 중 여부
+    UPROPERTY(VisibleAnywhere, Category="Round")
+    bool bRoundActive = false;
+
     /**stage1 층(라운드) 관리 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Round")
     int32 CurrentFloor = 1;
@@ -75,14 +93,24 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Round")
 	int32 EnemiesPerRound = 5;
 
-	/** 적 스폰용 클래스 */
-	UPROPERTY(EditDefaultsOnly, Category="Enemy")
-	TSubclassOf<ADummyEnemy> EnemyClass;
+	// 테스트용이라 주석처리
+	// UPROPERTY(EditDefaultsOnly, Category="Enemy")
+	// TSubclassOf<ADummyEnemy> EnemyClass;
 
     // [1단계] 보상으로 떨어질 액터 클래스 (블루프린트에서 설정)
     UPROPERTY(EditAnywhere, Category = "Reward")
     TSubclassOf<AActor> RewardActorClass;
+    /** 적 스폰용 클래스 */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
+    TSubclassOf<APppBaseAICharacter> EnemyClass;
 
     // [1단계] 이미 보상을 줬는지 여부 (중복 스폰 방지용)
     bool bRewardGiven = false;
+
+    // [추가] 스테이지 전용 타이머 사용/지속시간
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Timer")
+    bool bUseStageTimer = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Timer", meta=(ClampMin="1.0"))
+    float StageTimerSeconds = 120.f;
 };
