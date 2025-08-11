@@ -8,10 +8,15 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterDead);
 
+// 정현성
+// 체력 변경 델리게이트 체력 비율 0.0f ~ 1.0f
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChangedSignature, float, NewHealthPercentage);
+
 // by Yeoul
 // 무기 교체 델리게이트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponChanged, class AEquipWeaponMaster*, NewWeapon);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, int32, InMag, int32, Reserve);
+
 
 class USpringArmComponent;
 class UCameraComponent;
@@ -69,6 +74,13 @@ public:
     APickUpWeaponMaster* OverlappingPickUpActor = nullptr;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
     AEquipWeaponMaster* EquippedWeapon;
+
+
+    // 정현성
+    // 체력 관련 Event Dispatcher 선언
+    UPROPERTY(BlueprintAssignable, Category = "Health")
+    FOnHealthChangedSignature OnHealthChanged;
+
 
     // by Yeoul
     // 무기 변경 델리게이트
