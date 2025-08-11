@@ -5,6 +5,7 @@
 #include "WeaponTray.generated.h"
 
 /**
+ * by Yeoul
  * @class UWeaponTray
  * @brief 무기 트레이(Weapon Tray)를 나타내는 클래스입니다.
  *

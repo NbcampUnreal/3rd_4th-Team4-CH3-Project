@@ -35,7 +35,8 @@ public class PPP : ModuleRules
         {
             Path.Combine(ModuleDirectory, "Characters"),
             Path.Combine(ModuleDirectory, "OutGame"),
-            Path.Combine(ModuleDirectory, "Weapons")
+            Path.Combine(ModuleDirectory, "Weapons"),
+            Path.Combine(ModuleDirectory, "InGame"),
         });
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

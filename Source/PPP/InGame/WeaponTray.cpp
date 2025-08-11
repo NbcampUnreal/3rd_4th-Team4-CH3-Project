@@ -1,13 +1,10 @@
 #include "WeaponTray.h"
-
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
-
 #include "PppCharacter.h"
 #include "EquipWeaponMaster.h"
 #include "Engine/Texture2D.h"
-#include "Engine/UserDefinedEnum.h"   // BP Enum 표시용
 
 void UWeaponTray::NativeConstruct()
 {
@@ -100,10 +97,17 @@ void UWeaponTray::HandleWeaponChanged(AEquipWeaponMaster* NewWeapon)
         ? NewWeapon->WeaponDisplayName
         : FText::FromName(NewWeapon->GetFName());
 
-    UpdateWeaponInfo(WeaponName, NewWeapon->WeaponImage);
+    // 아이콘은 PDA Getter 사용
+    UpdateWeaponInfo
+    (
+        WeaponName,
+        NewWeapon->GetWeaponIcon()
+    );
+
+    // 모드는 C++ 게터 텍스트로 바로 표시
     UpdateFireModeTextFromWeapon(NewWeapon);
 
-    // 탄약 초기 동기화(캐릭터에서도 브로드캐스트 해주지만 안전빵)
+    // 탄약 초기 동기화(캐릭터에서도 브로드캐스트 해주지만 안전하게..)
     HandleAmmoChanged(NewWeapon->CurrentAmmoInMag, NewWeapon->ReserveAmmo);
 }
 
@@ -119,17 +123,5 @@ void UWeaponTray::UpdateFireModeTextFromWeapon(AEquipWeaponMaster* Weapon)
         return;
     }
 
-    // ── BP Enum(E_FireMode) DisplayName을 가져와 표기 ──
-    // 무기 필드가 C++ enum이든 BP enum이든, 인덱스(uint8)로 읽어 매핑
-    if (UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("E_FireMode"), true))
-    {
-        const int32 Index = static_cast<int32>(Weapon->FireMode); // Weapon->FireMode는 uint8/enum 기반
-        const FText ModeLabel = EnumPtr->GetDisplayNameTextByIndex(Index);
-        FireModeText->SetText(ModeLabel);
-    }
-    else
-    {
-        // 폴백
-        FireModeText->SetText(FText::FromString(TEXT("Unknown")));
-    }
+    FireModeText->SetText(Weapon->GetFireModeText());
 }
