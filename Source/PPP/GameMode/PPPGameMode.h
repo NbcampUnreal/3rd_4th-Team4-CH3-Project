@@ -89,4 +89,11 @@ protected:
 
     // [1단계] 이미 보상을 줬는지 여부 (중복 스폰 방지용)
     bool bRewardGiven = false;
+
+    // [추가] 스테이지 전용 타이머 사용/지속시간
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Timer")
+    bool bUseStageTimer = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Timer", meta=(ClampMin="1.0"))
+    float StageTimerSeconds = 120.f;
 };

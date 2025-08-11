@@ -1,10 +1,20 @@
+// StairRoundTrigger.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/BoxComponent.h"
 #include "StairRoundTrigger.generated.h"
 
+class UBoxComponent;
+
+/**
+ * 계단 트리거
+ * - 라운드 클리어 후 플레이어가 계단에 들어오면 지정한 라운드로 StartRound()
+ * - RoundIndexToStart: 시작할 라운드 번호(예: 2층 → 2, 3층 → 3)
+ * - bOnlyWhenRoundEnded: 이전 라운드가 끝났을 때만 동작
+ * - bConsumeOnce: 한 번만 사용하고 비활성화
+ * - bEnabled: 외부에서 On/Off 가능
+ */
 UCLASS()
 class PPP_API AStairRoundTrigger : public AActor
 {
@@ -13,34 +23,45 @@ class PPP_API AStairRoundTrigger : public AActor
 public:
     AStairRoundTrigger();
 
-    UPROPERTY(VisibleAnywhere, Category="Trigger")
-    UBoxComponent* Box;
-
-    // 이 트리거가 시작시킬 라운드 인덱스(또는 층 번호). 1층=1, 2층=2, 3층=3
-    UPROPERTY(EditAnywhere, Category="Round")
-    int32 RoundIndex = 1;
-
-    // GameMode가 InProgress일 때는 동작 금지, RoundEnded일 때만 허용
-    // 상황에 따라 BP에서 강제로 켜고 끌 수 있게 플래그도 둔다.
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Round")
-    bool bAllowWhenRoundEndedOnly = true;
-
-    // 라운드 트리거 사용 가능/불가 토글
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Round")
-    bool bEnabled = true;
-
-    UFUNCTION(BlueprintCallable, Category="Round")
+    // 외부에서 활성/비활성 제어
+    UFUNCTION(BlueprintCallable, Category="Stair")
     void SetEnabled(bool bInEnabled) { bEnabled = bInEnabled; }
 
 protected:
-    virtual void BeginPlay() override;
+    UPROPERTY(VisibleAnywhere, Category="Stair")
+    UBoxComponent* Box;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stair")
+    int32 RoundIndexToStart = 2; // 2층이면 2, 3층이면 3
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stair")
+    bool bOnlyWhenRoundEnded = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stair")
+    bool bConsumeOnce = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stair")
+    bool bEnabled = true;
+    // ===== 최종층 옵션 =====
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FinalFloor")
+    bool bIsFinalFloor = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FinalFloor", meta=(EditCondition="bIsFinalFloor"))
+    bool bTravelOnFinalFloor = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FinalFloor", meta=(EditCondition="bIsFinalFloor && bTravelOnFinalFloor"))
+    FName TargetLevelName = NAME_None;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FinalFloor", meta=(EditCondition="bIsFinalFloor"))
+    bool bCallRoundClearedBeforeTravel = true;
     UFUNCTION()
     void OnBoxBeginOverlap(
-        UPrimitiveComponent* OverlappedComponent,
+        UPrimitiveComponent* OverlappedComp,
         AActor* OtherActor,
         UPrimitiveComponent* OtherComp,
         int32 OtherBodyIndex,
         bool bFromSweep,
         const FHitResult& SweepResult);
+
+    virtual void BeginPlay() override;
 };

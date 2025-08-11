@@ -27,6 +27,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Travel")
     void SetTravelEnabled(bool bEnabled) { bTravelEnabled = bEnabled; }
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Travel")
+    bool bCallRoundClearedOnTravel = true;
+
 protected:
     virtual void BeginPlay() override;
 

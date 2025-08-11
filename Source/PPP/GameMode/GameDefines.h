@@ -24,3 +24,5 @@ DECLARE_LOG_CATEGORY_EXTERN(LogEnemy, Log, All);    // 적 관련
 DECLARE_LOG_CATEGORY_EXTERN(LogItem, Log, All);     // 아이템 관련
 DECLARE_LOG_CATEGORY_EXTERN(LogUI, Log, All);       // UI 관련
 DECLARE_LOG_CATEGORY_EXTERN(LogDebug, Log, All);    // 테스트/디버그용
+DECLARE_LOG_CATEGORY_EXTERN(LogCharacter, Log, All);  // 캐릭터 관련
+

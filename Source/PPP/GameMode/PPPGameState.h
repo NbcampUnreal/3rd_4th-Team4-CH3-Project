@@ -38,7 +38,7 @@ public:
 
     void AddScore(int32 Amount); //증가
     void ResetScore(); //스코어 초기화
-    void StartRoundTimer(float Duration);; //타이머 시작
+    void StartRoundTimer(float Duration); //타이머 시작
     void StopRoundTimer(); //타이머 중지
     float GetRemainingTime() const; //남은 시간 가져오기
     virtual void Tick(float DeltaTime) override;//tick사용
@@ -61,7 +61,8 @@ public:
     UPROPERTY(EditAnywhere, Category="Score")
     int32 ScoreToClearRound = 100; //라운드 클리어 점수
 
-
+    UFUNCTION(BlueprintPure, Category="Timer")
+    bool HasTimedOut() const { return bTimedOut; }//스테이지 타임아웃 여부
 
 private:
     UPROPERTY(VisibleAnywhere, Category="Timer")
@@ -69,4 +70,7 @@ private:
     bool bIsTimerRunning; //타이머 작동중인지
     void OnRoundTimerFinished(); //라운드 제한 시간 끝났을 때
     int32 PreviousDisplaySeconds = -1; //화면 표시용 이전 초 값을 저장 ! -1부터 시작해서 무조건 첫 프레임에 갱신되게
+    bool bTimedOut = false;//스테이지 타임아웃 여부
+
+
 };
