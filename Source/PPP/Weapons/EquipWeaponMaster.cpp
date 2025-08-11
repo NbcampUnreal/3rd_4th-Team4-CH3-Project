@@ -197,18 +197,20 @@ void AEquipWeaponMaster::Drop()
 }
 
 // by Yeoul
-// 재장선 함수
+// 재장전 함수
 void AEquipWeaponMaster::Reload()
 {
-    // 최대 탄창 크기
-    int32 MaxAmmoInMag = WeaponDataRow.MagazineSize;
-    // 탄창에 채울 필요가 있는 탄약 수
-    int32 AmmoNeeded = MaxAmmoInMag - CurrentAmmoInMag;
+    // 탄창 최대치(데이터테이블 값이 유효하면 우선, 아니면 멤버값 사용)
+    const int32 MaxAmmoInMag = (WeaponDataRow.MagazineSize > 0) ? WeaponDataRow.MagazineSize : MagazineSize;
 
-    // 예비 탄약이 없거나, 탄창이 가득 찼으면 재장전 중단
+    // 이번 재장전으로 채워야 할 탄수(음수 방지로 0 하한)
+    const int32 AmmoNeeded = FMath::Max(0, MaxAmmoInMag - CurrentAmmoInMag);
+
+    // 예비탄이 없거나 이미 가득 차면 재장전 불필요 → 즉시 종료
     if (ReserveAmmo <= 0 || AmmoNeeded <= 0)
     {
         UE_LOG(LogTemp, Warning, TEXT("재장전할 탄약이 없거나, 탄창이 이미 가득 찼습니다."));
+        OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
         return;
     }
 
@@ -225,8 +227,5 @@ void AEquipWeaponMaster::Reload()
     }
 
     // 탄약 변경 델리게이트 호출
-    if (OnAmmoChanged.IsBound())
-    {
-        OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
-    }
+    OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
 }

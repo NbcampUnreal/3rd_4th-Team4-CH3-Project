@@ -41,6 +41,8 @@ public:
     UInputAction* PickUpAction;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
     UInputAction* FireAction;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+    UInputAction* ReloadAction;
 
     // ====== UI 인풋/매핑 ======
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")

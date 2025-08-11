@@ -120,6 +120,11 @@ public:
     float SprintSpeedMultiplier;
 
     void DropWeaponToWorld(const FWeaponRow& WeaponRow, FVector DropLocation, FRotator DropRotation);
+
+    // 성준모, 장전 키 입력 시 호출될 함수
+    UFUNCTION()
+    void OnReload();
+
 protected:
 	virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
@@ -169,5 +174,15 @@ private:
     // by Yeoul
     UFUNCTION()
     void OnWeaponAmmoChanged(int32 InMag, int32 Reserve);
+
+    // 성준모, 재장전 애니메이션 동작 중인지 확인하는 부울 값
+    bool bIsReloading = false;
+
+    // 성준모, 장전 시간(타이머 핸들)
+    FTimerHandle ReloadTimerHandle;
+
+    // 성준모, 장전 완료 콜백
+    UFUNCTION()
+    void FinishReload();
 
 };
