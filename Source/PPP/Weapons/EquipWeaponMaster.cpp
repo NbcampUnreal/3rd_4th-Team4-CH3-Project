@@ -237,17 +237,13 @@ void AEquipWeaponMaster::Drop()
 // 재장전 함수
 void AEquipWeaponMaster::Reload()
 {
-    // 최대 탄창 크기는 PDA 우선(없으면 DT 값)
+    // PDA > DT > 멤버 순으로 최대 탄창 크기 결정
     const int32 MaxAmmoInMag =
-        (CachedData && CachedData->MaxMagSize > 0) ? CachedData->MaxMagSize
-                                                   : WeaponDataRow.MagazineSize;
+        (CachedData && CachedData->MaxMagSize > 0) ? CachedData->MaxMagSize :
+        (WeaponDataRow.MagazineSize > 0)           ? WeaponDataRow.MagazineSize :
+                                                     MagazineSize;
 
     const int32 AmmoNeeded = MaxAmmoInMag - CurrentAmmoInMag;
-    // 탄창 최대치(데이터테이블 값이 유효하면 우선, 아니면 멤버값 사용)
-    const int32 MaxAmmoInMag = (WeaponDataRow.MagazineSize > 0) ? WeaponDataRow.MagazineSize : MagazineSize;
-
-    // 이번 재장전으로 채워야 할 탄수(음수 방지로 0 하한)
-    const int32 AmmoNeeded = FMath::Max(0, MaxAmmoInMag - CurrentAmmoInMag);
 
     // 예비탄이 없거나 이미 가득 차면 재장전 불필요 → 즉시 종료
     if (ReserveAmmo <= 0 || AmmoNeeded <= 0)
@@ -290,5 +286,4 @@ FText AEquipWeaponMaster::GetFireModeText() const
     case EFireMode::Auto:   return NSLOCTEXT("Weapon", "Auto",   "Auto");
     default:                return NSLOCTEXT("Weapon", "Unknown","Unknown");
     }
-    OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
 }
