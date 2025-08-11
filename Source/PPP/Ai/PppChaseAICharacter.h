@@ -2,7 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "PppBaseAICharacter.h"
+#include "Animation/AnimMontage.h"
 #include "PppChaseAICharacter.generated.h"
+
 
 class USphereComponent;
 class UAnimMontage;
