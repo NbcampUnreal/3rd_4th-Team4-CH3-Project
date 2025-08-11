@@ -45,8 +45,15 @@ void AStairRoundTrigger::OnBoxBeginOverlap(
 
     // GameMode / GameState 참조 가져오기
     APPPGameMode* GM = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this));
+    if (!GM) return;
+
+    if (GM->GetCurrentRound() == RoundIndexToStart && !GM->IsRoundActive())
+    {
+        GM->StartRound();
+    }
+
     APPPGameState* GS = Cast<APPPGameState>(UGameplayStatics::GetGameState(this));
-    if (!GM || !GS) return;
+    if (!GS) return;
 
     // 고민중.. 일단 아래로
     // 기존: bOnlyWhenRoundEnded && GS->GetCurrentState() != EGameState::RoundEnded 시 return

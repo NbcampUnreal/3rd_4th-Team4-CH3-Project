@@ -18,6 +18,14 @@ public:
 
 	virtual void BeginPlay() override;
 
+    // 현재 라운드 번호 반환
+    UFUNCTION(BlueprintCallable, Category="Round")
+    int32 GetCurrentRound() const { return CurrentRound; }
+
+    // 현재 라운드 진행 여부 반환
+    UFUNCTION(BlueprintCallable, Category="Round")
+    bool IsRoundActive() const { return bRoundActive; }
+
 	/** 게임 상태 전환 */
 	void SetGameState(EGameState NewState);
 
@@ -61,6 +69,15 @@ public:
     UPROPERTY(BlueprintAssignable, Category="Round")
     FOnRoundClearedSignal OnRoundClearedSignal;
 protected:
+
+    // 현재 라운드 번호
+    UPROPERTY(VisibleAnywhere, Category="Round")
+    int32 CurrentRound = 1;
+
+    // 라운드 진행 중 여부
+    UPROPERTY(VisibleAnywhere, Category="Round")
+    bool bRoundActive = false;
+
     /**stage1 층(라운드) 관리 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Round")
     int32 CurrentFloor = 1;

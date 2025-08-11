@@ -31,6 +31,7 @@ protected:
     UPROPERTY(VisibleAnywhere, Category="Stair")
     UBoxComponent* Box;
 
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stair")
     int32 RoundIndexToStart = 2; // 2층이면 2, 3층이면 3
 
