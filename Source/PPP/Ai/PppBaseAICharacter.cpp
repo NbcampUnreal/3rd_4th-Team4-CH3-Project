@@ -11,10 +11,8 @@ APppBaseAICharacter::APppBaseAICharacter()
 
     AutoPossessAI = EAutoPossessAI::Disabled;
 
-    // 기본 시야 반경
-    SightRadius = 1500.0f;
-
     // 체력/방어력 시스템 초기화
+    SightRadius = 1500.0f;
     MaxHealth = 100.0f;    // 기본 최대 체력
     CurrentHealth = MaxHealth; // 시작 시 현재 체력은 최대 체력과 동일
     Defense = 10.0f;       // 기본 방어력
@@ -146,7 +144,12 @@ void APppBaseAICharacter::PlayDeathMontage()
         }
     }
 }
-// =======
+
+bool APppBaseAICharacter::IsDead() const
+{
+    return bIsDead;
+}
+// {=======
 //     CurrentHealth = MaxHealth;
 //     bIsDead = false;
 // }
