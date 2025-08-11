@@ -5,6 +5,9 @@
 #include "Engine/DamageEvents.h"
 #include "Kismet/GameplayStatics.h"
 #include "PPP/Ai/PppBaseAICharacter.h"
+#include "WeaponRow.h"  // by Yeoul: FWeaponRow 구조체 사용
+#include "WeaponTypes.h"    // by Yeoul: EFireMode Enum 사용
+#include "../InGame/WeaponDataAsset.h"  // by Yeoul: 무기 데이터 에셋 사용
 
 AEquipWeaponMaster::AEquipWeaponMaster()
 {
@@ -145,13 +148,51 @@ void AEquipWeaponMaster::Fire()
 // - 오너 설정 및 로그 출력
 void AEquipWeaponMaster::OnEquipped(APppCharacter* NewOwner, const FWeaponRow& InWeaponRow)
 {
+    // by Yeoul
+    // SAFE: 오너 체크
+    if (!NewOwner)
+    {
+        return;
+    }
+
+    // by Yeoul
+    // DT → PDA 캐시
+    CachedData = InWeaponRow.WeaponData.IsValid()
+        ? InWeaponRow.WeaponData.Get()
+        : InWeaponRow.WeaponData.LoadSynchronous();
+
     Damage = InWeaponRow.Damage;
     MagazineSize = InWeaponRow.MagazineSize;
     ReloadTime = InWeaponRow.ReloadTime;
-    WeaponName = InWeaponRow.WeaponName;
+    // WeaponName = InWeaponRow.WeaponName;
     FireRange = InWeaponRow.FireRange;
     WeaponDataRow = InWeaponRow;
     WeaponIndex = InWeaponRow.WeaponIndex;
+
+    // by Yeoul
+    // 표시 이름(FText) : PDA가 있으면 PDA로, 없으면 DT로 (FName→FText)
+    WeaponDisplayName = (CachedData && !CachedData->WeaponName.IsEmpty())
+        ? CachedData->WeaponName
+        : FText::FromName(InWeaponRow.WeaponName);
+
+    // by Yeoul
+    // PDA 우선 덮어쓰기(있을 때만)
+    if (CachedData)
+    {
+        if (CachedData->MaxMagSize > 0)
+        {
+            MagazineSize = CachedData->MaxMagSize;
+        }
+        if (CachedData->WeaponThumbnail)
+        {
+            WeaponImage = CachedData->WeaponThumbnail;
+        }
+        if (CachedData->AmmoThumbnail)
+        {
+            AmmoImage = CachedData->AmmoThumbnail;
+        }
+        // FireMode 사용은 GetFireMode()에서 PDA 참조
+    }
 
     AttachToComponent(
        NewOwner->GetMesh(),
@@ -166,16 +207,12 @@ void AEquipWeaponMaster::OnEquipped(APppCharacter* NewOwner, const FWeaponRow& I
     SetOwner(NewOwner);
 
     // by Yeoul
-    // 현재탄 = DT의 MagazineSize
+    // 탄약 초기화 + 브로드캐스트
     CurrentAmmoInMag = MagazineSize;
-    // 예비탄 = DT의 ReserveAmmo
-    ReserveAmmo = InWeaponRow.ReserveAmmo;
-
-    // by Yeoul
-    // 무기 장착 시 초기 탄약값 Broadcast
+    ReserveAmmo      = InWeaponRow.ReserveAmmo;
     OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
 
-    UE_LOG(LogTemp, Warning, TEXT("무기 장착 완료: %s"), *InWeaponRow.WeaponName.ToString());
+    UE_LOG(LogTemp, Warning, TEXT("무기 장착 완료: %s"), *WeaponDisplayName.ToString());  // by Yeoul: FText 사용
 }
 
 // 드랍 처리:
@@ -200,11 +237,13 @@ void AEquipWeaponMaster::Drop()
 // 재장전 함수
 void AEquipWeaponMaster::Reload()
 {
-    // 탄창 최대치(데이터테이블 값이 유효하면 우선, 아니면 멤버값 사용)
-    const int32 MaxAmmoInMag = (WeaponDataRow.MagazineSize > 0) ? WeaponDataRow.MagazineSize : MagazineSize;
+    // PDA > DT > 멤버 순으로 최대 탄창 크기 결정
+    const int32 MaxAmmoInMag =
+        (CachedData && CachedData->MaxMagSize > 0) ? CachedData->MaxMagSize :
+        (WeaponDataRow.MagazineSize > 0)           ? WeaponDataRow.MagazineSize :
+                                                     MagazineSize;
 
-    // 이번 재장전으로 채워야 할 탄수(음수 방지로 0 하한)
-    const int32 AmmoNeeded = FMath::Max(0, MaxAmmoInMag - CurrentAmmoInMag);
+    const int32 AmmoNeeded = MaxAmmoInMag - CurrentAmmoInMag;
 
     // 예비탄이 없거나 이미 가득 차면 재장전 불필요 → 즉시 종료
     if (ReserveAmmo <= 0 || AmmoNeeded <= 0)
@@ -214,18 +253,42 @@ void AEquipWeaponMaster::Reload()
         return;
     }
 
-    // 예비 탄약이 필요한 탄약보다 적으면
-    if (ReserveAmmo < AmmoNeeded)
-    {
-        CurrentAmmoInMag += ReserveAmmo;
-        ReserveAmmo = 0;
-    }
-    else
-    {
-        ReserveAmmo -= AmmoNeeded;
-        CurrentAmmoInMag = MaxAmmoInMag;
-    }
+    const int32 Use = FMath::Min(ReserveAmmo, AmmoNeeded);
+    CurrentAmmoInMag += Use;
+    ReserveAmmo      -= Use;
 
     // 탄약 변경 델리게이트 호출
     OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
+}
+
+// by Yeoul
+EFireMode AEquipWeaponMaster::GetFireMode() const
+{
+    return CachedData ? CachedData->FireMode : EFireMode::Single;
+}
+
+UTexture2D* AEquipWeaponMaster::GetWeaponIcon() const
+{
+    return CachedData ? CachedData->WeaponThumbnail : WeaponImage;
+}
+
+UTexture2D* AEquipWeaponMaster::GetAmmoIcon() const
+{
+    return CachedData ? CachedData->AmmoThumbnail : AmmoImage; // PDA 우선
+}
+
+UWeaponDataAsset* AEquipWeaponMaster::GetWeaponData() const
+{
+    return CachedData;
+}
+
+
+FText AEquipWeaponMaster::GetFireModeText() const
+{
+    switch (GetFireMode())
+    {
+    case EFireMode::Single: return NSLOCTEXT("Weapon", "Single", "Single");
+    case EFireMode::Auto:   return NSLOCTEXT("Weapon", "Auto",   "Auto");
+    default:                return NSLOCTEXT("Weapon", "Unknown","Unknown");
+    }
 }

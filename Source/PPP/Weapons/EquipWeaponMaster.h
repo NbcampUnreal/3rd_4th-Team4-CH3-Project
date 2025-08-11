@@ -4,23 +4,13 @@
 #include "GameFramework/Actor.h"
 #include "Sound/SoundBase.h"
 #include "WeaponRow.h"
+#include "WeaponTypes.h"    // by Yeoul: EFireMode Enum 사용
 #include "EquipWeaponMaster.generated.h"
-
-// by Yeoul
-// 발사 모드 ENUM으로 관리해 UI 표시
-// UENUM은 generated.h 포함 전에 전역 스코프에 선언
-UENUM(BlueprintType)
-enum class EFireMode : uint8
-{
-    Single  UMETA(DisplayName = "Single"),
-    Burst   UMETA(DisplayName = "Burst"),
-    Auto    UMETA(DisplayName = "Auto"),
-};
 
 // by Yeoul
 // 전방 선언
 class UTexture2D;
-
+class UWeaponDataAsset;
 
 // 무기 발사 시 피격(라인 트레이스 결과) 정보를 브로드캐스트하는 델리게이트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponFired, const FHitResult&, HitResult);
@@ -71,6 +61,24 @@ public:
     UFUNCTION(BlueprintCallable)
     void Reload();
 
+    // by Yeoul
+    // 캐시된 PDA(런타임 진실원)
+    UFUNCTION(BlueprintPure, Category="Data")
+    UWeaponDataAsset* GetWeaponData() const;
+
+    // by Yeoul
+    UFUNCTION(BlueprintPure, Category="Weapon")
+    EFireMode GetFireMode() const;
+
+    // by Yeoul
+    // UI 편의 (있으면 유지)
+    UFUNCTION(BlueprintPure, Category="UI", meta=(DisplayName="GetIcon")) // BP에서는 GetIcon으로 보임
+    UTexture2D* GetWeaponIcon() const;
+
+    // by Yeoul
+    UFUNCTION(BlueprintPure, Category="UI")
+    UTexture2D* GetAmmoIcon() const;
+
     // 현재 무기 정보(행 데이터) 보관 및 접근자 제공
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WeaponData")
     FWeaponRow WeaponDataRow;
@@ -101,15 +109,8 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
     FText WeaponDisplayName;
 
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
-    EFireMode FireMode = EFireMode::Single;
-
-    UFUNCTION(BlueprintPure, Category="UI")
-    UTexture2D* GetIcon() const
-    {
-        return WeaponImage;
-    }
+    UFUNCTION(BlueprintPure, Category="Weapon")
+    FText GetFireModeText() const;
 
 protected:
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Equip")
@@ -121,13 +122,18 @@ protected:
 
     // 데이터테이블 핸들: 에디터에서 선택한 Row를 참조용으로 보관할 수 있음
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DataTable")
-    FDataTableRowHandle WeaponData;
+    FDataTableRowHandle WeaponRow;  // by Yeoul: 멤버 이름 겹쳐서 변경
 
     // 무기 스탯: 장착 시 WeaponRow로부터 매핑되어 사용
     float Damage;
     int32 MagazineSize;
     float ReloadTime;
-    FName WeaponName;
+    FText WeaponName;   // by Yeoul: 무기 이름 UMG 바인딩 위해 타입 변경
     float FireRange;
     int32 WeaponIndex;
+
+private:
+    // by Yeoul
+    // 여기로 PDA 캐시
+    UPROPERTY() UWeaponDataAsset* CachedData = nullptr;
 };

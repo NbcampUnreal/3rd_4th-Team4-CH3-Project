@@ -1,7 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"   // by Yeoul: 데이터 테이블 사용
+#include "WeaponTypes.h"    // by Yeoul: EWeaponType Enum 사용
 #include "WeaponRow.generated.h"
+
+class UWeaponDataAsset; // by Yeoul: 무기 데이터 에셋 사용
 
 UENUM(BlueprintType)
 enum class EWeaponType : uint8
@@ -42,6 +46,11 @@ struct FWeaponRow : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     float FireRange;  // 유효 사거리
 
+    // by Yeoul
+    // PDA SoftRef: 런타임은 PDA만 진실원으로 사용
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data")
+    TSoftObjectPtr<UWeaponDataAsset> WeaponData;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TSubclassOf<class APickUpWeaponMaster> PickUpWeapon;  // 줍는 무기 종류, Static Mesh 타입
 
@@ -57,5 +66,5 @@ struct FWeaponRow : public FTableRowBase
     // by Yeoul
     // 예비 탄약 수, 예) 10 / 1000 이라 가정할 때 1000에 해당됨.
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    int32 ReserveAmmo;
+    int32 ReserveAmmo = 0;;
 };
