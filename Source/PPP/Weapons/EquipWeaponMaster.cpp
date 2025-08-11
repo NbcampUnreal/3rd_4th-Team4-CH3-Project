@@ -272,6 +272,11 @@ UTexture2D* AEquipWeaponMaster::GetWeaponIcon() const
     return CachedData ? CachedData->WeaponThumbnail : WeaponImage;
 }
 
+UTexture2D* AEquipWeaponMaster::GetAmmoIcon() const
+{
+    return CachedData ? CachedData->AmmoThumbnail : AmmoImage; // PDA 우선
+}
+
 UWeaponDataAsset* AEquipWeaponMaster::GetWeaponData() const
 {
     return CachedData;

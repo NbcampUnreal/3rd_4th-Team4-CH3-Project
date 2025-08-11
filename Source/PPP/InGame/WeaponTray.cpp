@@ -1,14 +1,35 @@
 #include "WeaponTray.h"
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
+#include "Components/Widget.h"
 #include "Kismet/GameplayStatics.h"
 #include "PppCharacter.h"
 #include "EquipWeaponMaster.h"
 #include "Engine/Texture2D.h"
 
+void UWeaponTray::SetHudVisible(bool bVisible)
+{
+    const ESlateVisibility Vis =
+        bVisible ? ESlateVisibility::SelfHitTestInvisible
+                 : ESlateVisibility::Collapsed;
+
+    if (TrayAnchor)
+    {
+        TrayAnchor->SetVisibility(Vis);
+    }
+    else
+    {
+        SetVisibility(Vis); // 루트로 폴백
+    }
+}
+
 void UWeaponTray::NativeConstruct()
 {
     Super::NativeConstruct();
+
+    // 처음엔 무기 UI 숨김
+    SetHudVisible(false);
+    bHasWeapon = false;
 
     // 플레이어 캐릭터 캐싱
     CachedCharacter = Cast<APppCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
@@ -37,33 +58,30 @@ void UWeaponTray::NativeDestruct()
 
 void UWeaponTray::UpdateWeaponInfo(const FText& NewWeaponName, UTexture2D* NewWeaponImage)
 {
-    if (WeaponNameText != nullptr)
+    if (WeaponNameText)
     {
         WeaponNameText->SetText(NewWeaponName);
     }
 
-    // 두 슬롯 교차 채우기
-    if (NewWeaponImage != nullptr)
+    if (NewWeaponImage)
     {
-        if (bPrimaryNext && PrimaryWeaponImage != nullptr)
+        if (bPrimaryNext && PrimaryWeaponImage)
         {
             PrimaryWeaponImage->SetBrushFromTexture(NewWeaponImage);
         }
-        else if (!bPrimaryNext && SecondaryWeaponImage != nullptr)
+        else if (SecondaryWeaponImage)
         {
             SecondaryWeaponImage->SetBrushFromTexture(NewWeaponImage);
         }
-    }
 
-    // 무기 교체 애니메이션
-    if (WeaponSwap != nullptr)
-    {
-        PlayAnimation(WeaponSwap);
+        if (WeaponSwap)
+        {
+            PlayAnimation(WeaponSwap);
+        }
+        bPrimaryNext = !bPrimaryNext;
     }
-
-    // 다음 채울 슬롯 토글
-    bPrimaryNext = !bPrimaryNext;
 }
+
 
 void UWeaponTray::UpdateAmmoText(int32 NewAmmoInMag, int32 NewReserveAmmo)
 {
@@ -80,48 +98,71 @@ void UWeaponTray::UpdateAmmoText(int32 NewAmmoInMag, int32 NewReserveAmmo)
 
 void UWeaponTray::HandleWeaponChanged(AEquipWeaponMaster* NewWeapon)
 {
-    if (NewWeapon == nullptr)
+    if (!NewWeapon)
     {
-        // 비우기
-        UpdateWeaponInfo(FText::GetEmpty(), nullptr);
+        // 무기 없음 → 숨김 + 초기화
+        bHasWeapon = false;
+        SetHudVisible(false);
 
-        if (CurrentAmmoText)   CurrentAmmoText->SetText(FText::FromString(TEXT("0")));
-        if (ReserveAmmoText)   ReserveAmmoText->SetText(FText::FromString(TEXT("0")));
-        if (FireModeText)      FireModeText->SetText(FText::GetEmpty());
+        UpdateWeaponInfo(FText::GetEmpty(), nullptr);
+        if (CurrentAmmoText) CurrentAmmoText->SetText(FText::FromString(TEXT("0")));
+        if (ReserveAmmoText) ReserveAmmoText->SetText(FText::FromString(TEXT("0")));
+        if (FireModeText)   FireModeText->SetText(FText());
+
+        // 잔상 제거
+        if (PrimaryWeaponImage)   PrimaryWeaponImage->SetBrushFromTexture(nullptr);
+        if (SecondaryWeaponImage) SecondaryWeaponImage->SetBrushFromTexture(nullptr);
+        if (AmmoImage)            AmmoImage->SetBrushFromTexture(nullptr);
         return;
     }
 
-    // 이름 우선순위: DisplayName 있으면 그거, 없으면 액터 이름
+    // 무기 있음 → 표시
+    bHasWeapon = true;
+    SetHudVisible(true);
+
     const FText WeaponName =
         !NewWeapon->WeaponDisplayName.IsEmpty()
-        ? NewWeapon->WeaponDisplayName
-        : FText::FromName(NewWeapon->GetFName());
+            ? NewWeapon->WeaponDisplayName
+            : FText::FromName(NewWeapon->GetFName());
 
-    // 아이콘은 PDA Getter 사용
-    UpdateWeaponInfo
-    (
-        WeaponName,
-        NewWeapon->GetWeaponIcon()
-    );
-
-    // 모드는 C++ 게터 텍스트로 바로 표시
+    UpdateWeaponInfo(WeaponName, NewWeapon->GetWeaponIcon());
+    SetAmmoIcon(NewWeapon->GetAmmoIcon());
     UpdateFireModeTextFromWeapon(NewWeapon);
 
-    // 탄약 초기 동기화(캐릭터에서도 브로드캐스트 해주지만 안전하게..)
+    // 초기 탄약 동기화(안전빵)
     HandleAmmoChanged(NewWeapon->CurrentAmmoInMag, NewWeapon->ReserveAmmo);
 }
 
-void UWeaponTray::HandleAmmoChanged(int32 InMag, int32 Reserve)
+void UWeaponTray::HandleAmmoChanged
+(
+    int32 InMag,
+    int32 Reserve
+)
 {
+    if (!bHasWeapon)
+    {
+        return; // 무기 없으면 무시
+    }
     UpdateAmmoText(InMag, Reserve);
 }
 
-void UWeaponTray::UpdateFireModeTextFromWeapon(AEquipWeaponMaster* Weapon)
+
+void UWeaponTray::UpdateFireModeTextFromWeapon
+(
+    AEquipWeaponMaster* Weapon
+)
 {
-    if (Weapon == nullptr || FireModeText == nullptr)
+    if (!Weapon || !FireModeText)
     {
         return;
     }
-
     FireModeText->SetText(Weapon->GetFireModeText());
+}
+
+void UWeaponTray::SetAmmoIcon(UTexture2D* NewAmmoImage)
+{
+    if (AmmoImage && NewAmmoImage)
+    {
+        AmmoImage->SetBrushFromTexture(NewAmmoImage);
+    }
 }

@@ -18,6 +18,8 @@
 class UTextBlock;
 class UImage;
 class UWidgetAnimation;
+class UWidget;
+class UTexture2D;
 class APppCharacter;
 class AEquipWeaponMaster;
 
@@ -32,6 +34,10 @@ public:
     // 위젯 파괴 시 호출되는 함수 (델리게이트 해제)
     virtual void NativeDestruct() override;
 
+    // 위젯이 보이는지 여부를 설정하는 함수
+    UFUNCTION(BlueprintCallable, Category="UI")
+    void SetHudVisible(bool bVisible);
+
     // 무기 정보를 업데이트 하는 함수
     UFUNCTION(BlueprintCallable, Category = "UI")
     void UpdateWeaponInfo(const FText& NewWeaponName, UTexture2D* NewWeaponImage);
@@ -42,12 +48,23 @@ public:
 
 protected:
     // 블루프린트 위젯 바인딩
-    UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> WeaponNameText;
-    UPROPERTY(meta = (BindWidget)) TObjectPtr<UImage> PrimaryWeaponImage;
-    UPROPERTY(meta = (BindWidget)) TObjectPtr<UImage> SecondaryWeaponImage;
-    UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> CurrentAmmoText;
-    UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> ReserveAmmoText;
-    UPROPERTY(meta = (BindWidget)) TObjectPtr<UTextBlock> FireModeText;
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UTextBlock> WeaponNameText;
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UImage> PrimaryWeaponImage;
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UImage> SecondaryWeaponImage;
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UTextBlock> CurrentAmmoText;
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UTextBlock> ReserveAmmoText;
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UTextBlock> FireModeText;
+    UPROPERTY(meta=(BindWidget))
+    TObjectPtr<UImage> AmmoImage;
+
+    UPROPERTY(meta=(BindWidgetOptional))
+    TObjectPtr<UWidget> TrayAnchor;
 
     // 애니메이션 바인딩
     UPROPERTY(meta = (BindWidgetAnim), Transient)
@@ -64,9 +81,16 @@ private:
     // Fire Mode UI 갱신
     void UpdateFireModeTextFromWeapon(AEquipWeaponMaster* Weapon);
 
+    // 아이콘 세터
+    UFUNCTION(BlueprintCallable, Category="UI")
+    void SetAmmoIcon(UTexture2D* NewAmmoImage);
+
 private:
     // 캐릭터 참조를 저장
     UPROPERTY() APppCharacter* CachedCharacter;
     // 이미지 번갈아 표시
     bool bPrimaryNext = true;
+
+    // 무기 보유 여부 가드
+    bool bHasWeapon = false;
 };

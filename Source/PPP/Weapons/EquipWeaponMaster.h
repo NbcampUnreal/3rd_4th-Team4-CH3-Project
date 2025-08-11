@@ -75,6 +75,10 @@ public:
     UFUNCTION(BlueprintPure, Category="UI", meta=(DisplayName="GetIcon")) // BP에서는 GetIcon으로 보임
     UTexture2D* GetWeaponIcon() const;
 
+    // by Yeoul
+    UFUNCTION(BlueprintPure, Category="UI")
+    UTexture2D* GetAmmoIcon() const;
+
     // 현재 무기 정보(행 데이터) 보관 및 접근자 제공
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="WeaponData")
     FWeaponRow WeaponDataRow;
