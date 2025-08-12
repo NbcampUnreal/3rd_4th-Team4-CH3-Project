@@ -39,6 +39,7 @@ public:
     void SetHudVisible(bool bVisible);
 
     // 무기 정보를 업데이트 하는 함수
+    // 이름 + 애니만 처리
     UFUNCTION(BlueprintCallable, Category = "UI")
     void UpdateWeaponInfo(const FText& NewWeaponName, UTexture2D* NewWeaponImage);
 
@@ -63,12 +64,13 @@ protected:
     UPROPERTY(meta=(BindWidget))
     TObjectPtr<UImage> AmmoImage;
 
+    // 시작 시 숨김/표시 전환용 루트
     UPROPERTY(meta=(BindWidgetOptional))
     TObjectPtr<UWidget> TrayAnchor;
 
     // 애니메이션 바인딩
     UPROPERTY(meta = (BindWidgetAnim), Transient)
-    UWidgetAnimation* WeaponSwap;
+    UWidgetAnimation* WeaponSwap = nullptr;
 
 private:
     // 델리게이트 바인드용
@@ -85,11 +87,12 @@ private:
     UFUNCTION(BlueprintCallable, Category="UI")
     void SetAmmoIcon(UTexture2D* NewAmmoImage);
 
-private:
     // 캐릭터 참조를 저장
-    UPROPERTY() APppCharacter* CachedCharacter;
-    // 이미지 번갈아 표시
-    bool bPrimaryNext = true;
+    UPROPERTY() APppCharacter* CachedCharacter = nullptr;
+
+    // 직전 무기 아이콘 (Secondary Weapon Image 용)
+    UPROPERTY(Transient)
+    TObjectPtr<UTexture2D> LastIcon = nullptr;
 
     // 무기 보유 여부 가드
     bool bHasWeapon = false;

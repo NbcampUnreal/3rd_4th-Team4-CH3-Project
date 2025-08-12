@@ -105,7 +105,9 @@ void APppCharacter::BeginPlay()
             KillMarkerWidget->SetVisibility(ESlateVisibility::Hidden);
         }
     }
-
+    // by Yeoul
+    // 시작 시 UI에 '무기 없음' 신호
+    OnWeaponChanged.Broadcast(nullptr);
 }
 
 void APppCharacter::Tick(float DeltaTime)

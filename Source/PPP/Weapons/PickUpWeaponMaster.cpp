@@ -64,7 +64,6 @@ void APickUpWeaponMaster::HandlePickUp(APppCharacter* Character)
         FRotator DropRotation = Character->EquippedWeapon->GetActorRotation();
 
         Character->DropWeaponToWorld(PrevWeaponRow, DropLocation, DropRotation);
-
         Character->EquippedWeapon->Destroy();
         // Character->EquippedWeapon = nullptr; // 준모님 여기 빼도 돼요?
     }
@@ -88,6 +87,9 @@ void APickUpWeaponMaster::HandlePickUp(APppCharacter* Character)
             NewWeapon->OnEquipped(Character, WeaponRow);
             // Character->EquippedWeapon = NewWeapon;   // 준모님 아랫줄의 세터로 바꿔도 돼요?
             // by Yeoul
+            UE_LOG(LogTemp, Warning, TEXT("[PickUp] After OnEquipped: Icon=%s, Ammo=%s"),
+                *GetNameSafe(NewWeapon->GetWeaponIcon()),
+                *GetNameSafe(NewWeapon->GetAmmoIcon()));
             // 세터로 교체 (여기서 OnWeaponChanced 브로드캐스트됨)
             Character->SetEquippedWeapon(NewWeapon);
         }
