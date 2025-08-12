@@ -1,4 +1,7 @@
 #include "PPPCharacter.h"
+
+#include <WeaponDataAsset.h>
+
 #include "PppPlayerController.h"
 #include "../Weapons/PickUpComponent.h"
 #include "../Weapons/EquipWeaponMaster.h"
@@ -542,6 +545,22 @@ void APppCharacter::OnReload()
     {
         // Verbose : 상세 로그 레벨로, 매우 세부적인 진단용 메세지.
         UE_LOG(LogTemp, Verbose, TEXT("이미 재장전 중입니다."));
+        return;
+    }
+
+    int32 MaxAmmoInMag = EquippedWeapon->WeaponDataRow.MagazineSize;
+
+    // PDA 값이 유효하면 MagazineSize 덮어씀
+    if (EquippedWeapon->GetWeaponData() && EquippedWeapon->GetWeaponData()->MaxMagSize > 0)
+    {
+        MaxAmmoInMag = EquippedWeapon->GetWeaponData()->MaxMagSize;
+    }
+
+    // 여기서 재장전 필요 여부 체크
+    if (EquippedWeapon->CurrentAmmoInMag >= MaxAmmoInMag ||
+        EquippedWeapon->ReserveAmmo <= 0)
+    {
+        UE_LOG(LogTemp, Log, TEXT("재장전 불필요: 탄창 가득 또는 예비탄 없음"));
         return;
     }
 
