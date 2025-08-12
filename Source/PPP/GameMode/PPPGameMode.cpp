@@ -61,6 +61,19 @@ void APPPGameMode::BeginPlay()
             UE_LOG(LogGame, Log, TEXT("스테이지 타이머 시작: %.1f초"), StageTimerSeconds);
         }
     }
+
+    // 정현성
+    // 시간을 화면에 띄우기
+    if (TimeWidgetClass)
+    {
+        UUserWidget* TimeWidget = CreateWidget<UUserWidget>(GetWorld(), TimeWidgetClass);
+        if (TimeWidget)
+        {
+            TimeWidget->AddToViewport();
+        }
+    }
+
+
 }
 
 void APPPGameMode::SetGameState(EGameState NewState)

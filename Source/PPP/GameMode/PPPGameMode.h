@@ -6,6 +6,7 @@
 #include "GameDefines.h"
 #include "PPPGameState.h" // ✅ GameState 클래스 참조 추가
 #include "../Ai/PppBaseAICharacter.h" // Base AI Character
+#include "Blueprint/UserWidget.h" // 정현성 타임 UI 추가
 #include "PPPGameMode.generated.h"
 
 UCLASS()
@@ -113,4 +114,9 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Timer", meta=(ClampMin="1.0"))
     float StageTimerSeconds = 120.f;
+
+    // 정현성
+    // 타임 위젯 블루프린트 클래스
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+    TSubclassOf<UUserWidget> TimeWidgetClass;
 };

@@ -40,7 +40,10 @@ public:
     void ResetScore(); //스코어 초기화
     void StartRoundTimer(float Duration); //타이머 시작
     void StopRoundTimer(); //타이머 중지
+
+    UFUNCTION(BlueprintCallable, Category = "Timer") // 정현성 Get Remaining Time 블루프린트로 호출
     float GetRemainingTime() const; //남은 시간 가져오기
+
     virtual void Tick(float DeltaTime) override;//tick사용
     EGameState GetCurrentState()const;
 	// -------------------------------
