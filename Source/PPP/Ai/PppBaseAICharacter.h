@@ -30,13 +30,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-    // 정현성
-    // 체력 변수 선언
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-    float Health;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-    float MaxHealth;
 
 public:
     // 이 AI 캐릭터가 사용할 비헤이비어 트리 애셋
@@ -86,10 +79,6 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Stats")
     bool IsDead() const;
-
-    // 정현성
-    // 데미지 처리 함수 추가
-    virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 protected:
     void ApplyHealthChange(float DeltaHealth);

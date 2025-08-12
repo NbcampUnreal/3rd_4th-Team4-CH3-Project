@@ -149,6 +149,14 @@ bool APppBaseAICharacter::IsDead() const
 {
     return bIsDead;
 }
+
+// 정현성
+// GetHealth를 CurrentHealth에 맞추기
+
+float APppBaseAICharacter::GetHealth() const
+{
+    return CurrentHealth;
+}
 // {=======
 //     CurrentHealth = MaxHealth;
 //     bIsDead = false;
