@@ -1,4 +1,5 @@
 #include "PppPlayerController.h"
+#include "GameFramework/HUD.h"
 #include "PppCharacter.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
@@ -38,7 +39,24 @@ void APppPlayerController::BeginPlay()
 {
     Super::BeginPlay();
 
-    EnableInput(this);  // ESC나 메뉴 입력용
+    const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(GetWorld(), true); // PIE 접두사 제거
+
+    // MainMenuLevel에선 HUD 숨기기
+    if (CurrentLevelName.Equals(TEXT("MainMenuLevel")))
+    {
+        if (AHUD* Hud = GetHUD())
+        {
+            Hud->Destroy();
+        }
+
+        bShowMouseCursor = true;
+
+        FInputModeUIOnly InputMode;
+        InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+        SetInputMode(InputMode);
+
+        ShowMainMenu(true);
+    }
 
     if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
     {
@@ -47,7 +65,7 @@ void APppPlayerController::BeginPlay()
             if (InputMappingContext)
             {
                 SubSystem->AddMappingContext(InputMappingContext, 0);
-                UE_LOG(LogTemp, Warning, TEXT("InputMappingContext 등록 완료"));
+                UE_LOG(LogTemp, Warning, TEXT("InputMappingContext 등록 완료: %s"), *InputMappingContext->GetName());
             }
             else
             {
@@ -56,12 +74,7 @@ void APppPlayerController::BeginPlay()
 
             if (PauseMenuIMC)
             {
-                SubSystem->AddMappingContext(PauseMenuIMC, 0);
-                UE_LOG(LogTemp, Warning, TEXT("PauseMenuIMC 등록 완료"));
-            }
-            if (PauseMenuIMC)
-            {
-                SubSystem->AddMappingContext(PauseMenuIMC, 0);
+                SubSystem->AddMappingContext(PauseMenuIMC, 1); // 메뉴가 게임 입력보다 우선
                 UE_LOG(LogTemp, Warning, TEXT("PauseMenuIMC 등록 완료: %s"), *PauseMenuIMC->GetName());
             }
             else
@@ -70,14 +83,8 @@ void APppPlayerController::BeginPlay()
             }
         }
     }
-
-    FString CurrentMapName = GetWorld()->GetMapName();
-
-    if (CurrentMapName.Contains("MainMenuLevel"))
-    {
-        ShowMainMenu(false);
-    }
 }
+
 
 void APppPlayerController::ShowMainMenu(bool bIsRestart)
 {
@@ -156,21 +163,37 @@ void APppPlayerController::ShowGameOver()
 
 void APppPlayerController::StartGame()
 {
-    //인풋 모드를 GameOnly로 바꿔서 키보드 입력 (WASD 등) 가능하게
     SetInputMode(FInputModeGameOnly());
     bShowMouseCursor = false;
 
-    // 0.3초 후에 맵 로딩하도록 타이머 설정
-        FTimerHandle StartHandle;
-        GetWorld()->GetTimerManager().SetTimer(
-            StartHandle,
-            [this]() {
-                UGameplayStatics::OpenLevel(GetWorld(), FName("BasicMap"), true);
-            },
-            0.3f, false);
+    if (MainMenuWidgetInstance)
+    {
+        MainMenuWidgetInstance->RemoveFromParent();
+        MainMenuWidgetInstance = nullptr;
+    }
 
-        UE_LOG(LogTemp, Warning, TEXT("StartGame() called - 0.3초 후 BasicMap으로 이동"));
+    const FName TargetLevel = StageLevelName.IsNone()
+        ? FName(TEXT("Stage2"))
+        : StageLevelName;
+
+    FTimerHandle StartHandle;
+    GetWorld()->GetTimerManager().SetTimer
+    (
+        StartHandle,
+        [this, TargetLevel]()
+        {
+            UGameplayStatics::OpenLevel
+            (
+                this,
+                TargetLevel
+            );
+        },
+        0.3f,
+        false
+    );
 }
+
+
 
 void APppPlayerController::QuitGame()
 {
@@ -214,15 +237,5 @@ void APppPlayerController::HandlePauseKey()
 // by Team4 (yeoul)
 void APppPlayerController::OnCharacterDead()
 {
-    if (GameOverWidgetClass && !GameOverWidgetInstance)
-    {
-        GameOverWidgetInstance = CreateWidget<UUserWidget>(this, GameOverWidgetClass);
-        if (GameOverWidgetInstance)
-        {
-            GameOverWidgetInstance->AddToViewport();    // 뷰포트에  UI 띄우기
-            SetInputMode(FInputModeUIOnly());   // UI 입력 전환
-            bShowMouseCursor = true;   // 마우스 커서 보이기
-            SetPause(true);    // 게임 일시정지
-        }
-    }
+    ShowGameOver();
 }

@@ -66,7 +66,7 @@ public:
     UUserWidget* MainMenuWidgetInstance;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
     UUserWidget* PauseMenuWidgetInstance;
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "UI")
     UUserWidget* GameOverWidgetInstance;
 
     // ====== 사운드 ======
@@ -88,6 +88,9 @@ public:
     void ShowGameOver();
     UFUNCTION()
     void OnCharacterDead();
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stage")
+    FName StageLevelName = TEXT("Stage2");
+
 private:
     UFUNCTION()
     void HandlePauseKey();

@@ -27,10 +27,12 @@ void APPPGameMode::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (APPPGameState* GS = GetGameState<APPPGameState>())
+    /* 자동 라운드/스테이지 타이머 시작 제거 (ExitWindow에서만 켜도록 할게요!!) - 김여울
+     *if (APPPGameState* GS = GetGameState<APPPGameState>())
     {
         GS->StartRoundTimer(120.f); // 2분 타이머 시작
     }
+    */
 
     // 플레이어 사망 시 GameMode -> OnGameOver()로 연결
     APppCharacter* PppCharacter = Cast<APppCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
@@ -52,6 +54,7 @@ void APPPGameMode::BeginPlay()
         }
     }
 
+    /* 비긴 플레이에서 스테이지 바로 시작하지 않게 주석처리할게요!!! - 김여울
     // [추가] 스테이지 타이머 시작 (예: 120초). GameState의 라운드 타이머를 재사용.
     if (bUseStageTimer)
     {
@@ -61,6 +64,7 @@ void APPPGameMode::BeginPlay()
             UE_LOG(LogGame, Log, TEXT("스테이지 타이머 시작: %.1f초"), StageTimerSeconds);
         }
     }
+    */
 
     // 정현성
     // 시간을 화면에 띄우기
@@ -73,7 +77,23 @@ void APPPGameMode::BeginPlay()
         }
     }
 
+    // 김여울
+    // 출구 게이트 캐싱 (Tag: ExitGateTag), 기본 비표시/충돌 off
+    {
+        TArray<AActor*> Found;
+        UGameplayStatics::GetAllActorsWithTag(this, ExitGateTag, Found);
+        ExitGate = Found.Num() > 0 ? Found[0] : nullptr;
 
+        if (ExitGate)
+        {
+            ExitGate->SetActorHiddenInGame(true);
+            ExitGate->SetActorEnableCollision(false);
+        }
+        else
+        {
+            UE_LOG(LogGame, Warning, TEXT("ExitGate(Tag=%s) not found."), *ExitGateTag.ToString());
+        }
+    }
 }
 
 void APPPGameMode::SetGameState(EGameState NewState)
@@ -295,6 +315,10 @@ void APPPGameMode::OnRoundCleared()
         GS->ResetScore();
     }
 
+    // 김여울
+    // 출구 제한시간 시작 + 게이트 오픈
+    StartExitWindow();
+
     // 기존: StartRound()를 즉시 호출
     // 변경: 자동 시작을 막고, 다음 층으로 이동 가능 신호만 브로드캐스트
     OnRoundClearedSignal.Broadcast();
@@ -312,4 +336,70 @@ void APPPGameMode::OnGameOver()
     {
         PC->ShowGameOver();
     }
+}
+
+// =========================
+// 김여울 아래 계속 추가
+// =========================
+
+void APPPGameMode::StartExitWindow()
+{
+    bGateOpen = true;
+
+    if (ExitGate)
+    {
+        ExitGate->SetActorHiddenInGame(false);
+        ExitGate->SetActorEnableCollision(true);
+    }
+
+    if (APPPGameState* GS = GetGameState<APPPGameState>())
+    {
+        GS->StartRoundTimer(StageTimerSeconds);   // 시간이 끝나면 GameState→EndRound()→HasTimedOut() 경로로 GameOver 자동
+    }
+
+    UE_LOG(LogGame, Log, TEXT("출구 제한시간 시작: %.1f초"), StageTimerSeconds);
+}
+
+void APPPGameMode::EnterNextStage()
+{
+    if (!bGateOpen)
+    {
+        return; // 아직 게이트 안열림
+    }
+
+    // 타이머 정지
+    if (APPPGameState* GS = GetGameState<APPPGameState>())
+    {
+        GS->StopRoundTimer();
+    }
+
+    // 게이트 닫기
+    bGateOpen = false;
+    if (ExitGate)
+    {
+        ExitGate->SetActorEnableCollision(false);
+        ExitGate->SetActorHiddenInGame(true);
+    }
+
+    // 다음 라운드 시작(또는 맵 로드로 교체 가능)
+    StartRound();
+}
+
+void APPPGameMode::OnExitTimeOver()
+{
+    if (!bGateOpen)
+    {
+        return; // 이미 통과했을 수 있음
+    }
+
+    UE_LOG(LogGame, Warning, TEXT("출구 제한시간 초과 → GameOver"));
+    bGateOpen = false;
+
+    if (ExitGate)
+    {
+        ExitGate->SetActorEnableCollision(false);
+        ExitGate->SetActorHiddenInGame(true);
+    }
+
+    OnGameOver();
 }

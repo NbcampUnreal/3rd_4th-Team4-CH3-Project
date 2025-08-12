@@ -18,6 +18,7 @@ class PPP_API UGameOverWidget : public UUserWidget
 
 protected:
     virtual void NativeConstruct() override;
+    virtual void NativeDestruct() override;
 
     UFUNCTION()
     void OnReturnToMainMenuClicked();
