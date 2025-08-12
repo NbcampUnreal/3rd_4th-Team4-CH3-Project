@@ -51,9 +51,9 @@ protected:
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UTextBlock> WeaponNameText;
     UPROPERTY(meta = (BindWidget))
-    TObjectPtr<UImage> PrimaryWeaponImage;
+    TObjectPtr<class UImage> PrimaryWeaponImage;
     UPROPERTY(meta = (BindWidget))
-    TObjectPtr<UImage> SecondaryWeaponImage;
+    TObjectPtr<class UImage> SecondaryWeaponImage;
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UTextBlock> CurrentAmmoText;
     UPROPERTY(meta = (BindWidget))
@@ -61,7 +61,7 @@ protected:
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UTextBlock> FireModeText;
     UPROPERTY(meta=(BindWidget))
-    TObjectPtr<UImage> AmmoImage;
+    TObjectPtr<class UImage> AmmoImage;
 
     UPROPERTY(meta=(BindWidgetOptional))
     TObjectPtr<UWidget> TrayAnchor;
@@ -85,12 +85,13 @@ private:
     UFUNCTION(BlueprintCallable, Category="UI")
     void SetAmmoIcon(UTexture2D* NewAmmoImage);
 
-private:
     // 캐릭터 참조를 저장
-    UPROPERTY() APppCharacter* CachedCharacter;
+    UPROPERTY() APppCharacter* CachedCharacter = nullptr;
     // 이미지 번갈아 표시
     bool bPrimaryNext = true;
-
     // 무기 보유 여부 가드
     bool bHasWeapon = false;
+    // 직전 무기 아이콘 (Secondary Weapon Image 용)
+    UPROPERTY(Transient)
+    TObjectPtr<UTexture2D> LastIcon = nullptr;
 };

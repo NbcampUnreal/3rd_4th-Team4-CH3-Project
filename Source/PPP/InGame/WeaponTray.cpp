@@ -6,6 +6,7 @@
 #include "PppCharacter.h"
 #include "EquipWeaponMaster.h"
 #include "Engine/Texture2D.h"
+#include "PPP/GameMOde/GameDefines.h"
 
 void UWeaponTray::SetHudVisible(bool bVisible)
 {
@@ -58,30 +59,34 @@ void UWeaponTray::NativeDestruct()
 
 void UWeaponTray::UpdateWeaponInfo(const FText& NewWeaponName, UTexture2D* NewWeaponImage)
 {
+    UE_LOG(LogTemp, Warning, TEXT("[Tray] Name=%s, Icon=%s, Prim=%d Sec=%d Ammo=%d"),
+        *NewWeaponName.ToString(),
+        *GetNameSafe(NewWeaponImage),
+        PrimaryWeaponImage!=nullptr,
+        SecondaryWeaponImage!=nullptr,
+        AmmoImage!=nullptr
+    );
+
     if (WeaponNameText)
     {
         WeaponNameText->SetText(NewWeaponName);
     }
 
-    if (NewWeaponImage)
+    if (PrimaryWeaponImage)
     {
-        if (bPrimaryNext && PrimaryWeaponImage)
-        {
-            PrimaryWeaponImage->SetBrushFromTexture(NewWeaponImage);
-        }
-        else if (SecondaryWeaponImage)
-        {
-            SecondaryWeaponImage->SetBrushFromTexture(NewWeaponImage);
-        }
+        PrimaryWeaponImage->SetBrushFromTexture(NewWeaponImage);
+    }
 
-        if (WeaponSwap)
-        {
-            PlayAnimation(WeaponSwap);
-        }
-        bPrimaryNext = !bPrimaryNext;
+    if (SecondaryWeaponImage)
+    {
+        SecondaryWeaponImage->SetBrushFromTexture(NewWeaponImage);
+    }
+
+    if (WeaponSwap && NewWeaponImage)
+    {
+        PlayAnimation(WeaponSwap);
     }
 }
-
 
 void UWeaponTray::UpdateAmmoText(int32 NewAmmoInMag, int32 NewReserveAmmo)
 {
@@ -105,14 +110,36 @@ void UWeaponTray::HandleWeaponChanged(AEquipWeaponMaster* NewWeapon)
         SetHudVisible(false);
 
         UpdateWeaponInfo(FText::GetEmpty(), nullptr);
-        if (CurrentAmmoText) CurrentAmmoText->SetText(FText::FromString(TEXT("0")));
-        if (ReserveAmmoText) ReserveAmmoText->SetText(FText::FromString(TEXT("0")));
-        if (FireModeText)   FireModeText->SetText(FText());
+        if (CurrentAmmoText)
+        {
+            CurrentAmmoText->SetText(FText::FromString(TEXT("0")));
+        }
+        if (ReserveAmmoText)
+        {
+            ReserveAmmoText->SetText(FText::FromString(TEXT("0")));
+        }
+        if (FireModeText)
+        {
+            FireModeText->SetText(FText());
+        }
 
         // 잔상 제거
-        if (PrimaryWeaponImage)   PrimaryWeaponImage->SetBrushFromTexture(nullptr);
-        if (SecondaryWeaponImage) SecondaryWeaponImage->SetBrushFromTexture(nullptr);
-        if (AmmoImage)            AmmoImage->SetBrushFromTexture(nullptr);
+        if (PrimaryWeaponImage)
+        {
+            PrimaryWeaponImage->SetBrushFromTexture(nullptr);
+        }
+
+        // 여기서는 이전 아이콘도 지우는 게 안전함
+        if (SecondaryWeaponImage)
+        {
+            SecondaryWeaponImage->SetBrushFromTexture(nullptr);
+        }
+
+        if (AmmoImage)
+        {
+            AmmoImage->SetBrushFromTexture(nullptr);
+        }
+
         return;
     }
 
@@ -120,17 +147,28 @@ void UWeaponTray::HandleWeaponChanged(AEquipWeaponMaster* NewWeapon)
     bHasWeapon = true;
     SetHudVisible(true);
 
+    // 직전 무기 아이콘을 Secondary에 먼저 채움
+    if (SecondaryWeaponImage)
+    {
+        SecondaryWeaponImage->SetBrushFromTexture(LastIcon);
+    }
+
+    // 이름 계산
     const FText WeaponName =
         !NewWeapon->WeaponDisplayName.IsEmpty()
             ? NewWeapon->WeaponDisplayName
             : FText::FromName(NewWeapon->GetFName());
 
-    UpdateWeaponInfo(WeaponName, NewWeapon->GetWeaponIcon());
-    SetAmmoIcon(NewWeapon->GetAmmoIcon());
+    // 현재 무기 아이콘 / 탄약 아이콘 / 발사모드 갱신하기
+    UpdateWeaponInfo(WeaponName, NewWeapon->GetWeaponIcon());   // 무기 PNG
+    SetAmmoIcon(NewWeapon->GetAmmoIcon());  // 탄약 PNG
     UpdateFireModeTextFromWeapon(NewWeapon);
 
-    // 초기 탄약 동기화(안전빵)
+    // 탄약 동기화
     HandleAmmoChanged(NewWeapon->CurrentAmmoInMag, NewWeapon->ReserveAmmo);
+
+    // 다음 교체를 위해 현재 아이콘을 캐싱
+    LastIcon = NewWeapon->GetWeaponIcon();
 }
 
 void UWeaponTray::HandleAmmoChanged
@@ -161,8 +199,17 @@ void UWeaponTray::UpdateFireModeTextFromWeapon
 
 void UWeaponTray::SetAmmoIcon(UTexture2D* NewAmmoImage)
 {
-    if (AmmoImage && NewAmmoImage)
+    if (!AmmoImage)
+    {
+        return; // null이면 아무것도 안해서 이전 이미지 남을 수 있으니 비워주기
+    }
+    if (NewAmmoImage)
     {
         AmmoImage->SetBrushFromTexture(NewAmmoImage);
+    }
+    else
+    {
+        // 아이콘 없을 때 잔상 제거
+        AmmoImage->SetBrushFromTexture(nullptr);
     }
 }
