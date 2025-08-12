@@ -97,6 +97,12 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Weapon|Animation")
     void PlayReloadAnimation();
 
+    // 발사 지연 캐시
+    float WeaponFireDelay = 0.f;
+
+    // 마지막 발사 시간 - UWorld::GetTimeSeconds 기준
+    float LastFireTime = -FLT_MAX;
+
     // by Yeoul
     // 탄약 변수
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
