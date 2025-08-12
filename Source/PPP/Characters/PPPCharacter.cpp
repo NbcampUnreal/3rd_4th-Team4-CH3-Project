@@ -494,7 +494,13 @@ float APppCharacter::TakeDamage(
 {
     float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-    CurrentHealth = FMath::Clamp(CurrentHealth - DamageAmount, 0.0f, MaxHealth);
+    // 김상범
+    // 실제 데미지를 체력에 적용
+    CurrentHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.0f, MaxHealth);
+    //CurrentHealth = FMath::Clamp(CurrentHealth - DamageAmount, 0.0f, MaxHealth);
+
+    // 김상범
+    UE_LOG(LogTemp, Warning, TEXT("캐릭터가 데미지를 받았습니다. 받은 데미지: %f, 남은 체력: %f"), DamageAmount, CurrentHealth);
 
     // 정현성
     // 체력이 변경될 때마다 Event Dispatcher 호출
