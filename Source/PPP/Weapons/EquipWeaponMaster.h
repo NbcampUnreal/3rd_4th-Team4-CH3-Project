@@ -90,6 +90,19 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Animation")
     UAnimSequence* FireAnim;
 
+    // 재장전 시 재생할 스켈레탈 애니메이션(장전 애니메이션, 소리 등)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Animation")
+    UAnimSequence* ReloadAnim;
+
+    UFUNCTION(BlueprintCallable, Category = "Weapon|Animation")
+    void PlayReloadAnimation();
+
+    // 발사 지연 캐시
+    float WeaponFireDelay = 0.f;
+
+    // 마지막 발사 시간 - UWorld::GetTimeSeconds 기준
+    float LastFireTime = -FLT_MAX;
+
     // by Yeoul
     // 탄약 변수
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
