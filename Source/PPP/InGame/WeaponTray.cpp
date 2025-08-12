@@ -59,29 +59,23 @@ void UWeaponTray::NativeDestruct()
 
 void UWeaponTray::UpdateWeaponInfo(const FText& NewWeaponName, UTexture2D* NewWeaponImage)
 {
-    UE_LOG(LogTemp, Warning, TEXT("[Tray] Name=%s, Icon=%s, Prim=%d Sec=%d Ammo=%d"),
-        *NewWeaponName.ToString(),
-        *GetNameSafe(NewWeaponImage),
-        PrimaryWeaponImage!=nullptr,
-        SecondaryWeaponImage!=nullptr,
-        AmmoImage!=nullptr
-    );
+    UE_LOG(LogTemp, Warning, TEXT("[Tray] Name=%s, Icon=%s"),
+        *NewWeaponName.ToString(), *GetNameSafe(NewWeaponImage));
 
+    // 이름만 갱신
     if (WeaponNameText)
     {
         WeaponNameText->SetText(NewWeaponName);
     }
 
+    // 항상 Primary만 갱신 (Secondary는 HandleWeaponChanged에서 직전 아이콘으로 세팅)
     if (PrimaryWeaponImage)
     {
-        PrimaryWeaponImage->SetBrushFromTexture(NewWeaponImage);
+        if (NewWeaponImage) PrimaryWeaponImage->SetBrushFromTexture(NewWeaponImage /*, true*/);
+        else                PrimaryWeaponImage->SetBrushFromTexture(nullptr);
     }
 
-    if (SecondaryWeaponImage)
-    {
-        SecondaryWeaponImage->SetBrushFromTexture(NewWeaponImage);
-    }
-
+    // 애니메이션 재생은 선택
     if (WeaponSwap && NewWeaponImage)
     {
         PlayAnimation(WeaponSwap);
@@ -110,38 +104,48 @@ void UWeaponTray::HandleWeaponChanged(AEquipWeaponMaster* NewWeapon)
         SetHudVisible(false);
 
         UpdateWeaponInfo(FText::GetEmpty(), nullptr);
-        if (CurrentAmmoText)
-        {
-            CurrentAmmoText->SetText(FText::FromString(TEXT("0")));
-        }
-        if (ReserveAmmoText)
-        {
-            ReserveAmmoText->SetText(FText::FromString(TEXT("0")));
-        }
-        if (FireModeText)
-        {
-            FireModeText->SetText(FText());
-        }
+
+        if (CurrentAmmoText)  CurrentAmmoText->SetText(FText::FromString(TEXT("0")));
+        if (ReserveAmmoText)  ReserveAmmoText->SetText(FText::FromString(TEXT("0")));
+        if (FireModeText)     FireModeText->SetText(FText());
 
         // 잔상 제거
-        if (PrimaryWeaponImage)
-        {
-            PrimaryWeaponImage->SetBrushFromTexture(nullptr);
-        }
+        if (PrimaryWeaponImage)   PrimaryWeaponImage->SetBrushFromTexture(nullptr);
+        if (SecondaryWeaponImage) SecondaryWeaponImage->SetBrushFromTexture(nullptr);
+        if (AmmoImage)            AmmoImage->SetBrushFromTexture(nullptr);
 
-        // 여기서는 이전 아이콘도 지우는 게 안전함
-        if (SecondaryWeaponImage)
-        {
-            SecondaryWeaponImage->SetBrushFromTexture(nullptr);
-        }
-
-        if (AmmoImage)
-        {
-            AmmoImage->SetBrushFromTexture(nullptr);
-        }
-
+        LastIcon = nullptr; // 다음 교체 때 깔끔하게
         return;
     }
+
+    // 무기 있음 → 표시
+    bHasWeapon = true;
+    SetHudVisible(true);
+
+    // 1) 직전 무기 아이콘을 Secondary에 채우기
+    if (SecondaryWeaponImage)
+    {
+        SecondaryWeaponImage->SetBrushFromTexture(LastIcon);
+    }
+
+    // 2) 현재 무기 이름/아이콘(Primary만) 갱신
+    const FText WeaponName =
+        !NewWeapon->WeaponDisplayName.IsEmpty()
+            ? NewWeapon->WeaponDisplayName
+            : FText::FromName(NewWeapon->GetFName());
+
+    UpdateWeaponInfo(WeaponName, NewWeapon->GetWeaponIcon());   // Primary만 바꿈
+
+    // 3) 나머지 UI 갱신
+    SetAmmoIcon(NewWeapon->GetAmmoIcon());              // 탄약 PNG
+    UpdateFireModeTextFromWeapon(NewWeapon);            // 발사 모드
+    HandleAmmoChanged(NewWeapon->CurrentAmmoInMag,
+                      NewWeapon->ReserveAmmo);          // 탄약 수치
+
+    // 4) 다음 교체를 위해 현재 아이콘 캐싱
+    LastIcon = NewWeapon->GetWeaponIcon();
+}
+
 
     // 무기 있음 → 표시
     bHasWeapon = true;
