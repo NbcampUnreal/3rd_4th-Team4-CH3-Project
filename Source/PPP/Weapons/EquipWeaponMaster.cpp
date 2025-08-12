@@ -39,9 +39,25 @@ void AEquipWeaponMaster::Fire()
         return;
     }
 
+    // 발사 지연 체크
+    // WeaponFireDelay == 0 이면 기존 동작 유지(쿨다운 없음)
+    if (WeaponFireDelay > 0.f)
+    {
+        const float Now = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.f;
+        const float Elapsed = Now - LastFireTime;
+
+        if (Elapsed < WeaponFireDelay)
+        {
+            // 아직 대기시간이 남았으므로 차단
+            // 남은 시간 로그 출력, 거슬리거나 신경쓰이면 삭제 가능
+            UE_LOG(LogTemp, Verbose, TEXT("발사 지연 : 남은 %.3f초"), WeaponFireDelay - Elapsed);
+            return;
+        }
+        // 통과하면 아래에서 정상 발사 처리 후 LastFireTime 갱신
+    }
+
     APppCharacter* OwnerCharacter = Cast<APppCharacter>(GetOwner());
     if (!OwnerCharacter) return;
-
     APlayerController* PlayerController = Cast<APlayerController>(OwnerCharacter->GetController());
     if (!PlayerController) return;
 
@@ -139,6 +155,11 @@ void AEquipWeaponMaster::Fire()
     // by Yeoul
     // 탄약 변경 이벤트 -> UI 갱신
     OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
+
+    if (WeaponFireDelay > 0.f)
+    {
+        LastFireTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.f;
+    }
 }
 
 // 장착 처리:
@@ -193,6 +214,9 @@ void AEquipWeaponMaster::OnEquipped(APppCharacter* NewOwner, const FWeaponRow& I
         }
         // FireMode 사용은 GetFireMode()에서 PDA 참조
     }
+
+    // 발사 지연 값 캐시(현재는 DT 값 사용, 추후 PDA 우선 필요 시 동일 패턴으로 확장
+    WeaponFireDelay = InWeaponRow.FireDelay;
 
     AttachToComponent(
        NewOwner->GetMesh(),

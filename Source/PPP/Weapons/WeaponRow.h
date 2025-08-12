@@ -46,6 +46,10 @@ struct FWeaponRow : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     float FireRange;  // 유효 사거리
 
+    // 무기별 발사 지연 시간, 0이면 제한 없음
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float FireDelay = 0.f;
+
     // by Yeoul
     // PDA SoftRef: 런타임은 PDA만 진실원으로 사용
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data")
