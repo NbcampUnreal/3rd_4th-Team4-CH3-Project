@@ -383,6 +383,11 @@ void APppCharacter::SetEquippedWeapon(AEquipWeaponMaster* NewWeapon)
     if (EquippedWeapon != nullptr)
     {
         EquippedWeapon->OnAmmoChanged.RemoveDynamic(this, &APppCharacter::OnWeaponAmmoChanged);
+
+        // 정현성
+        // 기존 무기 히트, 킬 델리게이트 언바인드
+        EquippedWeapon->OnWeaponHit.RemoveDynamic(this, &APppCharacter::ShowHitMarker);
+        EquippedWeapon->OnWeaponKilled.RemoveDynamic(this, &APppCharacter::ShowKillMarker);
     }
 
     // 교체
@@ -395,6 +400,11 @@ void APppCharacter::SetEquippedWeapon(AEquipWeaponMaster* NewWeapon)
     if (EquippedWeapon != nullptr)
     {
         EquippedWeapon->OnAmmoChanged.AddDynamic(this, &APppCharacter::OnWeaponAmmoChanged);
+
+        // 정현성
+        // 새 무기 히트, 킬 델리게이트 바인드
+        EquippedWeapon->OnWeaponHit.AddDynamic(this, &APppCharacter::ShowHitMarker);
+        EquippedWeapon->OnWeaponKilled.AddDynamic(this, &APppCharacter::ShowKillMarker);
 
         // 즉시 현재 탄약 상태를 UI에 반영 (안전빵)
         OnWeaponAmmoChanged(EquippedWeapon->CurrentAmmoInMag,

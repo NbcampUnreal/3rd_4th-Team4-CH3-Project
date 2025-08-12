@@ -116,19 +116,52 @@ void AEquipWeaponMaster::Fire()
         UE_LOG(LogTemp, Warning, TEXT("피격된 것 없음"));
     }
 
+
+    // 정현성 히트 마커와 킬 마커 두 개의 구분을 위해서는 AI가 맞고 죽었는지 혹은 맞고 살았는지 알아야하는데 데미지를 입힌 판정만 있어서 새로 써봅니다.
     // 피격 액터가 AI라면 데미지 적용
+    //if (bHit && Hit.GetActor())
+    //{
+    //    APppBaseAICharacter* HitAI = Cast<APppBaseAICharacter>(Hit.GetActor());
+    //    if (HitAI)
+    //    {
+    //        // 데미지 전달
+    //        HitAI->TakeDamage(Damage, FDamageEvent(), nullptr, this);   // 또는 필요한 인자 대로
+    //        LineColor = FColor::Green;
+    //        UE_LOG(LogTemp, Warning, TEXT("AI를 피격하여 데미지를 입혔습니다."));
+    //    }
+    //    else
+    //    {
+    //        UE_LOG(LogTemp, Warning, TEXT("피격된 액터가 AI가 아닙니다."));
+    //    }
+    //}
+
+    // 정현성
+    // 위 코드 참고해서 비슷하게 썼습니다.
     if (bHit && Hit.GetActor())
     {
         APppBaseAICharacter* HitAI = Cast<APppBaseAICharacter>(Hit.GetActor());
         if (HitAI)
         {
             // 데미지 전달
-            HitAI->TakeDamage(Damage, FDamageEvent(), nullptr, this);   // 또는 필요한 인자 대로
+            HitAI->TakeDamage(Damage, FDamageEvent(), nullptr, this);
+
+            // AI의 남은 체력을 확인하여 처치 여부를 판단
+            if (HitAI->GetHealth() <= 0.0f)
+            {
+                OnWeaponKilled.Broadcast();
+                UE_LOG(LogTemp, Warning, TEXT("AI를 처치했습니다."));
+            }
+            else
+            {
+                OnWeaponHit.Broadcast();
+                UE_LOG(LogTemp, Warning, TEXT("AI를 피격하여 데미지를 입혔습니다."));
+            }
             LineColor = FColor::Green;
-            UE_LOG(LogTemp, Warning, TEXT("AI를 피격하여 데미지를 입혔습니다."));
         }
         else
         {
+            // AI가 아닌 다른 액터를 맞췄을 때
+            OnWeaponHit.Broadcast();
             UE_LOG(LogTemp, Warning, TEXT("피격된 액터가 AI가 아닙니다."));
         }
     }

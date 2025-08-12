@@ -22,6 +22,13 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponDropped, AEquipWeaponMaster
 // 탄약 변경 델리게이트
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponAmmoChanged, int32, AmmoInMag, int32, Reserve);
 
+// 정현성
+// 히트 델리게이트
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponHit);
+
+// 적 처치 델리게이트
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponKilled);
+
 // 플레이어가 장착하는 무기(장착/발사/드랍 동작과 스탯 적용을 담당)
 UCLASS()
 class PPP_API AEquipWeaponMaster : public AActor
@@ -43,6 +50,14 @@ public:
     // 탄약 변경 이벤트: 블루프린트에서 바인딩 가능
     UPROPERTY(BlueprintAssignable, Category = "Weapon")
     FOnWeaponAmmoChanged OnAmmoChanged;
+
+    // 정현성
+    // 히트, 킬 블루프린트에서 바인딩
+    UPROPERTY(BlueprintAssignable)
+    FOnWeaponHit OnWeaponHit;
+
+    UPROPERTY(BlueprintAssignable)
+    FOnWeaponKilled OnWeaponKilled;
 
     // 무기 발사: 화면 중앙 기준 라인트레이스, 피격 처리 및 이펙트/디버그 라인 출력
     UFUNCTION(BlueprintCallable)
