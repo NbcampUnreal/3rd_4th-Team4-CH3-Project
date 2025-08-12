@@ -90,6 +90,13 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Animation")
     UAnimSequence* FireAnim;
 
+    // 재장전 시 재생할 스켈레탈 애니메이션(장전 애니메이션, 소리 등)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|Animation")
+    UAnimSequence* ReloadAnim;
+
+    UFUNCTION(BlueprintCallable, Category = "Weapon|Animation")
+    void PlayReloadAnimation();
+
     // by Yeoul
     // 탄약 변수
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
