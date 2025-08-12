@@ -131,16 +131,16 @@ void APPPGameState::Tick(float DeltaTime)
             PreviousDisplaySeconds = CurrentSeconds;
             //UE_LOG(LogGame, Log, TEXT("Tick 작동 중 - 남은 시간(초): %d"), CurrentSeconds);
         }
-        // 화면에 표시
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(
-                123456, // 고정 키(같은 메시지 갱신)
-                1.0f,   // 1초 표시
-                FColor::Yellow,
-                FString::Printf(TEXT("TIME LEFT: %d s"), CurrentSeconds)
-            );
-        }
+        // 화면에 표시  정현성 UI 충돌 때문에 주석 처리
+        //if (GEngine)
+        //{
+        //  GEngine->AddOnScreenDebugMessage(
+        //        123456, // 고정 키(같은 메시지 갱신)
+        //        1.0f,   // 1초 표시
+        //        FColor::Yellow,
+        //        FString::Printf(TEXT("TIME LEFT: %d s"), CurrentSeconds)
+        //    );
+        //}
         // 시간이 0 이하로 떨어졌을 경우 라운드 종료 처리
         if (RemainingTime <= 0.0f)
         {

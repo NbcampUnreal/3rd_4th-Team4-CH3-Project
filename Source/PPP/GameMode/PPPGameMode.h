@@ -6,8 +6,8 @@
 #include "GameDefines.h"
 #include "PPPGameState.h" // ✅ GameState 클래스 참조 추가
 #include "../Ai/PppBaseAICharacter.h" // Base AI Character
-#include "PPPGameMode.generated.h"
 #include "Blueprint/UserWidget.h" // 정현성 타임 UI 추가
+#include "PPPGameMode.generated.h"
 
 UCLASS()
 class PPP_API APPPGameMode : public AGameMode
