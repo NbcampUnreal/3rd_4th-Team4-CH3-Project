@@ -531,7 +531,7 @@ void APppCharacter::OnWeaponAmmoChanged(int32 CurrentAmmoInMag, int32 ReserveAmm
 // 성준모, 장전 입력 시 호출되는 함수 구현
 void APppCharacter::OnReload()
 {
-    UE_LOG(LogTemp, Warning, TEXT("[Check] OnReload pressed"));
+    UE_LOG(LogTemp, Warning, TEXT("재장전 R키 입력하셨습니다."));
 
     // 장착된 무기가 없을 때 실행
     if (!EquippedWeapon)
@@ -572,6 +572,8 @@ void APppCharacter::OnReload()
     // 유효한 장전 시간이면 타이머, 아니면 즉시 완료
     if (ReloadTime > 0.f)
     {
+        EquippedWeapon->PlayReloadAnimation(); // 무기 내부에서 SkeletalMesh로 재생
+
         GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &APppCharacter::FinishReload, ReloadTime, false);
     }
     else

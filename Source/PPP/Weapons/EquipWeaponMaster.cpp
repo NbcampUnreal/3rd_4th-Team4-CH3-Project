@@ -276,6 +276,14 @@ UTexture2D* AEquipWeaponMaster::GetAmmoIcon() const
 {
     return CachedData ? CachedData->AmmoThumbnail : AmmoImage; // PDA 우선
 }
+// 재장전 애니메이션 재생 함수 구현
+void AEquipWeaponMaster::PlayReloadAnimation()
+{
+    if (SkeletalMesh && ReloadAnim)
+    {
+        SkeletalMesh->PlayAnimation(ReloadAnim, false);
+    }
+}
 
 UWeaponDataAsset* AEquipWeaponMaster::GetWeaponData() const
 {
