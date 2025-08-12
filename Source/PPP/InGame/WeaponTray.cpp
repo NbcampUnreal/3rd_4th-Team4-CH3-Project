@@ -146,35 +146,6 @@ void UWeaponTray::HandleWeaponChanged(AEquipWeaponMaster* NewWeapon)
     LastIcon = NewWeapon->GetWeaponIcon();
 }
 
-
-    // 무기 있음 → 표시
-    bHasWeapon = true;
-    SetHudVisible(true);
-
-    // 직전 무기 아이콘을 Secondary에 먼저 채움
-    if (SecondaryWeaponImage)
-    {
-        SecondaryWeaponImage->SetBrushFromTexture(LastIcon);
-    }
-
-    // 이름 계산
-    const FText WeaponName =
-        !NewWeapon->WeaponDisplayName.IsEmpty()
-            ? NewWeapon->WeaponDisplayName
-            : FText::FromName(NewWeapon->GetFName());
-
-    // 현재 무기 아이콘 / 탄약 아이콘 / 발사모드 갱신하기
-    UpdateWeaponInfo(WeaponName, NewWeapon->GetWeaponIcon());   // 무기 PNG
-    SetAmmoIcon(NewWeapon->GetAmmoIcon());  // 탄약 PNG
-    UpdateFireModeTextFromWeapon(NewWeapon);
-
-    // 탄약 동기화
-    HandleAmmoChanged(NewWeapon->CurrentAmmoInMag, NewWeapon->ReserveAmmo);
-
-    // 다음 교체를 위해 현재 아이콘을 캐싱
-    LastIcon = NewWeapon->GetWeaponIcon();
-}
-
 void UWeaponTray::HandleAmmoChanged
 (
     int32 InMag,
