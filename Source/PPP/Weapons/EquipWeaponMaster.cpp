@@ -136,7 +136,7 @@ void AEquipWeaponMaster::Fire()
     //}
 
     // 정현성
-    // 위 코드 참고해서 비슷하게 썼습니다.
+    // 위 코드 참고해서 최대한 비슷하게 썼습니다.
     if (bHit && Hit.GetActor())
     {
         APppBaseAICharacter* HitAI = Cast<APppBaseAICharacter>(Hit.GetActor());
@@ -161,7 +161,6 @@ void AEquipWeaponMaster::Fire()
         else
         {
             // AI가 아닌 다른 액터를 맞췄을 때
-            OnWeaponHit.Broadcast();
             UE_LOG(LogTemp, Warning, TEXT("피격된 액터가 AI가 아닙니다."));
         }
     }
