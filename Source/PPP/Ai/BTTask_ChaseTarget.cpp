@@ -45,8 +45,7 @@ EBTNodeResult::Type UBTTask_ChaseTarget::ExecuteTask(UBehaviorTreeComponent& Own
     }
     else if (APppFleeAICharacter* FleeAIChar = Cast<APppFleeAICharacter>(MyPawn))
     {
-        // 도망치는 AI가 추격 태스크를 쓰는 경우 (혹은 다른 속도 설정)
-        // FleeAIChar->SetMovementSpeed(FleeAIChar->RunSpeed);
+
     }
 
 

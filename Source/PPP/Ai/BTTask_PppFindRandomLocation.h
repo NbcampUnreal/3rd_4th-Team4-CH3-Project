@@ -20,7 +20,4 @@ public:
     // 블랙보드 키 선택기
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Search")
     float SearchRadius;
-
-
-protected:
 };
