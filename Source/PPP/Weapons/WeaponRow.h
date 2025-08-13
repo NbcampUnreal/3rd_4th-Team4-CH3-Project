@@ -50,6 +50,22 @@ struct FWeaponRow : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     float FireDelay = 0.f;
 
+    // 샷건 전용 : 한 번에 발사하는 펠릿 수 (샷건 총알 중 작은  쇠구슬들)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 PelletCount = 1;
+
+    // 샷건 전용 : 펠릿 퍼짐 각도 (도 단위)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float SpreadAngle = 0.f;
+
+    // 로켓 런처 전용 : 폭발 반경
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ExPlosionRadius = 0.f;
+
+    // 로켓 런처 전용 : 폭발 반경 데미지
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ExplosionDamage = 0.f;
+
     // by Yeoul
     // PDA SoftRef: 런타임은 PDA만 진실원으로 사용
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Data")

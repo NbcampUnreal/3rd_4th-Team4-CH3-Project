@@ -118,6 +118,20 @@ public:
     // 마지막 발사 시간 - UWorld::GetTimeSeconds 기준
     float LastFireTime = -FLT_MAX;
 
+    // 폭발 FX와 사운드를 위한 Asset
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon|Explosion")
+    UParticleSystem* ExplosionFX = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon|Explosion")
+    USoundBase* ExplosionSound = nullptr;
+
+    // 폭발 연출 호출 함수
+    UFUNCTION(BlueprintCallable, Category="Weapon|Explosion")
+    void PlayExplosionEffect(const FVector& Location);
+
+    // 피격 기능 통합(현성님꺼랑 저(준모)꺼랑 합침)
+    bool ApplyDamageToHit(const FHitResult& Hit);
+
     // by Yeoul
     // 탄약 변수
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
@@ -153,12 +167,19 @@ protected:
     FDataTableRowHandle WeaponRow;  // by Yeoul: 멤버 이름 겹쳐서 변경
 
     // 무기 스탯: 장착 시 WeaponRow로부터 매핑되어 사용
-    float Damage;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Damage =0.f;
+
     int32 MagazineSize;
     float ReloadTime;
     FText WeaponName;   // by Yeoul: 무기 이름 UMG 바인딩 위해 타입 변경
     float FireRange;
     int32 WeaponIndex;
+    // 샷건, 로켓 런처에서 쓰이는 데이터 값들
+    int32 PelletCount;
+    float SpreadAngle;
+    float ExplosionRadius;
+    float ExplosionDamage;
 
 private:
     // by Yeoul
