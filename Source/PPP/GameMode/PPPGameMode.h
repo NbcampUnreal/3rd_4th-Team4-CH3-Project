@@ -28,6 +28,14 @@ public:
 
     void BindDeathEventsForExistingEnemies(); // 맵 내 모든 적에게 바인딩
 
+    UFUNCTION(BlueprintCallable, Category="Round")
+    void FlagRoundClearedWithoutStarting(); // 안전하게 라운드 클리어만
+
+    // 라운드 점수 합계
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Score")
+    int32 TotalScore = 0;
+
+
 	virtual void BeginPlay() override;
 
     // [탁] 라운드 기본 시간(초). 레벨별로 BeginPlay에서 세팅.

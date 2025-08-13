@@ -30,9 +30,13 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+    private:
+    UPROPERTY(VisibleAnywhere, Category = "Timer")
+    bool bIsTimerRunning = false;
 
 
 public:
+
     // 이 AI 캐릭터가 사용할 비헤이비어 트리 애셋
     UPROPERTY(EditAnywhere, Category = "AI")
     UBehaviorTree* BehaviorTreeAsset;

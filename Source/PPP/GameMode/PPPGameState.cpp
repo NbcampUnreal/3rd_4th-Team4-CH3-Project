@@ -92,13 +92,23 @@ bool APPPGameState::IsRoundCleared() const
 // -------------------------------
 void APPPGameState::StartRoundTimer(float Duration)
 {
-    RemainingTime = FMath::Max(0.0f, Duration); //음수 방지
+    // RemainingTime = FMath::Max(0.0f, Duration); //음수 방지
+    // RemainingTime = Duration;
+    // bIsTimerRunning = true;
+    // bTimedOut = false; //시작시 리셋
+    // PreviousDisplaySeconds = -1;  //표시될 초 리셋
+    // UE_LOG(LogTemp, Warning, TEXT("[GS] StartRoundTimer: Duration=%.2f"), RemainingTime);
+    if (bIsTimerRunning)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[GS] 타이머 이미 실행 중 → StartRoundTimer 중단"));
+        return;
+    }
+
     RemainingTime = Duration;
     bIsTimerRunning = true;
-    bTimedOut = false; //시작시 리셋
-    PreviousDisplaySeconds = -1;  //표시될 초 리셋
-    UE_LOG(LogTemp, Warning, TEXT("[GS] StartRoundTimer: Duration=%.2f"), RemainingTime);
+    bTimedOut = false;
 
+    UE_LOG(LogTemp, Warning, TEXT("[GS] 라운드 타이머 시작: %.1f초"), Duration);
 
 }
 
@@ -135,20 +145,21 @@ void APPPGameState::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (bIsTimerRunning)
+    if (!bIsTimerRunning || bTimedOut) return;
+
+    RemainingTime -= DeltaTime;
+
+    if (RemainingTime <= 0.f)
     {
-        // 매 프레임마다 시간 감소
-        RemainingTime -= DeltaTime;
+        RemainingTime = 0.f;
+        bTimedOut = true;
+        bIsTimerRunning = false; // 타이머 종료 처리
 
-        const int32 CurrentSeconds = FMath::Max(0, FMath::CeilToInt(RemainingTime));
+        UE_LOG(LogTemp, Warning, TEXT("[GS] 라운드 제한 시간 종료됨"));
 
-
-        // 초 단위가 바뀌었을 때만 로그 출력 (중복 출력 방지)
-        if (CurrentSeconds != PreviousDisplaySeconds)
-        {
-            PreviousDisplaySeconds = CurrentSeconds;
-            UE_LOG(LogTemp, Log, TEXT("[GS:Tick] 남은 시간: %d초 (%.2f)"), CurrentSeconds, RemainingTime);
-        }
+        OnRoundTimerFinished();
+        // 타이머 종료 후 처리
+    }
         // 화면에 표시  정현성 UI 충돌 때문에 주석 처리
         //if (GEngine)
         //{
@@ -160,9 +171,6 @@ void APPPGameState::Tick(float DeltaTime)
         //    );
         //}
         // 시간이 0 이하로 떨어졌을 경우 라운드 종료 처리
-        if (RemainingTime <= 0.0f)
-        {
-            OnRoundTimerFinished();
-        }
+
     }
-}
+

@@ -1,6 +1,7 @@
 // PPPGameMode.cpp
 #include "PPPGameMode.h"
 #include "PPPGameState.h"                 // GameState 캐스팅
+#include "../GameMode/PPPGameState.h"
 #include "EngineUtils.h"                  // TActorIterator
 #include "DummyEnemy.h"
 #include "Kismet/GameplayStatics.h"
@@ -56,6 +57,16 @@ void APPPGameMode::BindDeathEventsForExistingEnemies()
         // 중복 바인딩 방지
         Enemy->OnDeath.AddUniqueDynamic(this, &APPPGameMode::OnEnemyKilledFromDelegate);
     }
+}
+
+void APPPGameMode::FlagRoundClearedWithoutStarting()
+{
+    ++CurrentRound;
+    TotalScore = 0;
+    OnRoundClearedSignal.Broadcast();
+
+    // StartRound 호출 X
+    // StairRoundTrigger에서만 StartRound 시작하게 유도
 }
 
 void APPPGameMode::BeginPlay()
@@ -290,10 +301,10 @@ void APPPGameMode::EndRound()
     UE_LOG(LogWave, Log, TEXT("라운드 %d 종료!"), GS->CurrentRound);
 
     // 점수 또는 적 처치 조건 충족 여부 판단
-    const bool bClearedByScore   = GS->IsRoundCleared();
+    //const bool bClearedByScore   = GS->IsRoundCleared();
     const bool bClearedByEnemies = (GS->RemainingEnemies <= 0);
 
-    if (bClearedByScore || bClearedByEnemies)
+    if (bClearedByEnemies)
     {
         UE_LOG(LogGame, Log, TEXT("조건 충족 → 라운드 클리어"));
         OnRoundCleared();
@@ -310,23 +321,35 @@ void APPPGameMode::OnEnemyKilled()
     APPPGameState* GS = GetGameState<APPPGameState>();
     if (!GS) return;
 
-    // 정현성
-    // 퀘스트 진행도 업데이트
+    if (GS->GetCurrentState() != EGameState::InProgress)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("적 처치 무시: 현재 상태는 전투 중이 아님"));
+        return;
+    }
+
+    // 퀘스트만 업데이트
     if (QuestComponent)
     {
         QuestComponent->OnEnemyKilled(1);
     }
 
+    // 점수 증가
+    GS->AddScore(ScorePerKill);
 
-    //  킬당 Score 지급
-    GS->AddScore(ScorePerKill); // UI 업데이트까지 내부에서 처리됨
-
-    const int32 NewCount = GS->RemainingEnemies - 1;
+    const int32 NewCount = FMath::Max(GS->RemainingEnemies - 1, 0);
     GS->SetRemainingEnemies(NewCount);
 
     UE_LOG(LogEnemy, Log, TEXT("적 처치! 남은 적: %d, 현재 점수: %d"), NewCount, GS->GetScore());
 
     CheckRewardCondition();
+
+    // 🎯 Stage1일 경우 EndRound 호출 안 함
+    const FString LevelName = UGameplayStatics::GetCurrentLevelName(this, true);
+    if (LevelName.Contains(TEXT("Stage1")) || LevelName.Contains(TEXT("stage1")))
+    {
+        UE_LOG(LogEnemy, Log, TEXT("Stage1 - 처치만으로 라운드 종료 안 함."));
+        return;
+    }
 
     if (NewCount <= 0)
     {
@@ -415,13 +438,13 @@ void APPPGameMode::CheckRewardCondition()
         {
             UE_LOG(LogGame, Warning, TEXT("RewardActor가 설정되지 않았습니다."));
         }
-
-        // 점수 조건을 만족하면 라운드 종료
-        if (GS->GetCurrentState() == EGameState::InProgress)
-        {
-            UE_LOG(LogGame, Log, TEXT("점수 조건 충족 → 라운드 종료 호출"));
-            EndRound();
-        }
+        // 게임방식 변경되어 삭제예정!
+        // // 점수 조건을 만족하면 라운드 종료
+        // if (GS->GetCurrentState() == EGameState::InProgress)
+        // {
+        //     UE_LOG(LogGame, Log, TEXT("점수 조건 충족 → 라운드 종료 호출"));
+        //     EndRound();
+        // }
     }
 }
 
