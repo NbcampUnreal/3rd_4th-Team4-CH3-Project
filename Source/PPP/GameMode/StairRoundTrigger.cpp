@@ -1,10 +1,9 @@
-
 #include "StairRoundTrigger.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "PPPGameMode.h"
 #include "PPPGameState.h"
-#include "GameFramework/Character.h"
+#include "PPPCharacter.h"  // [수정] 플레이어 클래스 확인용으로 추가
 
 AStairRoundTrigger::AStairRoundTrigger()
 {
@@ -40,8 +39,9 @@ void AStairRoundTrigger::OnBoxBeginOverlap(
     // 트리거가 비활성 상태이면 작동하지 않음
     if (!bEnabled) return;
 
-    // 플레이어(캐릭터)만 허용
-    if (!OtherActor || !OtherActor->IsA(ACharacter::StaticClass())) return;
+    // [수정] 플레이어 클래스(APppCharacter)만 허용
+    APppCharacter* Player = Cast<APppCharacter>(OtherActor);
+    if (!Player) return;
 
     // GameMode / GameState 참조
     APPPGameMode* GM = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this));
@@ -102,4 +102,3 @@ void AStairRoundTrigger::OnBoxBeginOverlap(
         Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     }
 }
-
