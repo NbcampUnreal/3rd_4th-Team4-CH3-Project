@@ -104,7 +104,7 @@ void APppChaseAICharacter::OnMeleeDamageOverlap(UPrimitiveComponent* OverlappedC
             }
         }
     }
-    GetWorldTimerManager().SetTimer(MeleeCollisionTimerHandle, this, &APppChaseAICharacter::ApplyMeleeDamage, 1.0f, false);
+    GetWorldTimerManager().SetTimer(MeleeCollisionTimerHandle, this, &APppChaseAICharacter::ApplyMeleeDamage, 0.8f, false);
 }
 
 void APppChaseAICharacter::DeactivateMeleeDamageCollision()
