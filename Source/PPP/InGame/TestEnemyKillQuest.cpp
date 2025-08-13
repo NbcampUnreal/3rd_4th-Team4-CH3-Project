@@ -49,7 +49,6 @@ void UTestEnemyKillQuest::CompleteQuest()
     QuestState = EQuestState::Completed;
     UE_LOG(LogTemp, Warning, TEXT("Quest '%s' Completed!"), *QuestName.ToString());
 
-    // 이미 보상 줬으면 무시
     if (bRewardGiven || !RewardWeaponClass || !OwnerActor)
     {
         UE_LOG(LogTemp, Warning, TEXT("[Quest] 보상 스폰 조건 불충족 - bRewardGiven: %d, RewardWeaponClass: %s, OwnerActor: %s"),
@@ -59,15 +58,15 @@ void UTestEnemyKillQuest::CompleteQuest()
         return;
     }
 
-    // 보상 무기 스폰
     FVector SpawnLocation = OwnerActor->GetActorLocation() + FVector(0, 0, 150.f);
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = OwnerActor;
 
-    // ✅ 디버그용 구체 시각화
+    // 시각화
     DrawDebugSphere(OwnerActor->GetWorld(), SpawnLocation, 30.f, 12, FColor::Green, false, 5.f);
 
-    AEquipWeaponMaster* Reward = OwnerActor->GetWorld()->SpawnActor<AEquipWeaponMaster>(
+    // ✅ 올바른 타입으로 스폰
+    APickUpWeaponMaster* Reward = OwnerActor->GetWorld()->SpawnActor<APickUpWeaponMaster>(
         RewardWeaponClass, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
 
     if (Reward)

@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "TestEnemyKillQuest.h"
+#include "PickUpWeaponMaster.h"
 #include "TestQuestActorComponent.generated.h" // 이 줄은 파일 마지막에 있어야 함
 
 class AEquipWeaponMaster;
@@ -33,7 +34,7 @@ public:
 
     // ✅ 보상 기본 클래스(에디터에서 세팅)
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Quest|Reward")
-    TSubclassOf<AEquipWeaponMaster> DefaultRewardWeaponClass;
+    TSubclassOf<APickUpWeaponMaster> DefaultRewardWeaponClass;
 
     // 퀘스트 목표 단계 배열 (20, 30, 40)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")

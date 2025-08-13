@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/Actor.h"      // GetOwner
 #include "EquipWeaponMaster.h"        // AEquipWeaponMaster (보상 클래스용)
+#include "PickUpWeaponMaster.h"
 
 
 UTestQuestActorComponent::UTestQuestActorComponent()

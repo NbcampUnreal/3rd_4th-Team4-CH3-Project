@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "PickUpWeaponMaster.h"
+
 #include "TestEnemyKillQuest.generated.h"
 
 class AActor;
@@ -73,7 +75,7 @@ public: // <--- 'public:' 접근 지정자는 이 위치에 있어야 합니다.
 
     /** ✅ 추가: 보상 무기 클래스 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest|Reward")
-    TSubclassOf<AEquipWeaponMaster> RewardWeaponClass;
+    TSubclassOf<APickUpWeaponMaster> RewardWeaponClass;
 
 private:
     /** ✅ 추가: 중복 보상 방지용 */
