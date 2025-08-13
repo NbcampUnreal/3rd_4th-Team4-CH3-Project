@@ -4,7 +4,7 @@
 #include "GameFramework/GameMode.h"
 #include "DummyEnemy.h"
 #include "GameDefines.h"
-#include "PPPGameState.h" // ✅ GameState 클래스 참조 추가
+#include "PPPGameState.h" // GameState 클래스 참조 추가
 #include "../Ai/PppBaseAICharacter.h" // Base AI Character
 #include "Blueprint/UserWidget.h" // 정현성 타임 UI 추가
 #include "PPPGameMode.generated.h"
@@ -69,6 +69,22 @@ public:
 
     UPROPERTY(BlueprintAssignable, Category="Round")
     FOnRoundClearedSignal OnRoundClearedSignal;
+
+    // 여우리
+    // 라운드 클리어 직후 출구 제한시간 시작 (시간 내 못 들어가면 GameOver)
+    UFUNCTION(BlueprintCallable, Category="Stage")
+    void StartExitWindow();
+
+    // 코드 추가한 범인은 바로.... <김여울>
+    // 게이트 겹침 시 호출(트리거나 BP에서 호출)
+    UFUNCTION(BlueprintCallable, Category="Gate")
+    void EnterNextStage();
+
+    // 김여울
+    // 출구 제한시간 초과 시(GameState에서 콜백)
+    UFUNCTION()
+    void OnExitTimeOver();
+
 protected:
 
     // 현재 라운드 번호
@@ -119,4 +135,21 @@ protected:
     // 타임 위젯 블루프린트 클래스
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
     TSubclassOf<UUserWidget> TimeWidgetClass;
+
+    // 김여울
+    // 출구 제한시간 기본값(클리어 후 StartExitWindow 호출 시 쓰는 값)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gate|Timer", meta=(ClampMin="1.0"))
+    float ExitWindowSeconds = 30.f;
+
+    // 태그로 씬의 게이트 찾기(BP 트리거나 액터에 "StageGate" 태그 부여)
+    UPROPERTY(EditAnywhere, Category="Gate")
+    FName ExitGateTag = TEXT("StageGate");
+
+    // 씬의 게이트 참조(자동 캐싱)
+    UPROPERTY(VisibleAnywhere, Category="Gate")
+    AActor* ExitGate = nullptr;
+
+    // 출구 오픈 상태
+    UPROPERTY(VisibleAnywhere, Category="Gate")
+    bool bGateOpen = false;
 };

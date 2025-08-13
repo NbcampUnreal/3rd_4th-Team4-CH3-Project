@@ -11,14 +11,17 @@ void UGameOverWidget::NativeConstruct()
     {
         Return_BTN->OnClicked.AddDynamic(this, &UGameOverWidget::OnReturnToMainMenuClicked);
     }
+}
 
-    // 캐릭터의 델리게이트를 바인딩해서 로그 찍어보기 -> GameMode에서 바인딩되면 이부분 삭제
-    /*
-    if (APppCharacter* PlayerChar = Cast<APppCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+void UGameOverWidget::NativeDestruct
+(
+)
+{
+    if (Return_BTN)
     {
-        PlayerChar->OnCharacterDead.AddDynamic(this, &UGameOverWidget::HandlePlayerDeath);
+        Return_BTN->OnClicked.RemoveDynamic(this, &UGameOverWidget::OnReturnToMainMenuClicked);
     }
-    */
+    Super::NativeDestruct();
 }
 
 void UGameOverWidget::OnReturnToMainMenuClicked()

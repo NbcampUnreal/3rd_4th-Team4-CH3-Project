@@ -43,8 +43,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "UI")
     void UpdateWeaponInfo(const FText& NewWeaponName, UTexture2D* NewWeaponImage);
 
-    // 탄약 정보를 업데이트 하는 함수
-    UFUNCTION(BlueprintCallable, Category = "UI")
+    UFUNCTION(BlueprintCallable, Category="UI")
     void UpdateAmmoText(int32 NewAmmoInMag, int32 NewReserveAmmo);
 
 protected:
@@ -52,25 +51,21 @@ protected:
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UTextBlock> WeaponNameText;
     UPROPERTY(meta = (BindWidget))
-    TObjectPtr<UImage> PrimaryWeaponImage;
-    UPROPERTY(meta = (BindWidget))
-    TObjectPtr<UImage> SecondaryWeaponImage;
+    TObjectPtr<UImage> WeaponImage;
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UTextBlock> CurrentAmmoText;
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UTextBlock> ReserveAmmoText;
     UPROPERTY(meta = (BindWidget))
     TObjectPtr<UTextBlock> FireModeText;
-    UPROPERTY(meta=(BindWidget))
-    TObjectPtr<UImage> AmmoImage;
 
     // 시작 시 숨김/표시 전환용 루트
     UPROPERTY(meta=(BindWidgetOptional))
     TObjectPtr<UWidget> TrayAnchor;
 
     // 애니메이션 바인딩
-    UPROPERTY(meta = (BindWidgetAnim), Transient)
-    UWidgetAnimation* WeaponSwap = nullptr;
+    // UPROPERTY(meta = (BindWidgetAnim), Transient)
+    // UWidgetAnimation* WeaponSwap = nullptr;
 
 private:
     // 델리게이트 바인드용
@@ -83,16 +78,8 @@ private:
     // Fire Mode UI 갱신
     void UpdateFireModeTextFromWeapon(AEquipWeaponMaster* Weapon);
 
-    // 아이콘 세터
-    UFUNCTION(BlueprintCallable, Category="UI")
-    void SetAmmoIcon(UTexture2D* NewAmmoImage);
-
     // 캐릭터 참조를 저장
     UPROPERTY() APppCharacter* CachedCharacter = nullptr;
-
-    // 직전 무기 아이콘 (Secondary Weapon Image 용)
-    UPROPERTY(Transient)
-    TObjectPtr<UTexture2D> LastIcon = nullptr;
 
     // 무기 보유 여부 가드
     bool bHasWeapon = false;
