@@ -13,8 +13,6 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Animation/AnimInstance.h"
-#include "Animation/AnimMontage.h"
 
 APppCharacter::APppCharacter()
 {
@@ -546,12 +544,10 @@ void APppCharacter::OnReload()
 {
     UE_LOG(LogTemp, Warning, TEXT("재장전 R키 입력하셨습니다."));
 
-    UAnimMontage* MontageToPlay;
+    //UAnimMontage* MontageToPlay;
     // 장착된 무기가 없을 때 실행
     if (!EquippedWeapon)
     {
-        UAnimInstance* ReloadAnim = GetMesh()->GetAnimInstance();
-        ReloadAnim->Montage_Play(MontageToPlay, 1.f);
         UE_LOG(LogTemp, Warning, TEXT("Reload 실패 : 장착된 무기가 없습니다."));
         return;
     }
