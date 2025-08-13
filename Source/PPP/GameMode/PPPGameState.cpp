@@ -37,6 +37,18 @@ void APPPGameState::SetRemainingEnemies(int32 Count)
 {
 	RemainingEnemies = Count;
 }
+void APPPGameState::BeginPlay()
+{
+    Super::BeginPlay();
+
+    UE_LOG(LogTemp, Warning, TEXT("[GS] BeginPlay: %s  CanEverTick=%s"),
+        *GetClass()->GetName(),
+        PrimaryActorTick.bCanEverTick ? TEXT("true") : TEXT("false"));
+
+    // 혹시 비활성일 수 있어 강제 Enable
+    SetActorTickEnabled(true);
+    UE_LOG(LogTemp, Warning, TEXT("[GS] TickEnabled=%s"), IsActorTickEnabled() ? TEXT("true") : TEXT("false"));
+}
 
 // -------------------------------
 // Getter 함수들 정의
@@ -85,15 +97,21 @@ void APPPGameState::StartRoundTimer(float Duration)
     bIsTimerRunning = true;
     bTimedOut = false; //시작시 리셋
     PreviousDisplaySeconds = -1;  //표시될 초 리셋
+    UE_LOG(LogTemp, Warning, TEXT("[GS] StartRoundTimer: Duration=%.2f"), RemainingTime);
+
+
 }
 
 void APPPGameState::StopRoundTimer()
 {
     bIsTimerRunning = false;
+    UE_LOG(LogTemp, Warning, TEXT("[GS] StopRoundTimer: Remain=%.2f"), RemainingTime);
+
 }
 
 void APPPGameState::OnRoundTimerFinished()
 {
+    UE_LOG(LogTemp, Warning, TEXT("[GS] TimerFinished 호출"));
     UE_LOG(LogGame, Warning, TEXT("라운드 제한 시간 종료됨"));
 
     bIsTimerRunning = false; //타이머 중단
@@ -129,7 +147,7 @@ void APPPGameState::Tick(float DeltaTime)
         if (CurrentSeconds != PreviousDisplaySeconds)
         {
             PreviousDisplaySeconds = CurrentSeconds;
-            //UE_LOG(LogGame, Log, TEXT("Tick 작동 중 - 남은 시간(초): %d"), CurrentSeconds);
+            UE_LOG(LogTemp, Log, TEXT("[GS:Tick] 남은 시간: %d초 (%.2f)"), CurrentSeconds, RemainingTime);
         }
         // 화면에 표시  정현성 UI 충돌 때문에 주석 처리
         //if (GEngine)

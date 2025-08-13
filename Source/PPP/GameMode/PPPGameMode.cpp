@@ -9,6 +9,7 @@
 #include "EnemySpawnVolume.h"
 #include "PPPCharacter.h"                 // 플레이어 캐릭터
 #include "../characters/PppPlayerController.h" // 플레이어 컨트롤러
+#include "Blueprint/UserWidget.h"         // [추가] UUserWidget 사용 안전 헤더
 
 APPPGameMode::APPPGameMode()
 {
@@ -21,11 +22,43 @@ APPPGameMode::APPPGameMode()
 
     // 기본 플레이어 컨트롤러
     PlayerControllerClass = APppPlayerController::StaticClass();
+
+    // [탁] 기본 자동 시작 대상 레벨: stage1, stage2
+    AutoStartLevels = { FName(TEXT("stage1")), FName(TEXT("stage2")) };
 }
 
 void APPPGameMode::BeginPlay()
 {
     Super::BeginPlay();
+
+    // ===== [추가] 레벨별 라운드 기본 시간/모드 설정 (Stage1=60초, Stage2=120초) =====
+
+    const FString Lraw = UGameplayStatics::GetCurrentLevelName(this, /*bRemovePrefixString=*/true);
+    FString L = Lraw.ToLower();
+    L.ReplaceInline(TEXT("_"), TEXT(""));   // stage_1 → stage1
+    L.ReplaceInline(TEXT(" "), TEXT(""));   // "stage 1" → stage1
+
+    bUseStageTimer = false; // 전투 타이머 고정
+
+    if (L.Contains(TEXT("stage2")) || L.Contains(TEXT("stage02")))
+    {
+        ExitWindowSeconds = 120.f;
+        UE_LOG(LogGame, Log, TEXT("[GM] Stage2 설정 적용: ExitWindowSeconds=%.1f, bUseStageTimer=%s"),
+               ExitWindowSeconds, bUseStageTimer ? TEXT("true") : TEXT("false"));
+    }
+    else if (L.Contains(TEXT("stage1")) || L.Contains(TEXT("stage01")))
+    {
+        ExitWindowSeconds = 60.f;
+        UE_LOG(LogGame, Log, TEXT("[GM] Stage1 설정 적용: ExitWindowSeconds=%.1f, bUseStageTimer=%s"),
+               ExitWindowSeconds, bUseStageTimer ? TEXT("true") : TEXT("false"));
+    }
+    else
+    {
+        ExitWindowSeconds = 60.f; // 기본
+        UE_LOG(LogGame, Log, TEXT("[GM] Stage 설정 적용(기본): ExitWindowSeconds=%.1f, bUseStageTimer=%s"),
+               ExitWindowSeconds, bUseStageTimer ? TEXT("true") : TEXT("false"));
+    }
+
 
     /* 자동 라운드/스테이지 타이머 시작 제거 (ExitWindow에서만 켜도록 할게요!!) - 김여울
      *if (APPPGameState* GS = GetGameState<APPPGameState>())
@@ -45,14 +78,14 @@ void APPPGameMode::BeginPlay()
         UE_LOG(LogTemp, Warning, TEXT("APppCharacter not found in GameMode::BeginPlay"));
     }
 
-    // [추가] Stage2 맵이면 스테이지 타이머 사용 플래그 자동 활성화 (BP에서 직접 켜도 됨)
-    {
-        const FString LevelName = UGameplayStatics::GetCurrentLevelName(this, /*bRemovePrefixString=*/true);
-        if (LevelName.Contains(TEXT("Stage2")))
-        {
-            bUseStageTimer = true;
-        }
-    }
+    // [추가] Stage2 맵이면 스테이지 타이머 사용 플래그 자동 활성화 (BP에서 직접 켜도 됨) 우선끄고 테스트
+    // {
+    //     const FString LevelName = UGameplayStatics::GetCurrentLevelName(this, /*bRemovePrefixString=*/true);
+    //     if (LevelName.Contains(TEXT("Stage2")))
+    //     {
+    //         bUseStageTimer = true;
+    //     }
+    // }
 
     /* 비긴 플레이에서 스테이지 바로 시작하지 않게 주석처리할게요!!! - 김여울
     // [추가] 스테이지 타이머 시작 (예: 120초). GameState의 라운드 타이머를 재사용.
@@ -94,7 +127,40 @@ void APPPGameMode::BeginPlay()
             UE_LOG(LogGame, Warning, TEXT("ExitGate(Tag=%s) not found."), *ExitGateTag.ToString());
         }
     }
+
+    // [추가] 최종 확정값 로그
+    UE_LOG(LogGame, Log, TEXT("[GM] Final Timer Setup → ExitWindowSeconds=%.1f, OverrideByLevel=%s, UseStageTimer=%s, GameMode=%s"),
+           ExitWindowSeconds,
+           bOverrideExitSecondsByLevel ? TEXT("true") : TEXT("false"),
+           bUseStageTimer ? TEXT("true") : TEXT("false"),
+           *GetClass()->GetName());
+
+    // [자동 시작] 현재 레벨명이 AutoStartLevels에 들어있으면 라운드 자동 시작
+    {
+        const FString CurLevel = UGameplayStatics::GetCurrentLevelName(this, /*bRemovePrefixString=*/true);
+        UE_LOG(LogGame, Log, TEXT("[GameMode] BeginPlay. CurrentLevel='%s'"), *CurLevel);
+
+        for (const FName& AutoName : AutoStartLevels)
+        {
+            // 부분 일치 허용(예: "Stage2_P" 같은 변형 대응)
+            if (CurLevel.Contains(AutoName.ToString(), ESearchCase::IgnoreCase, ESearchDir::FromStart))
+            {
+                UE_LOG(LogGame, Log, TEXT("[GameMode] Level '%s' 진입 → 자동 StartRound() 실행"), *CurLevel);
+                StartRound();
+                break;
+            }
+        }
+    }
 }
+
+
+
+    // ===== [추가 끝] =====
+
+    // (만약 네 프로젝트에 "레벨 진입 시 자동 StartRound()" 블록이 아래에 있다면 그건 그대로 둬도 됨)
+
+
+
 
 void APPPGameMode::SetGameState(EGameState NewState)
 {
@@ -139,17 +205,20 @@ void APPPGameMode::StartRound()
     APPPGameState* GS = GetGameState<APPPGameState>();
     if (GS)
     {
-        GS->SetGameState(EGameState::InProgress);
+        GS->SetGameState(EGameState::InProgress); // [복구] 전투 상태로 진입
+
         // 라운드 증가 로직은 OnRoundCleared()에서만 처리
         GS->SetRemainingEnemies(EnemiesPerRound);
         UE_LOG(LogWave, Log, TEXT("Wave %d 시작!"), GS->CurrentRound);
 
-        // 3) 타이머 시작 (GS 널 체크 내부에서 안전하게 처리)
-        // [변경] 스테이지 타이머 사용 중이면 라운드 타이머는 켜지지 않음
-        if (!bUseStageTimer)
-        {
-            GS->StartRoundTimer(20.0f);
-        }
+        // [로그] 라운드 타이머 분기 확인
+        UE_LOG(LogTemp, Warning, TEXT("[GM] StartRound: bUseStageTimer=%s"),
+            bUseStageTimer ? TEXT("true") : TEXT("false"));
+
+        // [통일] 라운드 타이머는 ExitWindowSeconds로 '한 번만' 시작
+        GS->StartRoundTimer(ExitWindowSeconds);
+        UE_LOG(LogTemp, Warning, TEXT("[GM] GS->StartRoundTimer(%.1f) 호출됨 (ExitWindowSeconds)"), ExitWindowSeconds);
+
     }
 
     // 4) 적 스폰
@@ -159,13 +228,13 @@ void APPPGameMode::StartRound()
     bRewardGiven = false;
 }
 
+
 void APPPGameMode::EndRound()
 {
     SetGameState(EGameState::RoundEnded);
 
     APPPGameState* GS = GetGameState<APPPGameState>();
     if (!GS) return;
-
 
     // [추가] 시간 초과는 무조건 게임 오버
     if (GS->HasTimedOut())
@@ -262,7 +331,6 @@ void APPPGameMode::SpawnEnemies()
     }
 }
 
-
 int32 APPPGameMode::GetMaxRounds() const
 {
     return MaxRounds;
@@ -354,10 +422,10 @@ void APPPGameMode::StartExitWindow()
 
     if (APPPGameState* GS = GetGameState<APPPGameState>())
     {
-        GS->StartRoundTimer(StageTimerSeconds);   // 시간이 끝나면 GameState→EndRound()→HasTimedOut() 경로로 GameOver 자동
+        GS->StartRoundTimer(ExitWindowSeconds);   // 시간이 끝나면 GameState→EndRound()→HasTimedOut() 경로로 GameOver 자동
     }
 
-    UE_LOG(LogGame, Log, TEXT("출구 제한시간 시작: %.1f초"), StageTimerSeconds);
+    UE_LOG(LogGame, Log, TEXT("출구 제한시간 시작: %.1f초"), ExitWindowSeconds);
 }
 
 void APPPGameMode::EnterNextStage()

@@ -13,6 +13,10 @@ class PPP_API APPPGameState : public AGameState
 public:
 	APPPGameState();
 
+    // [추가] 타이머 로그를 켜고 끄는 스위치
+    UPROPERTY(EditAnywhere, Category="Round|Debug")
+    bool bDebugTimerLogs = true;
+
 	/** 현재 게임 상태 (InProgress, GameOver 같은 거) */
 	UPROPERTY(BlueprintReadOnly, Category="State")
 	EGameState CurrentState;
@@ -66,6 +70,8 @@ public:
 
     UFUNCTION(BlueprintPure, Category="Timer")
     bool HasTimedOut() const { return bTimedOut; }//스테이지 타임아웃 여부
+
+    virtual void BeginPlay() override; // [로그용] 실제로 GS가 뜨는지 확인
 
 private:
     UPROPERTY(VisibleAnywhere, Category="Timer")

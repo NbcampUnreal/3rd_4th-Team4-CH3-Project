@@ -55,12 +55,12 @@ void UBTService_FleeDetectPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, ui
     {
         BlackboardComp->SetValueAsBool(PlayerDetectedKey.SelectedKeyName, true);
         BlackboardComp->SetValueAsVector(PlayerLocationKey.SelectedKeyName, PlayerPawn->GetActorLocation());
-        UE_LOG(LogTemp, Warning, TEXT("FleeAI: Player DETECTED within %.2f. Distance: %.2f"), ActualDetectionRadius, DistanceToPlayer);
+        //UE_LOG(LogTemp, Warning, TEXT("FleeAI: Player DETECTED within %.2f. Distance: %.2f"), ActualDetectionRadius, DistanceToPlayer);
     }
     else
     {
         BlackboardComp->ClearValue(PlayerDetectedKey.SelectedKeyName);
         BlackboardComp->ClearValue(PlayerLocationKey.SelectedKeyName);
-        UE_LOG(LogTemp, Warning, TEXT("FleeAI: Player NOT DETECTED. Distance: %.2f"), DistanceToPlayer);
+        //UE_LOG(LogTemp, Warning, TEXT("FleeAI: Player NOT DETECTED. Distance: %.2f"), DistanceToPlayer);
     }
 }
