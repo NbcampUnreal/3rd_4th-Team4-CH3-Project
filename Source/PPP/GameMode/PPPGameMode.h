@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "GameFramework/GameModeBase.h"
 #include "DummyEnemy.h"
 #include "GameDefines.h"
 #include "PPPGameState.h" // GameState 클래스 참조 추가
@@ -18,6 +19,10 @@ public:
 	APPPGameMode();
 
 	virtual void BeginPlay() override;
+
+    // [탁] 라운드 기본 시간(초). 레벨별로 BeginPlay에서 세팅.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Round|Timer")
+    float RoundTimePerRound = 60.f; // 기본 60초 (Stage1 용)
 
     // 현재 라운드 번호 반환
     UFUNCTION(BlueprintCallable, Category="Round")
@@ -85,7 +90,16 @@ public:
     UFUNCTION()
     void OnExitTimeOver();
 
+    // [탁] 레벨 로드시 자동 라운드 시작 여부
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Round|AutoStart")
+    bool bAutoStartRoundOnLevelLoad = true;
+
+    // [탁] 자동 시작을 적용할 레벨 이름 목록(소문자 권장: "stage1", "stage2")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Round|AutoStart")
+    TArray<FName> AutoStartLevels;
+
 protected:
+
 
     // 현재 라운드 번호
     UPROPERTY(VisibleAnywhere, Category="Round")
@@ -152,4 +166,10 @@ protected:
     // 출구 오픈 상태
     UPROPERTY(VisibleAnywhere, Category="Gate")
     bool bGateOpen = false;
+
+    // 디테일창 값(ExitWindowSeconds)을 우선 사용할지 여부
+    // false면: 디테일창 값 그대로 사용
+    // true면 : BeginPlay에서 맵 이름으로 ExitWindowSeconds를 덮어씀
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Round|Timer")
+    bool bOverrideExitSecondsByLevel = false;
 };

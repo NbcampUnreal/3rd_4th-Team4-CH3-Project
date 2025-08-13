@@ -230,7 +230,7 @@ void APppCharacter::StartSprint(const FInputActionValue& value)
     if (GetCharacterMovement())
     {
         GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-        UE_LOG(LogTemp, Warning, TEXT("Fast : %f"), GetCharacterMovement()->MaxWalkSpeed);
+        //UE_LOG(LogTemp, Warning, TEXT("Fast : %f"), GetCharacterMovement()->MaxWalkSpeed);
     }
 }
 void APppCharacter::StopSprint(const FInputActionValue& value)
@@ -238,7 +238,7 @@ void APppCharacter::StopSprint(const FInputActionValue& value)
     if (GetCharacterMovement())
     {
         GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
-        UE_LOG(LogTemp, Warning, TEXT("Slow : %f"), GetCharacterMovement()->MaxWalkSpeed);
+        //UE_LOG(LogTemp, Warning, TEXT("Slow : %f"), GetCharacterMovement()->MaxWalkSpeed);
     }
 }
 void APppCharacter::ZoomIn(const FInputActionValue& value)
