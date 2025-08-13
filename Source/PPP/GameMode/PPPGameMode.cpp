@@ -256,20 +256,18 @@ void APPPGameMode::StartRound()
     APPPGameState* GS = GetGameState<APPPGameState>();
     if (GS)
     {
-        GS->SetGameState(EGameState::InProgress); // [복구] 전투 상태로 진입
-
-        // 라운드 증가 로직은 OnRoundCleared()에서만 처리
+        GS->SetGameState(EGameState::InProgress);
         GS->SetRemainingEnemies(EnemiesPerRound);
         UE_LOG(LogWave, Log, TEXT("Wave %d 시작!"), GS->CurrentRound);
 
-        // [로그] 라운드 타이머 분기 확인
-        UE_LOG(LogTemp, Warning, TEXT("[GM] StartRound: bUseStageTimer=%s"),
-            bUseStageTimer ? TEXT("true") : TEXT("false"));
+        // [수정] 라운드 타이머 초기화
+        float InitTime = bUseStageTimer ? StageTimerSeconds : RoundTimePerRound;
+        GS->SetRemainingTime(InitTime);
+        UE_LOG(LogTemp, Warning, TEXT("[GM] RemainingTime 초기화: %.1f초"), InitTime);
 
-        // [통일] 라운드 타이머는 ExitWindowSeconds로 '한 번만' 시작
+        // [기존] ExitWindowSeconds 타이머 시작
         GS->StartRoundTimer(ExitWindowSeconds);
         UE_LOG(LogTemp, Warning, TEXT("[GM] GS->StartRoundTimer(%.1f) 호출됨 (ExitWindowSeconds)"), ExitWindowSeconds);
-
     }
 
     // 4) 적 스폰

@@ -5,6 +5,8 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 
+
+
 APPPGameState::APPPGameState()
 {
 	CurrentState = EGameState::WaitingToStart;
@@ -22,6 +24,10 @@ EGameState APPPGameState::GetCurrentState() const
 // -------------------------------
 // GameMode → GameState 데이터 전달 함수들
 // -------------------------------
+void APPPGameState::SetRemainingTime(float NewTime)
+{
+    RemainingTime = NewTime;
+}
 
 void APPPGameState::SetGameState(EGameState NewState)
 {

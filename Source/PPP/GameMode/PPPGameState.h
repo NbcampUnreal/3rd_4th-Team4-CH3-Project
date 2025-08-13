@@ -11,6 +11,9 @@ class PPP_API APPPGameState : public AGameState
 	GENERATED_BODY()
 
 public:
+
+    void SetRemainingTime(float NewTime);
+
 	APPPGameState();
 
     // [추가] 타이머 로그를 켜고 끄는 스위치

@@ -78,6 +78,17 @@ void UTestQuestActorComponent::StartQuest()
         OnQuestProgressUpdated.Broadcast(CurrentQuest->CurrentKillCount, CurrentQuest->TargetKillCount);
         UE_LOG(LogTemp, Log, TEXT("퀘스트 시작: '%s' 목표: %d"), *CurrentQuest->QuestName.ToString(), CurrentQuest->TargetKillCount);
 
+        // 보상 무기 클래스 설정
+        if (RewardWeaponClasses.IsValidIndex(CurrentQuestStageIndex))
+        {
+            CurrentQuest->RewardWeaponClass = RewardWeaponClasses[CurrentQuestStageIndex];
+        }
+        else
+        {
+            CurrentQuest->RewardWeaponClass = nullptr;
+            UE_LOG(LogTemp, Warning, TEXT("[QuestInit] RewardWeaponClasses에 해당 인덱스가 없습니다."));
+        }
+
         // ✅ 디버그: 보상 준비 상태 로그 (if 블록 안으로 이동)
         UE_LOG(LogTemp, Warning, TEXT("[QuestInit] Owner=%s, RewardClass=%s"),
             *GetNameSafe(CurrentQuest->OwnerActor),
@@ -119,6 +130,16 @@ void UTestQuestActorComponent::OnEnemyKilled(int32 KillAmount)
 
 void UTestQuestActorComponent::GoToNextQuestStage()
 {
+    // 보상 무기 클래스 설정
+    if (RewardWeaponClasses.IsValidIndex(CurrentQuestStageIndex))
+    {
+        CurrentQuest->RewardWeaponClass = RewardWeaponClasses[CurrentQuestStageIndex];
+    }
+    else
+    {
+        CurrentQuest->RewardWeaponClass = nullptr;
+        UE_LOG(LogTemp, Warning, TEXT("[QuestInit] RewardWeaponClasses에 해당 인덱스가 없습니다."));
+    }
     // 다음 퀘스트 단계가 있는지 확인
     if (CurrentQuestStageIndex + 1 < QuestStages.Num())
     {

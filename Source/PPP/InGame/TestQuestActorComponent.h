@@ -20,6 +20,10 @@ public:
 
     UTestQuestActorComponent();
 
+    // 스테이지별 보상 무기 배열
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Quest|Reward")
+    TArray<TSubclassOf<APickUpWeaponMaster>> RewardWeaponClasses;
+
 protected:
 
     virtual void BeginPlay() override;
