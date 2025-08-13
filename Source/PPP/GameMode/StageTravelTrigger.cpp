@@ -28,6 +28,7 @@ void AStageTravelTrigger::OnBoxBeginOverlap(
     int32 OtherBodyIndex,
     bool bFromSweep,
     const FHitResult& SweepResult)
+
 {
     if (!bTravelEnabled) return;
     if (!OtherActor || !OtherActor->IsA(ACharacter::StaticClass())) return;

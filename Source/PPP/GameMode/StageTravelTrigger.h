@@ -20,6 +20,9 @@ public:
     UPROPERTY(EditAnywhere, Category="Travel")
     FName TargetLevelName = TEXT("stage1");
 
+    UPROPERTY(VisibleAnywhere)
+    bool bTriggered = false; //라운드 중복
+
     // 조건 충족 시에만 동작
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Travel")
     bool bTravelEnabled = false;
