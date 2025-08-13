@@ -384,24 +384,23 @@ void APPPGameMode::SpawnEnemies()
     {
         if (AEnemySpawnVolume* SpawnVolume = Cast<AEnemySpawnVolume>(Actor))
         {
-            // 여기서 EnemyClass 강제 주입
-            if (EnemyClass)
+            // 현재 라운드와 일치하는 층의 스폰 볼륨만 스폰
+            if (SpawnVolume->RoundIndexToSpawn == CurrentRound)
             {
-                SpawnVolume->EnemyClasses.Empty();
-                SpawnVolume->EnemyClasses.Add(EnemyClass); // Chase, Flee 등 중 원하는 클래스
-                SpawnVolume->SpawnWeights.Empty();
-                SpawnVolume->SpawnWeights.Add(1.0f); // 확률 100%
-            }
+                // EnemyClass 강제 설정
+                if (EnemyClass)
+                {
+                    SpawnVolume->EnemyClasses.Empty();
+                    SpawnVolume->EnemyClasses.Add(EnemyClass);
+                    SpawnVolume->SpawnWeights.Empty();
+                    SpawnVolume->SpawnWeights.Add(1.0f);
+                }
 
-            SpawnVolume->SpawnEnemies(EnemiesPerRound);
-            UE_LOG(LogEnemy, Log, TEXT("%s에서 %d마리 적 스폰 (강제 EnemyClass: %s)"),
-                   *SpawnVolume->GetName(),
-                   EnemiesPerRound,
-                   EnemyClass ? *EnemyClass->GetName() : TEXT("기본"));
-        }
-        else
-        {
-            UE_LOG(LogEnemy, Warning, TEXT("EnemyClass가 지정되지 않은 EnemySpawnVolume이 있음: %s"), *Actor->GetName());
+                SpawnVolume->SpawnEnemies(EnemiesPerRound);
+
+                UE_LOG(LogEnemy, Log, TEXT("ROUND %d - %s 에서 적 %d마리 스폰됨"),
+                    CurrentRound, *SpawnVolume->GetName(), EnemiesPerRound);
+            }
         }
     }
 }

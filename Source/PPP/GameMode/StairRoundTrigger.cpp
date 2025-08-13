@@ -43,39 +43,20 @@ void AStairRoundTrigger::OnBoxBeginOverlap(
     // 플레이어(캐릭터)만 허용
     if (!OtherActor || !OtherActor->IsA(ACharacter::StaticClass())) return;
 
-    // GameMode / GameState 참조 가져오기
+    // GameMode / GameState 참조
     APPPGameMode* GM = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this));
-    if (!GM) return;
-
-    if (GM->GetCurrentRound() == RoundIndexToStart && !GM->IsRoundActive())
-    {
-        GM->StartRound();
-    }
-
     APPPGameState* GS = Cast<APPPGameState>(UGameplayStatics::GetGameState(this));
-    if (!GS) return;
+    if (!GM || !GS) return;
 
-    // 고민중.. 일단 아래로
-    // 기존: bOnlyWhenRoundEnded && GS->GetCurrentState() != EGameState::RoundEnded 시 return
-    // 현재: 조건과 관계없이 즉시 진행
-
-    // =========================
-    // [추가] 최종층 처리 로직
-    // - bIsFinalFloor가 true일 때는 라운드 시작 대신 스테이지 클리어/이동을 수행
-    // - bCallRoundClearedBeforeTravel=true: 이동 전에 GameMode의 OnRoundCleared() 호출
-    // - bTravelOnFinalFloor=true && TargetLevelName 유효: 지정 맵으로 이동
-    // - 그 외: 기본적으로 GameMode의 OnGameOver() 등으로 마무리(임시 처리)
-    // =========================
+    // -------- [최종 층 처리] --------
     if (bIsFinalFloor)
     {
-        // 필요 시 라운드 클리어 신호(라운드 증가/스코어 리셋/브로드캐스트 등)
         if (bCallRoundClearedBeforeTravel)
         {
             UE_LOG(LogTemp, Log, TEXT("[StairTrigger] FinalFloor: OnRoundCleared() 호출"));
             GM->OnRoundCleared();
         }
 
-        // 최종층에서 다른 맵으로 이동
         if (bTravelOnFinalFloor && TargetLevelName != NAME_None)
         {
             UE_LOG(LogTemp, Log, TEXT("[StairTrigger] FinalFloor: OpenLevel -> %s"), *TargetLevelName.ToString());
@@ -83,34 +64,42 @@ void AStairRoundTrigger::OnBoxBeginOverlap(
         }
         else
         {
-            // [임시 처리] 이동이 없다면 스테이지 종료 등 처리(추후 클리어 UI 연결 가능)
-            UE_LOG(LogTemp, Log, TEXT("[StairTrigger] FinalFloor: 이동 없음 → OnGameOver() 호출(임시)"));
+            UE_LOG(LogTemp, Log, TEXT("[StairTrigger] FinalFloor: 이동 없음 → OnGameOver() 호출"));
             GM->OnGameOver();
         }
 
-        // 한 번만 작동하도록 설정되어 있으면 비활성화
         if (bConsumeOnce)
         {
             bEnabled = false;
             Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         }
-        return; // 최종층 처리는 여기서 종료
+
+        return; // 최종층 처리 끝
     }
 
-    // 유효한 라운드 번호인지 확인
+    // -------- [일반 라운드 시작 처리] --------
+
+    // 유효한 라운드 번호가 아니면 무시
     if (RoundIndexToStart <= 0) return;
 
-    // 현재 라운드를 지정된 라운드로 강제 설정
-    GS->SetCurrentRound(RoundIndexToStart);
+    // 이미 시작된 라운드면 무시
+    if (GM->IsRoundActive()) return;
 
-    // GameMode에 라운드 시작 요청
-    UE_LOG(LogTemp, Log, TEXT("[StairTrigger] StartRound -> Round %d"), RoundIndexToStart);
+    // 현재 라운드가 아닌 경우에만 세팅
+    if (GM->GetCurrentRound() != RoundIndexToStart)
+    {
+        GS->SetCurrentRound(RoundIndexToStart);
+    }
+
+    // 라운드 시작
+    UE_LOG(LogTemp, Log, TEXT("[StairTrigger] Round %d 시작"), RoundIndexToStart);
     GM->StartRound();
 
-    // 한 번만 작동하도록 설정된 경우: 비활성화 처리
+    // 소비형 트리거면 비활성화
     if (bConsumeOnce)
     {
         bEnabled = false;
         Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     }
 }
+

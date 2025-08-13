@@ -82,6 +82,20 @@ void AEnemySpawnVolume::SpawnEnemies(int32 Count)
     UE_LOG(LogTemp, Warning, TEXT("[SpawnEnemies] 요청: %d, 스폰됨: %d"), Count, SpawnedCount);
 }
 
+void AEnemySpawnVolume::TriggerSpawn(int32 CurrentFloor, int32 EnemyCount)
+{
+    if (FloorIndex == CurrentFloor)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("스폰볼륨 [%s]: 현재 층과 일치. 적 스폰 시도"), *GetName());
+        SpawnEnemies(EnemyCount);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("스폰볼륨 [%s]: 현재 층과 불일치. 무시됨 (FloorIndex=%d, CurrentFloor=%d)"),
+               *GetName(), FloorIndex, CurrentFloor);
+    }
+}
+
 void AEnemySpawnVolume::BeginPlay()
 {
     Super::BeginPlay();
