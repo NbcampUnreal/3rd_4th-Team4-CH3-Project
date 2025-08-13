@@ -4,6 +4,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "GameOverWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/TextBlock.h"
@@ -36,15 +37,44 @@ APppPlayerController::APppPlayerController()
 {
 }
 
+// 김여울
+static void AddOnceToViewport
+(
+    UUserWidget*& OutWidget,
+    TSubclassOf<UUserWidget> ClassToCreate,
+    APlayerController* PC,
+    int32 ZOrder = 0
+);
 
 void APppPlayerController::BeginPlay()
 {
     Super::BeginPlay();
 
     const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
+    UE_LOG(LogTemp, Warning, TEXT("CurrentLevelName = %s"), *CurrentLevelName);
 
+    // === 메인메뉴일 때 ===
     if (CurrentLevelName.Equals(TEXT("MainMenuLevel")))
     {
+        // 이전에 Pause 되어 있었으면 해제
+        if (IsPaused())
+        {
+            SetPause(false);
+        }
+        bPauseOpen = false;
+
+        // 남아 있을 수 있는 UI 위젯 정리
+        if (PauseMenuWidgetInstance)
+        {
+            PauseMenuWidgetInstance->RemoveFromParent();
+            PauseMenuWidgetInstance = nullptr;
+        }
+        if (GameOverWidgetInstance)
+        {
+            GameOverWidgetInstance->RemoveFromParent();
+            GameOverWidgetInstance = nullptr;
+        }
+
         if (AHUD* Hud = GetHUD())
         {
             Hud->Destroy();
@@ -57,53 +87,67 @@ void APppPlayerController::BeginPlay()
         SetInputMode(InputMode);
 
         ShowMainMenu(true);
+        return; // 여기서 끝
     }
-    else
+
+    // === 게임 레벨일 때 HUD 위젯들 생성 ===
+    AddOnceToViewport(HealthWidget,    HealthClass,    this, 10);
+    AddOnceToViewport(CrosshairWidget, CrosshairClass, this, 20);
+    AddOnceToViewport(WeaponTrayWidget,WeaponTrayClass,this, 30);
+    AddOnceToViewport(HitmarkerWidget, HitmarkerClass, this, 40);
+    AddOnceToViewport(QuestWidget,     QuestClass,     this, 50);
+    AddOnceToViewport(TimeWidget,      TimeClass,      this, 60);
+
+    SetHudWidgetsVisible(true);
+
+    // === 퀘스트 UI 초기화 ===
+    if (QuestUIWidgetClass)
     {
-        if (QuestUIWidgetClass)
+        QuestUIWidgetInstance = CreateWidget<UUserWidget>(this, QuestUIWidgetClass);
+        if (QuestUIWidgetInstance)
         {
-            QuestUIWidgetInstance = CreateWidget<UUserWidget>(this, QuestUIWidgetClass);
-            if (QuestUIWidgetInstance)
+            QuestUIWidgetInstance->AddToViewport();
+            QuestProgressTextBlock = Cast<UTextBlock>(QuestUIWidgetInstance->GetWidgetFromName(TEXT("KillCountText")));
+
+            if (APPPGameMode* GameMode = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this)))
             {
-                QuestUIWidgetInstance->AddToViewport();
-                QuestProgressTextBlock = Cast<UTextBlock>(QuestUIWidgetInstance->GetWidgetFromName(TEXT("KillCountText")));
+                UE_LOG(LogTemp, Warning, TEXT("GameMode is valid: %s"), GameMode ? TEXT("true") : TEXT("false"));
 
-                if (APPPGameMode* GameMode = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this)))
+                if (UTestQuestActorComponent* QuestComponent = GameMode->GetQuestComponent())
                 {
-                    UE_LOG(LogTemp, Warning, TEXT("GameMode is valid: %s"), GameMode ? TEXT("true") : TEXT("false"));
+                    UE_LOG(LogTemp, Warning, TEXT("QuestComponent is valid: %s"), QuestComponent ? TEXT("true") : TEXT("false"));
 
-                    if (UTestQuestActorComponent* QuestComponent = GameMode->GetQuestComponent())
-                    {
-                        UE_LOG(LogTemp, Warning, TEXT("QuestComponent is valid: %s"), QuestComponent ? TEXT("true") : TEXT("false"));
-
-                        QuestComponent->OnQuestProgressUpdated.AddDynamic(this, &APppPlayerController::OnQuestProgressUpdated);
-                    }
-                }
-            }
-        }
-
-        if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
-        {
-            if (UEnhancedInputLocalPlayerSubsystem* SubSystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
-            {
-                if (InputMappingContext)
-                {
-                    SubSystem->AddMappingContext(InputMappingContext, 0);
-                    UE_LOG(LogTemp, Warning, TEXT("InputMappingContext 등록 완료: %s"), *InputMappingContext->GetName());
-                }
-                else
-                {
-                    UE_LOG(LogTemp, Error, TEXT("InputMappingContext가 설정되지 않았습니다."));
-                }
-
-                if (PauseMenuIMC)
-                {
-                    SubSystem->AddMappingContext(PauseMenuIMC, 1);
+                    QuestComponent->OnQuestProgressUpdated.AddDynamic(this, &APppPlayerController::OnQuestProgressUpdated);
                 }
             }
         }
     }
+
+    // === 인풋 매핑 추가 ===
+    if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
+    {
+        if (UEnhancedInputLocalPlayerSubsystem* SubSystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+        {
+            if (InputMappingContext)
+            {
+                SubSystem->AddMappingContext(InputMappingContext, 0);
+                UE_LOG(LogTemp, Warning, TEXT("InputMappingContext 등록 완료: %s"), *InputMappingContext->GetName());
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("InputMappingContext가 설정되지 않았습니다."));
+            }
+
+            if (PauseMenuIMC)
+            {
+                SubSystem->AddMappingContext(PauseMenuIMC, 1);
+            }
+        }
+    }
+    // 이미 소유 중인 Pawn에도 안전 바인딩
+    BindDeathDelegateToPawn(GetPawn());
 }
+
 
 void APppPlayerController::OnQuestProgressUpdated(int32 CurrentKills, int32 TargetKills)
 {
@@ -122,8 +166,32 @@ void APppPlayerController::OnQuestProgressUpdated(int32 CurrentKills, int32 Targ
 }
 
 
-void APppPlayerController::ShowMainMenu(bool bIsRestart)
+void APppPlayerController::ShowMainMenu
+(
+    bool bIsRestart
+)
 {
+    // Unpause + 잔여 UI 정리
+    if (IsPaused())
+    {
+        SetPause(false);
+    }
+    bPauseOpen = false;
+
+    SetHudWidgetsVisible(false); // 혹시 남아있을 HUD 접기
+
+    if (PauseMenuWidgetInstance)
+    {
+        PauseMenuWidgetInstance->RemoveFromParent();
+        PauseMenuWidgetInstance = nullptr;
+    }
+    if (GameOverWidgetInstance)
+    {
+        GameOverWidgetInstance->RemoveFromParent();
+        GameOverWidgetInstance = nullptr;
+    }
+
+    // 기존 로직 유지
     if (MainMenuWidgetInstance)
     {
         MainMenuWidgetInstance->RemoveFromParent();
@@ -135,9 +203,12 @@ void APppPlayerController::ShowMainMenu(bool bIsRestart)
         MainMenuWidgetInstance = CreateWidget<UUserWidget>(this, MainMenuWidgetClass);
         if (MainMenuWidgetInstance)
         {
-            MainMenuWidgetInstance->AddToViewport();
+            MainMenuWidgetInstance->AddToViewport(500); // 여유 ZOrder
             bShowMouseCursor = true;
-            SetInputMode(FInputModeUIOnly());
+
+            FInputModeUIOnly Mode;
+            Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+            SetInputMode(Mode);
 
             if (UButton* StartBtn = Cast<UButton>(MainMenuWidgetInstance->GetWidgetFromName(TEXT("Start_BTN"))))
             {
@@ -151,50 +222,103 @@ void APppPlayerController::ShowMainMenu(bool bIsRestart)
     }
 }
 
+
 void APppPlayerController::ShowPauseMenu()
 {
-    if (PauseMenuWidgetInstance)
+    EnsureHudWidgets();
+
+    // 클래스 누락 체크 (크래시 대신 경고 + 계속 진행)
+    if (!ensureMsgf(PauseMenuWidgetClass != nullptr, TEXT("PauseMenuWidgetClass is null.")))
     {
-        PauseMenuWidgetInstance->RemoveFromParent();
-        PauseMenuWidgetInstance = nullptr;
+        return;
     }
 
-    if (PauseMenuWidgetClass)
+    // 위젯이 아직 없으면 1회 생성 (매번 만들고 지우지 말자)
+    if (PauseMenuWidgetInstance == nullptr)
     {
         PauseMenuWidgetInstance = CreateWidget<UUserWidget>(this, PauseMenuWidgetClass);
+        ensureMsgf(PauseMenuWidgetInstance != nullptr, TEXT("Failed to create PauseMenuWidgetInstance."));
+
         if (PauseMenuWidgetInstance)
         {
-            PauseMenuWidgetInstance->AddToViewport();
-            PauseMenuWidgetInstance->SetIsFocusable(false);
-
-            FInputModeGameAndUI InputMode;
-            InputMode.SetWidgetToFocus(PauseMenuWidgetInstance->TakeWidget());
-            InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-
-            SetInputMode(InputMode);
-            bShowMouseCursor = true;
+            PauseMenuWidgetInstance->AddToViewport(1000);
+            PauseMenuWidgetInstance->SetIsFocusable(true);
         }
     }
 
-    if (!IsPaused())
+    // 보이기
+    if (PauseMenuWidgetInstance)
     {
-        SetPause(true);
+        PauseMenuWidgetInstance->SetVisibility(ESlateVisibility::Visible);
     }
+
+    // HUD 숨기고 게임 일시정지
+    SetHudWidgetsVisible(false);
+    SetPause(true);
+
+    // 마우스/포커스 UI 전환
+    bShowMouseCursor = true;
+
+    FInputModeUIOnly InputMode;
+    InputMode.SetWidgetToFocus(PauseMenuWidgetInstance ? PauseMenuWidgetInstance->TakeWidget() : TSharedPtr<SWidget>());
+    InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    SetInputMode(InputMode);
+
+    bPauseOpen = true;
 }
 
 void APppPlayerController::ShowGameOver()
 {
-    if (!GameOverWidgetInstance && GameOverWidgetClass)
+    UE_LOG(LogTemp, Warning, TEXT("GameOverWidgetClass: %s"), *GetNameSafe(GameOverWidgetClass));
+
+    // EnsureHudWidgets();
+
+    if (!ensureMsgf(GameOverWidgetClass != nullptr, TEXT("GameOverWidgetClass is null.")))
     {
-        GameOverWidgetInstance = CreateWidget<UUserWidget>(this, GameOverWidgetClass);
+        return;
+    }
+
+    if (GameOverWidgetInstance == nullptr)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Creating GameOverWidgetInstance"));
+        UGameOverWidget* TypedWidget = CreateWidget<UGameOverWidget>(this, GameOverWidgetClass);
+        GameOverWidgetInstance = TypedWidget;
+        ensureMsgf(GameOverWidgetInstance != nullptr, TEXT("Failed to create GameOverWidgetInstance."));
+
         if (GameOverWidgetInstance)
         {
-            GameOverWidgetInstance->AddToViewport();
-            SetInputMode(FInputModeUIOnly());
-            bShowMouseCursor = true;
-            SetPause(true);
+            GameOverWidgetInstance->AddToViewport(9999);
+            GameOverWidgetInstance->SetIsFocusable(true);
+            UE_LOG(LogTemp, Warning, TEXT("✅ GameOverWidgetInstance AddToViewport 성공"));
+
+            // Return 버튼 바인딩
+            if (UButton* ReturnButton = Cast<UButton>(GameOverWidgetInstance->GetWidgetFromName(TEXT("Return_BTN"))))
+            {
+                ReturnButton->OnClicked.AddDynamic(this, &APppPlayerController::StartGame);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("Return_BTN not found in GameOverWidget."));
+            }
         }
     }
+
+    if (GameOverWidgetInstance)
+    {
+        GameOverWidgetInstance->SetVisibility(ESlateVisibility::Visible);
+    }
+
+    // 이제 이 시점에 HUD 제거
+    SetHudWidgetsVisible(false);
+    SetPause(true);
+    bShowMouseCursor = true;
+
+    bShowMouseCursor = true;
+
+    FInputModeUIOnly InputMode;
+    InputMode.SetWidgetToFocus(GameOverWidgetInstance ? GameOverWidgetInstance->TakeWidget() : TSharedPtr<SWidget>());
+    InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    SetInputMode(InputMode);
 }
 
 void APppPlayerController::StartGame()
@@ -228,8 +352,6 @@ void APppPlayerController::StartGame()
         false
     );
 }
-
-
 
 void APppPlayerController::QuitGame()
 {
@@ -266,6 +388,27 @@ void APppPlayerController::SetupInputComponent()
 
 void APppPlayerController::HandlePauseKey()
 {
+    // 열려 있으면 닫기, 아니면 열기
+    if (bPauseOpen)
+    {
+        // 닫기
+        if (PauseMenuWidgetInstance)
+        {
+            PauseMenuWidgetInstance->SetVisibility(ESlateVisibility::Collapsed);
+        }
+
+        SetPause(false);
+        SetHudWidgetsVisible(true);     // HUD 복구
+        bShowMouseCursor = false;
+
+        FInputModeGameOnly GameOnly;
+        SetInputMode(GameOnly);
+
+        bPauseOpen = false;
+        return;
+    }
+
+    // 열기
     ShowPauseMenu();
 }
 
@@ -273,5 +416,121 @@ void APppPlayerController::HandlePauseKey()
 // by Team4 (yeoul)
 void APppPlayerController::OnCharacterDead()
 {
+    UE_LOG(LogTemp, Error, TEXT("OnCharacterDead() called in PlayerController"));
     ShowGameOver();
+}
+
+// 김여울
+static void AddOnceToViewport
+(
+    UUserWidget*& OutWidget,
+    TSubclassOf<UUserWidget> ClassToCreate,
+    APlayerController* PC,
+    int32 ZOrder
+)
+{
+    if (!IsValid(OutWidget) && *ClassToCreate)
+    {
+        OutWidget = CreateWidget<UUserWidget>(PC, ClassToCreate);
+        if (IsValid(OutWidget))
+        {
+            OutWidget->AddToViewport(ZOrder);
+            OutWidget->SetIsEnabled(true);
+            OutWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
+        }
+    }
+}
+
+// 김여울
+void APppPlayerController::SetHudWidgetsVisible(bool bVisible)
+{
+    // HUD 위젯 제거 방식 전환: 감추는 게 아니라 완전 제거
+    auto RemoveOrAdd = [this, bVisible](UUserWidget*& Widget, TSubclassOf<UUserWidget> ClassToCreate, int32 ZOrder)
+    {
+        if (bVisible)
+        {
+            if (!IsValid(Widget) && *ClassToCreate)
+            {
+                Widget = CreateWidget<UUserWidget>(this, ClassToCreate);
+                if (IsValid(Widget))
+                {
+                    Widget->AddToViewport(ZOrder);
+                    Widget->SetIsEnabled(true);
+                    Widget->SetVisibility(ESlateVisibility::HitTestInvisible);
+                    UE_LOG(LogTemp, Warning, TEXT("[HUD] Re-created: %s"), *Widget->GetName());
+                }
+            }
+            else if (IsValid(Widget))
+            {
+                Widget->SetVisibility(ESlateVisibility::HitTestInvisible);
+                Widget->SetIsEnabled(true);
+            }
+        }
+        else
+        {
+            if (IsValid(Widget))
+            {
+                Widget->RemoveFromParent();
+                UE_LOG(LogTemp, Warning, TEXT("[HUD] Removed: %s"), *Widget->GetName());
+                Widget = nullptr;
+            }
+        }
+    };
+
+    RemoveOrAdd(HealthWidget,    HealthClass,    10);
+    RemoveOrAdd(CrosshairWidget, CrosshairClass, 20);
+    RemoveOrAdd(WeaponTrayWidget,WeaponTrayClass,30);
+    RemoveOrAdd(HitmarkerWidget, HitmarkerClass, 40);
+    RemoveOrAdd(QuestWidget,     QuestClass,     50);
+    RemoveOrAdd(TimeWidget,      TimeClass,      60);
+
+    if (bVisible)
+    {
+        bShowMouseCursor = false;
+        FInputModeGameOnly GameOnly;
+        SetInputMode(GameOnly);
+    }
+    else
+    {
+        bShowMouseCursor = true;
+        FInputModeUIOnly UIOnly;
+        UIOnly.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+        SetInputMode(UIOnly);
+    }
+}
+
+// 김여울
+// 캐릭터가 소유될 때마다 사망 델리게이트 바인딩
+void APppPlayerController::BindDeathDelegateToPawn
+(
+    APawn* InPawn
+)
+{
+    if (APppCharacter* P = Cast<APppCharacter>(InPawn))
+    {
+        // 중복 방지 후 바인딩
+        P->OnCharacterDead.RemoveDynamic(this, &APppPlayerController::OnCharacterDead);
+        P->OnCharacterDead.AddDynamic(this, &APppPlayerController::OnCharacterDead);
+        UE_LOG(LogTemp, Warning, TEXT("[PC] Bound OnCharacterDead from Pawn."));
+    }
+}
+
+void APppPlayerController::OnPossess
+(
+    APawn* InPawn
+)
+{
+    Super::OnPossess(InPawn);
+    BindDeathDelegateToPawn(InPawn);
+}
+
+// 김여울
+void APppPlayerController::EnsureHudWidgets()
+{
+    AddOnceToViewport(HealthWidget,    HealthClass,    this, 10);
+    AddOnceToViewport(CrosshairWidget, CrosshairClass, this, 20);
+    AddOnceToViewport(WeaponTrayWidget,WeaponTrayClass,this, 30);
+    AddOnceToViewport(HitmarkerWidget, HitmarkerClass, this, 40);
+    AddOnceToViewport(QuestWidget,     QuestClass,     this, 50);
+    AddOnceToViewport(TimeWidget,      TimeClass,      this, 60);
 }

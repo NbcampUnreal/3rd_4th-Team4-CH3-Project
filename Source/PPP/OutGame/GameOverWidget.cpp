@@ -26,7 +26,12 @@ void UGameOverWidget::NativeDestruct
 
 void UGameOverWidget::OnReturnToMainMenuClicked()
 {
-    // MainMenuLevel로 돌아가기
+    // 레벨 이동 전 일시정지 해제
+    if (APlayerController* PC = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr)
+    {
+        PC->SetPause(false);
+    }
+
     UGameplayStatics::OpenLevel(this, FName("MainMenuLevel"));
 }
 

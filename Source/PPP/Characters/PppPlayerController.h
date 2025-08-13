@@ -86,6 +86,49 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
     USoundBase* QuitSound;
 
+    // 김여울
+    // HUD 클래스
+    UPROPERTY(EditDefaultsOnly, Category = "UI|HUD")
+    TSubclassOf<UUserWidget> HealthClass;
+
+    UPROPERTY(EditDefaultsOnly, Category = "UI|HUD")
+    TSubclassOf<UUserWidget> CrosshairClass;
+
+    UPROPERTY(EditDefaultsOnly, Category = "UI|HUD")
+    TSubclassOf<UUserWidget> WeaponTrayClass;
+
+    UPROPERTY(EditDefaultsOnly, Category = "UI|HUD")
+    TSubclassOf<UUserWidget> HitmarkerClass;
+
+    UPROPERTY(EditDefaultsOnly, Category = "UI|HUD")
+    TSubclassOf<UUserWidget> QuestClass;
+
+    UPROPERTY(EditDefaultsOnly, Category = "UI|HUD")
+    TSubclassOf<UUserWidget> TimeClass;
+
+    UPROPERTY()
+    UUserWidget* HealthWidget;
+
+    UPROPERTY()
+    UUserWidget* CrosshairWidget;
+
+    UPROPERTY()
+    UUserWidget* WeaponTrayWidget;
+
+    UPROPERTY()
+    UUserWidget* HitmarkerWidget;
+
+    UPROPERTY()
+    UUserWidget* QuestWidget;
+
+    UPROPERTY()
+    UUserWidget* TimeWidget;
+
+    UFUNCTION(BlueprintCallable, Category = "UI|HUD")
+    void SetHudWidgetsVisible(bool bVisible);
+
+    bool bPauseOpen = false; // 토글용
+
     // ====== 함수들 ======
     virtual void BeginPlay() override;
     virtual void SetupInputComponent() override;
@@ -112,4 +155,10 @@ private:
     UFUNCTION()
     void OnQuestProgressUpdated(int32 CurrentKills, int32 TargetKills);
 
+    virtual void OnPossess(APawn* InPawn) override;
+
+    void BindDeathDelegateToPawn(APawn* InPawn);
+
+    // 김여울
+    void EnsureHudWidgets(); // HUD 위젯 생성 보장용 함수
 };
