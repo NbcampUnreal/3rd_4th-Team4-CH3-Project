@@ -86,5 +86,5 @@ void AEnemySpawnVolume::BeginPlay()
 {
     Super::BeginPlay();
     UE_LOG(LogTemp, Warning, TEXT("SpawnVolume BeginPlay 호출됨"));
-    SpawnEnemies(10);
+    SpawnEnemies(5);
 }

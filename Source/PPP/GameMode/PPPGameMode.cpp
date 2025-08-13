@@ -27,6 +27,26 @@ APPPGameMode::APPPGameMode()
     AutoStartLevels = { FName(TEXT("stage1")), FName(TEXT("stage2")) };
 }
 
+void APPPGameMode::OnEnemyKilledFromDelegate()
+{
+    OnEnemyKilled(); //우선 있는거 사용
+}
+
+void APPPGameMode::BindDeathEventsForExistingEnemies()
+{
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    for (TActorIterator<APppBaseAICharacter> It(World); It; ++It)
+    {
+        APppBaseAICharacter* Enemy = *It;
+        if (!IsValid(Enemy)) continue;
+
+        // 중복 바인딩 방지
+        Enemy->OnDeath.AddUniqueDynamic(this, &APPPGameMode::OnEnemyKilledFromDelegate);
+    }
+}
+
 void APPPGameMode::BeginPlay()
 {
     Super::BeginPlay();
@@ -126,6 +146,8 @@ void APPPGameMode::BeginPlay()
         {
             UE_LOG(LogGame, Warning, TEXT("ExitGate(Tag=%s) not found."), *ExitGateTag.ToString());
         }
+
+        BindDeathEventsForExistingEnemies();// 맵에 미리 배치된 적들까지 모두 구독
     }
 
     // [추가] 최종 확정값 로그
@@ -224,6 +246,9 @@ void APPPGameMode::StartRound()
     // 4) 적 스폰
     SpawnEnemies();
 
+    // 새로 스폰된 적들도 포함해서 전부 구독
+    BindDeathEventsForExistingEnemies();
+
     // 5) 보상 플래그 초기화
     bRewardGiven = false;
 }
@@ -267,10 +292,13 @@ void APPPGameMode::OnEnemyKilled()
     APPPGameState* GS = GetGameState<APPPGameState>();
     if (!GS) return;
 
+    //  킬당 Score 지급
+    GS->AddScore(ScorePerKill); // UI 업데이트까지 내부에서 처리됨
+
     const int32 NewCount = GS->RemainingEnemies - 1;
     GS->SetRemainingEnemies(NewCount);
 
-    UE_LOG(LogEnemy, Log, TEXT("적 처치! 남은 적: %d"), NewCount);
+    UE_LOG(LogEnemy, Log, TEXT("적 처치! 남은 적: %d, 현재 점수: %d"), NewCount, GS->GetScore());
 
     CheckRewardCondition();
 
