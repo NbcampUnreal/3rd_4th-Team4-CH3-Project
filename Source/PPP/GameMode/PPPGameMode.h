@@ -6,6 +6,7 @@
 #include "DummyEnemy.h"
 #include "GameDefines.h"
 #include "PPPGameState.h" // GameState 클래스 참조 추가
+#include "../Ai/PppBaseAICharacter.h" //Score추가용
 #include "../Ai/PppBaseAICharacter.h" // Base AI Character
 #include "Blueprint/UserWidget.h" // 정현성 타임 UI 추가
 #include "PPPGameMode.generated.h"
@@ -17,6 +18,11 @@ class PPP_API APPPGameMode : public AGameMode
 
 public:
 	APPPGameMode();
+    //스코어 구현
+    UFUNCTION()
+    void OnEnemyKilledFromDelegate();  // OnDeath 델리게이트가 불러줄 핸들러
+
+    void BindDeathEventsForExistingEnemies(); // 맵 내 모든 적에게 바인딩
 
 	virtual void BeginPlay() override;
 
@@ -144,6 +150,10 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Timer", meta=(ClampMin="1.0"))
     float StageTimerSeconds = 120.f;
+
+    //킬당 Score 획득
+    UPROPERTY(EditAnywhere, Category="Score")
+    int32 ScorePerKill = 10;
 
     // 정현성
     // 타임 위젯 블루프린트 클래스
