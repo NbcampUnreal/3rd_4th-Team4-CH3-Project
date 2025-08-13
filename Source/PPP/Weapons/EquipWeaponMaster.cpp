@@ -79,17 +79,84 @@ void AEquipWeaponMaster::Fire()
     }
 
     // 화면 중앙 좌표 → 월드 위치/방향으로 디프로젝션
-    int32 SizeX, SizeY;
+    int32 SizeX = 0, SizeY = 0;
     PlayerController->GetViewportSize(SizeX, SizeY);
-    FVector2D ViewportCenter(SizeX / 2.f, SizeY / 2.f);
+    const FVector2D ViewportCenter(SizeX / 2.f, SizeY / 2.f);
 
-    FVector WorldLocation, WorldDirection;
-    if (!PlayerController->DeprojectScreenPositionToWorld(
-        ViewportCenter.X, ViewportCenter.Y, WorldLocation, WorldDirection))
+    FVector WorldLocation = FVector::ZeroVector;
+    FVector WorldDirection = FVector::ForwardVector; // [ADD] 기본값 선언
+    if (!PlayerController->DeprojectScreenPositionToWorld(ViewportCenter.X, ViewportCenter.Y, WorldLocation, WorldDirection))
     {
         UE_LOG(LogTemp, Warning, TEXT("화면 중심 좌표 디프로젝션 실패"));
         return;
     }
+
+    if (PelletCount > 1)
+    {
+        for (int i = 0; i < PelletCount; ++i)
+        {
+            FVector PelletDir = FMath::VRandCone(WorldDirection, FMath::DegreesToRadians(SpreadAngle));
+            FVector End = MuzzleLocation + (PelletDir * FireRange);
+
+            FHitResult Hit;
+            FCollisionQueryParams Params;
+            Params.AddIgnoredActor(this);
+            Params.AddIgnoredActor(GetOwner());
+
+            FColor LineColor = FColor::Red;
+
+            if (GetWorld()->LineTraceSingleByChannel(Hit, MuzzleLocation, End, ECC_Visibility, Params))
+            {
+                if (ApplyDamageToHit(Hit))
+                {
+                    LineColor = FColor::Green; // AI 맞춘 경우
+                }
+            }
+
+            DrawDebugLine(GetWorld(), MuzzleLocation, End, LineColor, false, 1.0f, 0, 1.0f);
+        }
+
+        // 펠릿 발사 끝났으면 더 이상 아래 기본 발사 로직 실행 안 함
+        --CurrentAmmoInMag;
+        OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
+        LastFireTime = GetWorld()->GetTimeSeconds();
+        return;
+    }
+
+    // 로켓런처: 폭발 판정
+    if (ExplosionRadius > 0.f)
+    {
+        FVector End = MuzzleLocation + (WorldDirection * FireRange);
+
+        FHitResult Hit;
+        FCollisionQueryParams Params;
+        Params.AddIgnoredActor(this);
+        Params.AddIgnoredActor(GetOwner());
+
+        if (GetWorld()->LineTraceSingleByChannel(Hit, MuzzleLocation, End, ECC_Visibility, Params))
+        {
+            UGameplayStatics::ApplyRadialDamage(
+                GetWorld(),
+                (ExplosionDamage > 0.f ? ExplosionDamage : Damage), // 반경 대신 데미지 사용
+                Hit.ImpactPoint,
+                ExplosionRadius,
+                UDamageType::StaticClass(),
+                {}, // 무시할 액터 배열
+                this,
+                OwnerCharacter->GetController(),
+                true
+            );
+
+            //폭발 연출
+            PlayExplosionEffect(Hit.ImpactPoint);
+        }
+
+        --CurrentAmmoInMag;
+        OnAmmoChanged.Broadcast(CurrentAmmoInMag, ReserveAmmo);
+        LastFireTime = GetWorld()->GetTimeSeconds();
+        return;
+    }
+
 
     // 총구에서 화면 중앙 방향(FireRange만큼)으로 라인트레이스
     FVector Start = MuzzleLocation;
@@ -116,6 +183,13 @@ void AEquipWeaponMaster::Fire()
         UE_LOG(LogTemp, Warning, TEXT("피격된 것 없음"));
     }
 
+    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+    {
+        if (ApplyDamageToHit(Hit))
+        {
+            LineColor = FColor::Green; // AI 맞춘 경우
+        }
+    }
 
     // 정현성 히트 마커와 킬 마커 두 개의 구분을 위해서는 AI가 맞고 죽었는지 혹은 맞고 살았는지 알아야하는데 데미지를 입힌 판정만 있어서 새로 써봅니다.
     // 피격 액터가 AI라면 데미지 적용
@@ -134,36 +208,6 @@ void AEquipWeaponMaster::Fire()
     //        UE_LOG(LogTemp, Warning, TEXT("피격된 액터가 AI가 아닙니다."));
     //    }
     //}
-
-    // 정현성
-    // 위 코드 참고해서 최대한 비슷하게 썼습니다.
-    if (bHit && Hit.GetActor())
-    {
-        APppBaseAICharacter* HitAI = Cast<APppBaseAICharacter>(Hit.GetActor());
-        if (HitAI)
-        {
-            // 데미지 전달
-            HitAI->TakeDamage(Damage, FDamageEvent(), nullptr, this);
-
-            // AI의 남은 체력을 확인하여 처치 여부를 판단
-            if (HitAI->GetHealth() <= 0.0f)
-            {
-                OnWeaponKilled.Broadcast();
-                UE_LOG(LogTemp, Warning, TEXT("AI를 처치했습니다."));
-            }
-            else
-            {
-                OnWeaponHit.Broadcast();
-                UE_LOG(LogTemp, Warning, TEXT("AI를 피격하여 데미지를 입혔습니다."));
-            }
-            LineColor = FColor::Green;
-        }
-        else
-        {
-            // AI가 아닌 다른 액터를 맞췄을 때
-            UE_LOG(LogTemp, Warning, TEXT("피격된 액터가 AI가 아닙니다."));
-        }
-    }
 
     // 시각적 디버그 라인, 라인 트레이스 레이저 시각화
     DrawDebugLine(
@@ -221,6 +265,11 @@ void AEquipWeaponMaster::OnEquipped(APppCharacter* NewOwner, const FWeaponRow& I
     FireRange = InWeaponRow.FireRange;
     WeaponDataRow = InWeaponRow;
     WeaponIndex = InWeaponRow.WeaponIndex;
+    // 샷건, 로켓 런처 데이터 캐싱
+    PelletCount = InWeaponRow.PelletCount;
+    SpreadAngle = InWeaponRow.SpreadAngle;
+    ExplosionRadius = InWeaponRow.ExPlosionRadius;
+    ExplosionDamage = InWeaponRow.ExplosionDamage;
 
     // by Yeoul
     // 표시 이름(FText) : PDA가 있으면 PDA로, 없으면 DT로 (FName→FText)
@@ -339,6 +388,54 @@ void AEquipWeaponMaster::PlayReloadAnimation()
     {
         SkeletalMesh->PlayAnimation(ReloadAnim, false);
     }
+}
+
+void AEquipWeaponMaster::PlayExplosionEffect(const FVector& Location)
+{
+    if (ExplosionFX)
+    {
+        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionFX, Location);
+    }
+
+    if (ExplosionSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound, Location);
+    }
+}
+
+bool AEquipWeaponMaster::ApplyDamageToHit(const FHitResult& Hit)
+{
+    // 먼저 Actor 포인터 얻기
+    AActor* HitActor = Hit.GetActor();
+    if (!HitActor) return false; // 맞은 액터 없으면 종료
+
+    // 안전한 Actor 캐스팅 (컴포넌트가 아닌 Actor 대상)
+    if (APppBaseAICharacter* HitAI = Cast<APppBaseAICharacter>(HitActor))
+    {
+        // 데미지 적용
+        HitAI->TakeDamage(Damage, FDamageEvent(), nullptr, this);
+
+        // 처치 여부 판정
+        if (HitAI->GetHealth() <= 0.0f)
+        {
+            OnWeaponKilled.Broadcast();
+            UE_LOG(LogTemp, Warning, TEXT("AI를 처치했습니다."));
+        }
+        else
+        {
+            OnWeaponHit.Broadcast();
+            UE_LOG(LogTemp, Warning, TEXT("AI를 피격하여 데미지를 입혔습니다."));
+        }
+
+        return true; // AI 맞춤 → 초록색
+    }
+    else
+    {
+        // AI 타입이 아닌 경우
+        UE_LOG(LogTemp, Log, TEXT("피격된 액터가 AI가 아닙니다."));
+    }
+
+    return false; // AI 아님 → 빨간색
 }
 
 UWeaponDataAsset* AEquipWeaponMaster::GetWeaponData() const
