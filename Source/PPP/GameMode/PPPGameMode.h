@@ -11,6 +11,10 @@
 #include "Blueprint/UserWidget.h" // 정현성 타임 UI 추가
 #include "PPPGameMode.generated.h"
 
+// 정현성
+// 퀘스트 추가
+class UTestQuestActorComponent;
+
 UCLASS()
 class PPP_API APPPGameMode : public AGameMode
 {
@@ -55,6 +59,11 @@ public:
 
 	/** 적 사망 처리 */
 	void OnEnemyKilled();
+
+    // 정현성
+    // 퀘스트 컴포넌트 접근 함수 선언
+    UFUNCTION(BlueprintCallable, Category = "Quest")
+    UTestQuestActorComponent* GetQuestComponent() const;
 
 	/** 적 스폰 */
 	void SpawnEnemies();
@@ -103,6 +112,7 @@ public:
     // [탁] 자동 시작을 적용할 레벨 이름 목록(소문자 권장: "stage1", "stage2")
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Round|AutoStart")
     TArray<FName> AutoStartLevels;
+
 
 protected:
 
@@ -159,6 +169,11 @@ protected:
     // 타임 위젯 블루프린트 클래스
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
     TSubclassOf<UUserWidget> TimeWidgetClass;
+
+    // 정현성
+    // 퀘스트 컴포넌트 선언
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Quest")
+    TObjectPtr<UTestQuestActorComponent> QuestComponent;
 
     // 김여울
     // 출구 제한시간 기본값(클리어 후 StartExitWindow 호출 시 쓰는 값)

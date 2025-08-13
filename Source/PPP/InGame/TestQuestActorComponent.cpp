@@ -75,7 +75,7 @@ void UTestQuestActorComponent::OnEnemyKilled(int32 KillAmount)
     bool bQuestCompleted = CurrentQuest->AddKillCount(KillAmount);
 
 
-    // OnQuestProgressUpdated.Broadcast(CurrentQuest->CurrentKillCount, CurrentQuest->TargetKillCount);
+    OnQuestProgressUpdated.Broadcast(CurrentQuest->CurrentKillCount, CurrentQuest->TargetKillCount);
 
     if (bQuestCompleted)
     {
@@ -119,6 +119,11 @@ void UTestQuestActorComponent::GoToNextQuestStage()
         }
         OnAllQuestsCompleted.Broadcast();
     }
+}
+
+void UTestQuestActorComponent::UpdateQuestProgress()
+{
+    OnEnemyKilled(1);
 }
 
 bool UTestQuestActorComponent::AreAllQuestsCompleted() const
