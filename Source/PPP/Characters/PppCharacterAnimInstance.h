@@ -1,4 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -25,4 +24,7 @@ public:
     // 정현수 돌격 소총 애님 재생 결정
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
     bool bIsRifleEquipped;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+    bool bIsReloading;
 };

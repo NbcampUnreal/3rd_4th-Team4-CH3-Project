@@ -36,5 +36,7 @@ void UPppCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
         // 캐릭터의 bool 값을 읽어와 동기화
         bIsRifleEquipped = MyChar->GetIsRifleEquipped();
+
+        bIsReloading = MyChar->bIsReloading;
     }
 }

@@ -14,7 +14,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
-
 APppCharacter::APppCharacter()
 {
 
@@ -545,6 +544,7 @@ void APppCharacter::OnReload()
 {
     UE_LOG(LogTemp, Warning, TEXT("재장전 R키 입력하셨습니다."));
 
+    //UAnimMontage* MontageToPlay;
     // 장착된 무기가 없을 때 실행
     if (!EquippedWeapon)
     {
