@@ -3,6 +3,9 @@
 #include "TestQuestActorComponent.h"
 #include "Engine/World.h"
 #include "TestEnemyKillQuest.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/Actor.h"      // GetOwner
+#include "EquipWeaponMaster.h"        // AEquipWeaponMaster (보상 클래스용)
 
 
 UTestQuestActorComponent::UTestQuestActorComponent()
@@ -10,7 +13,7 @@ UTestQuestActorComponent::UTestQuestActorComponent()
     PrimaryComponentTick.bCanEverTick = false;
 
     // 퀘스트 단계 기본값 설정 (에디터에서 변경 가능)
-    QuestStages.Add(20);
+    QuestStages.Add(10);
     QuestStages.Add(30);
     QuestStages.Add(40);
 
@@ -36,6 +39,7 @@ void UTestQuestActorComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 void UTestQuestActorComponent::StartQuest()
 {
+    UE_LOG(LogTemp, Warning, TEXT("StartQuest 실행: 컴포넌트의 Owner = %s"), *GetNameSafe(GetOwner()));
 
     if (QuestStages.Num() == 0)
     {
@@ -43,18 +47,45 @@ void UTestQuestActorComponent::StartQuest()
         return;
     }
 
-
     if (CurrentQuestStageIndex == -1) // 퀘스트가 처음 시작될 때
     {
         CurrentQuestStageIndex = 0;
-        CurrentQuest = NewObject<UTestEnemyKillQuest>(this, UTestEnemyKillQuest::StaticClass(), TEXT("KillQuestInstance"));
-        CurrentQuest->AdvanceQuest(QuestStages[CurrentQuestStageIndex]);
-        CurrentQuest->QuestName = FText::Format(FText::FromString(TEXT("Enemy Kill Quest Stage {0}")), FText::AsNumber(CurrentQuestStageIndex + 1));
-        CurrentQuest->QuestDescription = FText::Format(FText::FromString(TEXT("Defeat {0} enemies.")), FText::AsNumber(QuestStages[CurrentQuestStageIndex]));
 
+        // 퀘스트 객체 생성
+        CurrentQuest = NewObject<UTestEnemyKillQuest>(this, UTestEnemyKillQuest::StaticClass(), TEXT("KillQuestInstance"));
+
+        // 보상 스폰 위치를 명확히: 캐릭터로 캐스팅
+        ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+        if (OwnerCharacter)
+        {
+            CurrentQuest->OwnerActor = OwnerCharacter;
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("퀘스트 컴포넌트의 Owner가 캐릭터가 아닙니다. 보상 스폰 실패 가능성 있음."));
+            CurrentQuest->OwnerActor = GetOwner(); // fallback: 기존 방식 유지
+        }
+
+        CurrentQuest->RewardWeaponClass = DefaultRewardWeaponClass;
+
+
+        // 퀘스트 단계/텍스트 설정
+        CurrentQuest->AdvanceQuest(QuestStages[CurrentQuestStageIndex]);
+        CurrentQuest->QuestName        = FText::Format(FText::FromString(TEXT("Enemy Kill Quest Stage {0}")), FText::AsNumber(CurrentQuestStageIndex + 1));
+        CurrentQuest->QuestDescription = FText::Format(FText::FromString(TEXT("Defeat {0} enemies.")), FText::AsNumber(QuestStages[CurrentQuestStageIndex]));
 
         OnQuestProgressUpdated.Broadcast(CurrentQuest->CurrentKillCount, CurrentQuest->TargetKillCount);
         UE_LOG(LogTemp, Log, TEXT("퀘스트 시작: '%s' 목표: %d"), *CurrentQuest->QuestName.ToString(), CurrentQuest->TargetKillCount);
+
+        // ✅ 디버그: 보상 준비 상태 로그 (if 블록 안으로 이동)
+        UE_LOG(LogTemp, Warning, TEXT("[QuestInit] Owner=%s, RewardClass=%s"),
+            *GetNameSafe(CurrentQuest->OwnerActor),
+            *GetNameSafe(CurrentQuest->RewardWeaponClass));
+
+        if (!CurrentQuest->RewardWeaponClass)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[QuestInit] DefaultRewardWeaponClass가 비었습니다. 에디터에서 설정하세요 (BP_PppCharacter > TestQuestActor > Quest|Reward)."));
+        }
     }
     else
     {
