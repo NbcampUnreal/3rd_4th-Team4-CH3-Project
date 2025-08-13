@@ -21,6 +21,10 @@ class PPP_API APPPGameMode : public AGameMode
 	GENERATED_BODY()
 
 public:
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UUserWidget> GameOverWidgetClass;
+
 	APPPGameMode();
     //스코어 구현
 
