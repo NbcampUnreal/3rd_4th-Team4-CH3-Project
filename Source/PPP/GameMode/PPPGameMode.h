@@ -23,8 +23,6 @@ class PPP_API APPPGameMode : public AGameMode
 public:
 	APPPGameMode();
     //스코어 구현
-    UFUNCTION()
-    void OnEnemyKilledFromDelegate();  // OnDeath 델리게이트가 불러줄 핸들러
 
     void BindDeathEventsForExistingEnemies(); // 맵 내 모든 적에게 바인딩
 

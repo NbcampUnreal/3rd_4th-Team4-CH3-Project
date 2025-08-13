@@ -11,6 +11,8 @@ class PPP_API APPPGameState : public AGameState
 	GENERATED_BODY()
 
 public:
+    void AddKill();                 // 함수 선언
+    int32 GetKillCount() const;    // 킬 수 조회 함수
 
     void SetRemainingTime(float NewTime);
 
@@ -83,6 +85,7 @@ private:
     void OnRoundTimerFinished(); //라운드 제한 시간 끝났을 때
     int32 PreviousDisplaySeconds = -1; //화면 표시용 이전 초 값을 저장 ! -1부터 시작해서 무조건 첫 프레임에 갱신되게
     bool bTimedOut = false;//스테이지 타임아웃 여부
+    int32 KillCount = 0;           // 킬 수 변수
 
 
 };

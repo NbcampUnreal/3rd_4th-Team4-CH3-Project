@@ -3,6 +3,8 @@
 #include "Components/CapsuleComponent.h" // 캡슐 컴포넌트를 사용하기 위함 (충돌 비활성화 등)
 #include "Animation/AnimMontage.h" // UAnimMontage 사용
 #include "AIController.h" // AAIController 사용을 위해 포함
+#include "../GameMode/PPPGameMode.h"
+#include "Kismet/GameplayStatics.h"
 #include "BrainComponent.h"
 
 APppBaseAICharacter::APppBaseAICharacter()
@@ -108,6 +110,8 @@ void APppBaseAICharacter::Die()
     {
         OnDeath.Broadcast();
     }
+    // 기탁 GameMode와 연결된 델리게이트에도 알림
+    //OnCharacterDead.Broadcast(this);
 
 
     // 움직임 비활성화
@@ -127,6 +131,12 @@ void APppBaseAICharacter::Die()
 
     // 일정 시간 후 액터 파괴
     SetLifeSpan(5.0f); // 5초 후 액터 파괴
+
+    // 기탁 GameMode에 적 처치 알림
+    if (APPPGameMode* GM = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this)))
+    {
+        GM->OnEnemyKilled();
+    }
 }
 
 void APppBaseAICharacter::PlayDeathMontage()

@@ -39,23 +39,29 @@ UTestQuestActorComponent* APPPGameMode::GetQuestComponent() const
     return QuestComponent;
 }
 
-void APPPGameMode::OnEnemyKilledFromDelegate()
-{
-    OnEnemyKilled(); //우선 있는거 사용
-}
 
+// void APPPGameMode::BindDeathEventsForExistingEnemies()
+// {
+//     UWorld* World = GetWorld();
+//     if (!World) return;
+//
+//     for (TActorIterator<APppBaseAICharacter> It(World); It; ++It)
+//     {
+//         APppBaseAICharacter* Enemy = *It;
+//         if (!IsValid(Enemy)) continue;
+//
+//         // 중복 바인딩 방지
+//         Enemy->OnDeath.AddUniqueDynamic(this, &APPPGameMode::OnEnemyKilledFromDelegate);
+//     }
+// }
 void APPPGameMode::BindDeathEventsForExistingEnemies()
 {
-    UWorld* World = GetWorld();
-    if (!World) return;
 
-    for (TActorIterator<APppBaseAICharacter> It(World); It; ++It)
+    for (TActorIterator<APppBaseAICharacter> It(GetWorld()); It; ++It)
     {
         APppBaseAICharacter* Enemy = *It;
-        if (!IsValid(Enemy)) continue;
+        if (!Enemy) continue;
 
-        // 중복 바인딩 방지
-        Enemy->OnDeath.AddUniqueDynamic(this, &APPPGameMode::OnEnemyKilledFromDelegate);
     }
 }
 
@@ -316,6 +322,9 @@ void APPPGameMode::EndRound()
 
 void APPPGameMode::OnEnemyKilled()
 {
+    UE_LOG(LogTemp, Warning, TEXT(">>>>> OnEnemyKilled 호출됨"));
+
+    // 중복 제거!
     APPPGameState* GS = GetGameState<APPPGameState>();
     if (!GS) return;
 
@@ -325,14 +334,15 @@ void APPPGameMode::OnEnemyKilled()
         return;
     }
 
+    // 점수, 킬 수 한 번만 추가
+    GS->AddScore(ScorePerKill);
+    GS->AddKill();
+
     // 퀘스트만 업데이트
     if (QuestComponent)
     {
         QuestComponent->OnEnemyKilled(1);
     }
-
-    // 점수 증가
-    GS->AddScore(ScorePerKill);
 
     const int32 NewCount = FMath::Max(GS->RemainingEnemies - 1, 0);
     GS->SetRemainingEnemies(NewCount);
@@ -341,7 +351,6 @@ void APPPGameMode::OnEnemyKilled()
 
     CheckRewardCondition();
 
-    // 🎯 Stage1일 경우 EndRound 호출 안 함
     const FString LevelName = UGameplayStatics::GetCurrentLevelName(this, true);
     if (LevelName.Contains(TEXT("Stage1")) || LevelName.Contains(TEXT("stage1")))
     {
@@ -359,7 +368,6 @@ void APPPGameMode::OnEnemyKilled()
         UE_LOG(LogEnemy, Log, TEXT("라운드 진행 중 - 남은 적: %d"), NewCount);
     }
 }
-
 void APPPGameMode::OnPlayerDeath()
 {
     UE_LOG(LogGame, Error, TEXT("플레이어 사망"));
@@ -397,6 +405,8 @@ void APPPGameMode::SpawnEnemies()
                 }
 
                 SpawnVolume->SpawnEnemies(EnemiesPerRound);
+                BindDeathEventsForExistingEnemies(); // ✅ 스폰된 적들에게도 델리게이트 연결
+
 
                 UE_LOG(LogEnemy, Log, TEXT("ROUND %d - %s 에서 적 %d마리 스폰됨"),
                     CurrentRound, *SpawnVolume->GetName(), EnemiesPerRound);
@@ -544,4 +554,14 @@ void APPPGameMode::OnExitTimeOver()
     }
 
     OnGameOver();
+}
+void APPPGameState::AddKill()
+{
+    ++KillCount;
+    UE_LOG(LogTemp, Log, TEXT("KillCount: %d"), KillCount);
+}
+
+int32 APPPGameState::GetKillCount() const
+{
+    return KillCount;
 }
