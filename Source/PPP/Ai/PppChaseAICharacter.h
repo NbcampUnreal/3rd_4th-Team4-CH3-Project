@@ -62,6 +62,7 @@ public:
     // 콜리전 활성화를 위한 타이머 핸들
     FTimerHandle MeleeCollisionTimerHandle;
 
+    float StartTime=0;
 protected:
     // 데미지 판정 범위를 나타내는 콜리전 컴포넌트
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "AI|Combat")

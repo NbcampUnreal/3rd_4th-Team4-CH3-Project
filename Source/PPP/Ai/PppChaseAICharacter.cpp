@@ -48,29 +48,27 @@ void APppChaseAICharacter::StartMeleeAttack()
 
 void APppChaseAICharacter::ApplyMeleeDamage()
 {
-
+    GetWorldTimerManager().ClearTimer(MeleeCollisionTimerHandle);
     // 몽타주 노티파이에서 호출됨
     // 충돌 감지 콜리전을 활성화
     MeleeDamageCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     UE_LOG(LogTemp, Warning, TEXT("MeleeDamageCollision이 활성화되었습니다!"));
-
-    // 일정 시간 후 콜리전을 다시 비활성화하도록 타이머 설정 (애니메이션에 따라 시간 조절)
-    GetWorldTimerManager().SetTimer(MeleeCollisionTimerHandle, this, &APppChaseAICharacter::DeactivateMeleeDamageCollision, 0.5f, false);
 }
 
 void APppChaseAICharacter::OnMeleeDamageOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
     UE_LOG(LogTemp, Warning, TEXT("AI가 플레이어와 겹쳤습니다."));
 
+    //float CurrentTime = GetWorld()->GetTimeSeconds();
     if (OtherActor && OtherActor != this)
     {
         // 먼저 다른 AI와 충돌했는지 확인하고, 맞다면 함수를 즉시 종료합니다.
-        APppChaseAICharacter* OtherAI = Cast<APppChaseAICharacter>(OtherActor);
+        /*APppChaseAICharacter* OtherAI = Cast<APppChaseAICharacter>(OtherActor);
         if (OtherAI)
         {
             UE_LOG(LogTemp, Warning, TEXT("AI가 다른 AI와 충돌했습니다. 공격을 무시합니다."));
             return; // 함수를 여기서 끝냅니다.
-        }
+        }*/
 
         // 그 다음 플레이어 캐릭터인지 확인합니다.
         APppCharacter* PlayerCharacter = Cast<APppCharacter>(OtherActor);
@@ -92,7 +90,6 @@ void APppChaseAICharacter::OnMeleeDamageOverlap(UPrimitiveComponent* OverlappedC
             // 성공 로그도 이 블록 안에 있어야 합니다.
             UE_LOG(LogTemp, Warning, TEXT("플레이어에게 피해 %f를 입혔습니다."), MeleeDamage);
 
-
         }
         else
         {
@@ -107,6 +104,7 @@ void APppChaseAICharacter::OnMeleeDamageOverlap(UPrimitiveComponent* OverlappedC
             }
         }
     }
+    GetWorldTimerManager().SetTimer(MeleeCollisionTimerHandle, this, &APppChaseAICharacter::ApplyMeleeDamage, 1.0f, false);
 }
 
 void APppChaseAICharacter::DeactivateMeleeDamageCollision()
