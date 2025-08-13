@@ -10,6 +10,7 @@
 #include "PPPCharacter.h"                 // 플레이어 캐릭터
 #include "../characters/PppPlayerController.h" // 플레이어 컨트롤러
 #include "Blueprint/UserWidget.h"         // [추가] UUserWidget 사용 안전 헤더
+#include "TestQuestActorComponent.h" // 정현성 퀘스트 추가
 
 APPPGameMode::APPPGameMode()
 {
@@ -25,6 +26,16 @@ APPPGameMode::APPPGameMode()
 
     // [탁] 기본 자동 시작 대상 레벨: stage1, stage2
     AutoStartLevels = { FName(TEXT("stage1")), FName(TEXT("stage2")) };
+
+    // 정현성
+    // 퀘스트 컴포넌트 생성, 등록
+    QuestComponent = CreateDefaultSubobject<UTestQuestActorComponent>(TEXT("QuestComponent"));
+
+}
+
+UTestQuestActorComponent* APPPGameMode::GetQuestComponent() const
+{
+    return QuestComponent;
 }
 
 void APPPGameMode::OnEnemyKilledFromDelegate()
@@ -119,6 +130,8 @@ void APPPGameMode::BeginPlay()
     }
     */
 
+
+
     // 정현성
     // 시간을 화면에 띄우기
     if (TimeWidgetClass)
@@ -128,6 +141,11 @@ void APPPGameMode::BeginPlay()
         {
             TimeWidget->AddToViewport();
         }
+    }
+
+    if (QuestComponent)
+    {
+        QuestComponent->StartQuest();
     }
 
     // 김여울
@@ -291,6 +309,14 @@ void APPPGameMode::OnEnemyKilled()
 {
     APPPGameState* GS = GetGameState<APPPGameState>();
     if (!GS) return;
+
+    // 정현성
+    // 퀘스트 진행도 업데이트
+    if (QuestComponent)
+    {
+        QuestComponent->OnEnemyKilled(1);
+    }
+
 
     //  킬당 Score 지급
     GS->AddScore(ScorePerKill); // UI 업데이트까지 내부에서 처리됨

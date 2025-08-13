@@ -51,6 +51,8 @@ public:
     UPROPERTY(BlueprintAssignable, Category = "Quest")
     FOnAllQuestsCompleted OnAllQuestsCompleted;
 
+    UFUNCTION(BlueprintCallable, Category = "Quest")
+    void UpdateQuestProgress();
     /**
      * @brief 적 처치 이벤트를 처리합니다. 이 함수를 적 AI가 죽을 때 호출해야 합니다.
      * @param KillAmount 처치한 적의 수 (기본값 1)

@@ -1,7 +1,9 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "TestQuestActorComponent.h" // 정현성 퀘스트UI 추가
 #include "Components/Button.h"
+#include "Components/TextBlock.h"
 #include "InputMappingContext.h"
 #include "Blueprint/UserWidget.h"
 #include "InputAction.h"
@@ -69,6 +71,17 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "UI")
     UUserWidget* GameOverWidgetInstance;
 
+    // 정현성
+    // 킬 카운트 위젯 추가
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+    TSubclassOf<UUserWidget> QuestUIWidgetClass;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category = "UI")
+    UUserWidget* QuestUIWidgetInstance;
+
+    UPROPERTY()
+    class UTextBlock* QuestProgressTextBlock;
+
     // ====== 사운드 ======
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
     USoundBase* QuitSound;
@@ -91,7 +104,12 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stage")
     FName StageLevelName = TEXT("Stage2");
 
+
 private:
     UFUNCTION()
     void HandlePauseKey();
+
+    UFUNCTION()
+    void OnQuestProgressUpdated(int32 CurrentKills, int32 TargetKills);
+
 };

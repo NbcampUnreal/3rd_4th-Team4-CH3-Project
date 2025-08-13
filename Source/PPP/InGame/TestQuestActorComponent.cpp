@@ -2,7 +2,7 @@
 
 #include "TestQuestActorComponent.h"
 #include "Engine/World.h"
-#include "TestEnemyKillQuest.h" 
+#include "TestEnemyKillQuest.h"
 
 
 UTestQuestActorComponent::UTestQuestActorComponent()
@@ -36,24 +36,23 @@ void UTestQuestActorComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 void UTestQuestActorComponent::StartQuest()
 {
-   
+
     if (QuestStages.Num() == 0)
     {
         UE_LOG(LogTemp, Warning, TEXT("QuestStages 배열이 비어 있습니다. 에디터에서 퀘스트 단계를 설정해 주세요. 퀘스트를 시작할 수 없습니다."));
-        return; 
+        return;
     }
-    
+
 
     if (CurrentQuestStageIndex == -1) // 퀘스트가 처음 시작될 때
     {
         CurrentQuestStageIndex = 0;
-        // 새로운 퀘스트 인스턴스를 생성하고 초기화합니다.
         CurrentQuest = NewObject<UTestEnemyKillQuest>(this, UTestEnemyKillQuest::StaticClass(), TEXT("KillQuestInstance"));
         CurrentQuest->AdvanceQuest(QuestStages[CurrentQuestStageIndex]);
         CurrentQuest->QuestName = FText::Format(FText::FromString(TEXT("Enemy Kill Quest Stage {0}")), FText::AsNumber(CurrentQuestStageIndex + 1));
         CurrentQuest->QuestDescription = FText::Format(FText::FromString(TEXT("Defeat {0} enemies.")), FText::AsNumber(QuestStages[CurrentQuestStageIndex]));
 
-        
+
         OnQuestProgressUpdated.Broadcast(CurrentQuest->CurrentKillCount, CurrentQuest->TargetKillCount);
         UE_LOG(LogTemp, Log, TEXT("퀘스트 시작: '%s' 목표: %d"), *CurrentQuest->QuestName.ToString(), CurrentQuest->TargetKillCount);
     }
@@ -65,17 +64,17 @@ void UTestQuestActorComponent::StartQuest()
 
 void UTestQuestActorComponent::OnEnemyKilled(int32 KillAmount)
 {
-  
+
     if (!CurrentQuest || CurrentQuest->QuestState != EQuestState::InProgress)
     {
         UE_LOG(LogTemp, Warning, TEXT("활성화된 퀘스트가 없거나 퀘스트가 진행 중이 아닙니다."));
         return;
     }
 
-   
+
     bool bQuestCompleted = CurrentQuest->AddKillCount(KillAmount);
 
-    
+
     OnQuestProgressUpdated.Broadcast(CurrentQuest->CurrentKillCount, CurrentQuest->TargetKillCount);
 
     if (bQuestCompleted)
@@ -88,11 +87,11 @@ void UTestQuestActorComponent::OnEnemyKilled(int32 KillAmount)
 
 void UTestQuestActorComponent::GoToNextQuestStage()
 {
-    // 다음 퀘스트 단계가 있는지 확인합니다.
+    // 다음 퀘스트 단계가 있는지 확인
     if (CurrentQuestStageIndex + 1 < QuestStages.Num())
     {
         CurrentQuestStageIndex++;
-       
+
         if (CurrentQuest)
         {
             CurrentQuest->AdvanceQuest(QuestStages[CurrentQuestStageIndex]);
@@ -101,25 +100,30 @@ void UTestQuestActorComponent::GoToNextQuestStage()
         }
         else
         {
-          
+
             CurrentQuest = NewObject<UTestEnemyKillQuest>(this, UTestEnemyKillQuest::StaticClass(), TEXT("KillQuestInstance"));
             CurrentQuest->AdvanceQuest(QuestStages[CurrentQuestStageIndex]);
             CurrentQuest->QuestName = FText::Format(FText::FromString(TEXT("Enemy Kill Quest Stage {0}")), FText::AsNumber(CurrentQuestStageIndex + 1));
             CurrentQuest->QuestDescription = FText::Format(FText::FromString(TEXT("Defeat {0} enemies.")), FText::AsNumber(QuestStages[CurrentQuestStageIndex]));
         }
         UE_LOG(LogTemp, Log, TEXT("다음 퀘스트 단계로 이동: %d, 목표: %d"), CurrentQuestStageIndex + 1, CurrentQuest->TargetKillCount);
-        OnQuestProgressUpdated.Broadcast(CurrentQuest->CurrentKillCount, CurrentQuest->TargetKillCount); // 새로운 단계 시작 시 UI 업데이트
+        OnQuestProgressUpdated.Broadcast(CurrentQuest->CurrentKillCount, CurrentQuest->TargetKillCount);
     }
     else
     {
-     
+
         UE_LOG(LogTemp, Log, TEXT("모든 퀘스트 단계가 완료되었습니다!"));
         if (CurrentQuest)
         {
             CurrentQuest->CompleteQuest(); // 최종적으로 완료 상태로 설정
         }
-        OnAllQuestsCompleted.Broadcast(); 
+        OnAllQuestsCompleted.Broadcast();
     }
+}
+
+void UTestQuestActorComponent::UpdateQuestProgress()
+{
+    OnEnemyKilled(1);
 }
 
 bool UTestQuestActorComponent::AreAllQuestsCompleted() const

@@ -8,6 +8,8 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
+#include "PPP/GameMode/PPPGameMode.h" // 정현성 추가
+#include "TestQuestActorComponent.h" // 정현성 추가
 
 APppPlayerController::APppPlayerController()
     : InputMappingContext(nullptr)
@@ -39,9 +41,8 @@ void APppPlayerController::BeginPlay()
 {
     Super::BeginPlay();
 
-    const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(GetWorld(), true); // PIE 접두사 제거
+    const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
 
-    // MainMenuLevel에선 HUD 숨기기
     if (CurrentLevelName.Equals(TEXT("MainMenuLevel")))
     {
         if (AHUD* Hud = GetHUD())
@@ -57,26 +58,66 @@ void APppPlayerController::BeginPlay()
 
         ShowMainMenu(true);
     }
-
-    if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
+    else
     {
-        if (UEnhancedInputLocalPlayerSubsystem* SubSystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+        if (QuestUIWidgetClass)
         {
-            if (InputMappingContext)
+            QuestUIWidgetInstance = CreateWidget<UUserWidget>(this, QuestUIWidgetClass);
+            if (QuestUIWidgetInstance)
             {
-                SubSystem->AddMappingContext(InputMappingContext, 0);
-                UE_LOG(LogTemp, Warning, TEXT("InputMappingContext 등록 완료: %s"), *InputMappingContext->GetName());
-            }
-            else
-            {
-                UE_LOG(LogTemp, Error, TEXT("InputMappingContext가 설정되지 않았습니다."));
-            }
+                QuestUIWidgetInstance->AddToViewport();
+                QuestProgressTextBlock = Cast<UTextBlock>(QuestUIWidgetInstance->GetWidgetFromName(TEXT("KillCountText")));
 
-            if (PauseMenuIMC)
-            {
-                SubSystem->AddMappingContext(PauseMenuIMC, 1); // 메뉴가 게임 입력보다 우선
+                if (APPPGameMode* GameMode = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this)))
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("GameMode is valid: %s"), GameMode ? TEXT("true") : TEXT("false"));
+
+                    if (UTestQuestActorComponent* QuestComponent = GameMode->GetQuestComponent())
+                    {
+                        UE_LOG(LogTemp, Warning, TEXT("QuestComponent is valid: %s"), QuestComponent ? TEXT("true") : TEXT("false"));
+
+                        QuestComponent->OnQuestProgressUpdated.AddDynamic(this, &APppPlayerController::OnQuestProgressUpdated);
+                    }
+                }
             }
         }
+
+        if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
+        {
+            if (UEnhancedInputLocalPlayerSubsystem* SubSystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+            {
+                if (InputMappingContext)
+                {
+                    SubSystem->AddMappingContext(InputMappingContext, 0);
+                    UE_LOG(LogTemp, Warning, TEXT("InputMappingContext 등록 완료: %s"), *InputMappingContext->GetName());
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Error, TEXT("InputMappingContext가 설정되지 않았습니다."));
+                }
+
+                if (PauseMenuIMC)
+                {
+                    SubSystem->AddMappingContext(PauseMenuIMC, 1);
+                }
+            }
+        }
+    }
+}
+
+void APppPlayerController::OnQuestProgressUpdated(int32 CurrentKills, int32 TargetKills)
+{
+    if (QuestProgressTextBlock)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("QuestProgressTextBlock is valid: true"));
+
+        FText NewText = FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(CurrentKills), FText::AsNumber(TargetKills));
+        QuestProgressTextBlock->SetText(NewText);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("QuestProgressTextBlock is valid: false"));
+
     }
 }
 
