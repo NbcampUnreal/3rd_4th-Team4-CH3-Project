@@ -75,11 +75,6 @@ void APppPlayerController::BeginPlay()
             if (PauseMenuIMC)
             {
                 SubSystem->AddMappingContext(PauseMenuIMC, 1); // 메뉴가 게임 입력보다 우선
-                UE_LOG(LogTemp, Warning, TEXT("PauseMenuIMC 등록 완료: %s"), *PauseMenuIMC->GetName());
-            }
-            else
-            {
-                UE_LOG(LogTemp, Error, TEXT("PauseMenuIMC가 NULL입니다!"));
             }
         }
     }

@@ -21,8 +21,6 @@ void UMainMenuWidget::NativeConstruct()
 
 void UMainMenuWidget::OnStartClicked()
 {
-    UE_LOG(LogTemp, Log, TEXT("Start Clicked"));
-
     if (APppPlayerController* PC = Cast<APppPlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
     {
         PC->StartGame();
@@ -31,6 +29,5 @@ void UMainMenuWidget::OnStartClicked()
 
 void UMainMenuWidget::OnQuitClicked()
 {
-    UE_LOG(LogTemp, Log, TEXT("Quit Clicked"));
     UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, true);
 }

@@ -28,10 +28,7 @@ void UGameOverWidget::OnReturnToMainMenuClicked()
 {
     // MainMenuLevel로 돌아가기
     UGameplayStatics::OpenLevel(this, FName("MainMenuLevel"));
-    UE_LOG(LogTemp, Log, TEXT("Return to Main Menu Clicked"));
 }
 
 void UGameOverWidget::HandlePlayerDeath()
-{
-    UE_LOG(LogTemp, Warning, TEXT("GameOverWidget detected: Player is Dead."));
-}
+{}

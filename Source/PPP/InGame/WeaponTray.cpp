@@ -67,12 +67,6 @@ void UWeaponTray::UpdateWeaponInfo(const FText& NewWeaponName, UTexture2D* NewWe
             WeaponImage->SetBrushFromTexture(nullptr);
         }
     }
-
-    // 애니메이션 재생은 선택
-    // if (WeaponSwap && NewWeaponImage)
-    //{
-    //    PlayAnimation(WeaponSwap);
-    //}
 }
 
 void UWeaponTray::UpdateAmmoText(int32 NewAmmoInMag, int32 NewReserveAmmo)

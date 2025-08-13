@@ -22,8 +22,6 @@ void UPauseMenuWidget::NativeConstruct()
 
 void UPauseMenuWidget::OnResumeClicked()
 {
-    UE_LOG(LogTemp, Log, TEXT("Resume Clicked"));
-
     if (APppPlayerController* PC = Cast<APppPlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
     {
         PC->SetPause(false); // 게임 재개
@@ -42,5 +40,4 @@ void UPauseMenuWidget::OnReturnClicked()
     {
         PC->ShowMainMenu(true); // MainMenu로 복귀
     }
-    UE_LOG(LogTemp, Log, TEXT("Return Clicked"));
 }
