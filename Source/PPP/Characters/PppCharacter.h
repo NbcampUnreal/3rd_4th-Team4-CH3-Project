@@ -148,9 +148,13 @@ public:
 
     // 정현성
     // 위젯 보임, 숨김 함수 선언
+    UFUNCTION()
     void ShowHitMarker();
+    UFUNCTION()
     void HideHitMarker();
+    UFUNCTION()
     void ShowKillMarker();
+    UFUNCTION()
     void HideKillMarker();
 
 
