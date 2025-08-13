@@ -30,14 +30,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-    // 정현성
-    // 체력 변수 선언
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-    float Health;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-    float MaxHealth;
-
 
 
 public:
