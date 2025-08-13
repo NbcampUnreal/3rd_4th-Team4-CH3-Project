@@ -17,18 +17,18 @@ APppChaseAICharacter::APppChaseAICharacter()
 
     // 근접 공격 데미지 판정용 콜리전 컴포넌트 생성
     MeleeDamageCollision = CreateDefaultSubobject<USphereComponent>(TEXT("MeleeDamageCollision"));
-    MeleeDamageCollision->SetupAttachment(GetMesh(), FName("hand_r")); // 여기에 원하는 소켓 이름으로 변경
+    MeleeDamageCollision->SetupAttachment(GetMesh(), FName("hand_r"));
     MeleeDamageCollision->SetSphereRadius(25.0f);
     MeleeDamageCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     MeleeDamageCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     MeleeDamageCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 
     MeleeDamageCollision->OnComponentBeginOverlap.AddDynamic(this, &APppChaseAICharacter::OnMeleeDamageOverlap);
-    UE_LOG(LogTemp, Warning, TEXT("근접 공격 오버랩 이벤트가 바인딩되었습니다!")); // 디버깅용 로그
+    UE_LOG(LogTemp, Warning, TEXT("근접 공격 오버랩 이벤트가 바인딩되었습니다!"));
 
     // 임시 체력설정
     MaxHealth = 150.f;
-    CurrentHealth = MaxHealth; // 또는 필요하다면 설정
+    CurrentHealth = MaxHealth;
     Defense = 10.f;
 
 }
@@ -49,7 +49,6 @@ void APppChaseAICharacter::StartMeleeAttack()
 void APppChaseAICharacter::ApplyMeleeDamage()
 {
     GetWorldTimerManager().ClearTimer(MeleeCollisionTimerHandle);
-    // 몽타주 노티파이에서 호출됨
     // 충돌 감지 콜리전을 활성화
     MeleeDamageCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     UE_LOG(LogTemp, Warning, TEXT("MeleeDamageCollision이 활성화되었습니다!"));
@@ -62,22 +61,21 @@ void APppChaseAICharacter::OnMeleeDamageOverlap(UPrimitiveComponent* OverlappedC
     //float CurrentTime = GetWorld()->GetTimeSeconds();
     if (OtherActor && OtherActor != this)
     {
-        // 먼저 다른 AI와 충돌했는지 확인하고, 맞다면 함수를 즉시 종료합니다.
+        // 먼저 다른 AI와 충돌했는지 확인하고, 맞다면 함수를 즉시 종료
         /*APppChaseAICharacter* OtherAI = Cast<APppChaseAICharacter>(OtherActor);
         if (OtherAI)
         {
             UE_LOG(LogTemp, Warning, TEXT("AI가 다른 AI와 충돌했습니다. 공격을 무시합니다."));
-            return; // 함수를 여기서 끝냅니다.
+            return;
         }*/
 
-        // 그 다음 플레이어 캐릭터인지 확인합니다.
+        // 플레이어 캐릭터인지 확인
         APppCharacter* PlayerCharacter = Cast<APppCharacter>(OtherActor);
         if (PlayerCharacter)
         {
-            // 플레이어 캐릭터 찾기 성공!
             UE_LOG(LogTemp, Warning, TEXT("플레이어 캐릭터 찾기 성공!"));
 
-            // 데미지 적용 로직은 이 블록 안에 있어야 합니다.
+            // 데미지 적용 로직
             MeleeDamageCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
             UGameplayStatics::ApplyDamage(
                 PlayerCharacter,
@@ -86,8 +84,6 @@ void APppChaseAICharacter::OnMeleeDamageOverlap(UPrimitiveComponent* OverlappedC
                 this,
                 UDamageType::StaticClass()
             );
-
-            // 성공 로그도 이 블록 안에 있어야 합니다.
             UE_LOG(LogTemp, Warning, TEXT("플레이어에게 피해 %f를 입혔습니다."), MeleeDamage);
 
         }

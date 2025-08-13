@@ -24,10 +24,6 @@ public:
     UFUNCTION(BlueprintCallable, Category = "AI|Combat")
     void StartMeleeAttack();
 
-    // 실제 데미지를 적용하는 함수
-    /*UFUNCTION(BlueprintCallable, Category = "AI|Combat")
-    void ApplyMeleeDamage();*/
-
     // 근접 공격 애니메이션 (몽타주)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Combat")
     UAnimMontage* MeleeAttackMontage;
