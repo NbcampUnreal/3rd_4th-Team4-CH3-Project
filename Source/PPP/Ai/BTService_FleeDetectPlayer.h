@@ -21,11 +21,5 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Blackboard")
     FBlackboardKeySelector PlayerDetectedKey;
 
-    // 나중에 도망가고 숨거나 할 때 쓸 것
-    // UPROPERTY(EditAnywhere, Category = "Blackboard")
-    // FBlackboardKeySelector IsFleeingKey;
-    // UPROPERTY(EditAnywhere, Category = "AI|Flee")
-    // float TriggerFleeDistance;
-    // UPROPERTY(EditAnywhere, Category = "AI|Flee")
-    // float StopFleeDistance;
+
 };

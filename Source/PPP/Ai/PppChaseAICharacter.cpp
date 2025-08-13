@@ -61,13 +61,6 @@ void APppChaseAICharacter::OnMeleeDamageOverlap(UPrimitiveComponent* OverlappedC
     //float CurrentTime = GetWorld()->GetTimeSeconds();
     if (OtherActor && OtherActor != this)
     {
-        // 먼저 다른 AI와 충돌했는지 확인하고, 맞다면 함수를 즉시 종료
-        /*APppChaseAICharacter* OtherAI = Cast<APppChaseAICharacter>(OtherActor);
-        if (OtherAI)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("AI가 다른 AI와 충돌했습니다. 공격을 무시합니다."));
-            return;
-        }*/
 
         // 플레이어 캐릭터인지 확인
         APppCharacter* PlayerCharacter = Cast<APppCharacter>(OtherActor);

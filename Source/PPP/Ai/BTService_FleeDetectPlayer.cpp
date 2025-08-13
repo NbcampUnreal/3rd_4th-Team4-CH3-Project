@@ -13,9 +13,7 @@ UBTService_FleeDetectPlayer::UBTService_FleeDetectPlayer()
 
     PlayerLocationKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTService_FleeDetectPlayer, PlayerLocationKey));
     PlayerDetectedKey.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(UBTService_FleeDetectPlayer, PlayerDetectedKey));
-    // TriggerFleeDistance와 StopFleeDistance
-    // TriggerFleeDistance = 800.0f;
-    // StopFleeDistance = 1500.0f;
+
 }
 
 void UBTService_FleeDetectPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
