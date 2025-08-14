@@ -75,6 +75,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Quest")
     UTestQuestActorComponent* GetQuestComponent() const;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+    TSubclassOf<UUserWidget> ScoreWidgetClass;
+
 	/** 적 스폰 */
 	void SpawnEnemies();
 

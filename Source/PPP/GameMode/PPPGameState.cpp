@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h" // 정현성 DOREPLIFETIME 매크로를 사용하기 위해 이 헤더를 추가해야 한다는데 이해 못함
 
 
 
@@ -74,7 +75,9 @@ int32 APPPGameState::GetRemainingEnemies() const
 // -------------------------------
 void APPPGameState::OnRep_Score()
 {
-    // UI에 연결 예정
+    // 정현성
+    OnScoreChanged.Broadcast(Score);
+    UE_LOG(LogGame, Log, TEXT("Score updated: %d"), Score);
 }
 void APPPGameState::AddScore(int32 Amount)
 {
@@ -86,7 +89,7 @@ void APPPGameState::ResetScore()
 {
     Score = 0;
     OnRep_Score(); // 점수 초기화 시 UI 업데이트
-    UE_LOG(LogGame, Log, TEXT("Score reset to 0"));
+    //UE_LOG(LogGame, Log, TEXT("Score reset to 0"));
 }
 
 bool APPPGameState::IsRoundCleared() const
@@ -178,5 +181,14 @@ void APPPGameState::Tick(float DeltaTime)
         //}
         // 시간이 0 이하로 떨어졌을 경우 라운드 종료 처리
 
-    }
+}
 
+// 정현성
+// 네트워크 복제를 위한 GetLifetimeReplicatedProps 함수 정의?? 잘 모르겠음
+void APPPGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+
+    DOREPLIFETIME(APPPGameState, Score);
+}
