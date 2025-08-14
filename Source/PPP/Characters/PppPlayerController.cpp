@@ -60,6 +60,12 @@ void APppPlayerController::BeginPlay()
     {
         UE_LOG(LogTemp, Warning, TEXT("[GameOver] 레벨 시작"));
 
+        // 이전 레벨의 AHUD 클래스를 제거 (필요한 경우)
+        if (AHUD* Hud = GetHUD())
+        {
+            Hud->Destroy();
+        }
+
         // 마우스 커서 활성화 및 UI 모드로 변경
         bShowMouseCursor = true;
 
