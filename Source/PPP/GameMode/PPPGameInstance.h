@@ -22,4 +22,7 @@ public:
 
     UFUNCTION(BlueprintCallable)
     TSubclassOf<AActor> GetEquippedWeaponClass() const { return SavedEquippedWeaponClass; }
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 FinalScore = 0;
 };

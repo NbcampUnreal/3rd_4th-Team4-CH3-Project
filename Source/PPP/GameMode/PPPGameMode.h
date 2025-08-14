@@ -21,12 +21,22 @@ class PPP_API APPPGameMode : public AGameMode
 	GENERATED_BODY()
 
 public:
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UUserWidget> GameOverWidgetClass;
+
 	APPPGameMode();
     //스코어 구현
-    UFUNCTION()
-    void OnEnemyKilledFromDelegate();  // OnDeath 델리게이트가 불러줄 핸들러
 
     void BindDeathEventsForExistingEnemies(); // 맵 내 모든 적에게 바인딩
+
+    UFUNCTION(BlueprintCallable, Category="Round")
+    void FlagRoundClearedWithoutStarting(); // 안전하게 라운드 클리어만
+
+    // 라운드 점수 합계
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Score")
+    int32 TotalScore = 0;
+
 
 	virtual void BeginPlay() override;
 

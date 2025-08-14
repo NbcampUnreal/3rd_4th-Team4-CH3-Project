@@ -1,4 +1,5 @@
 // StageTravelTrigger.cpp
+
 #include "StageTravelTrigger.h"
 #include "Kismet/GameplayStatics.h"
 #include "PPPGameMode.h" // APPPGameMode
@@ -29,19 +30,21 @@ void AStageTravelTrigger::OnBoxBeginOverlap(
     bool bFromSweep,
     const FHitResult& SweepResult)
 {
+    if (bTriggered) return; // 중복 방지
     if (!bTravelEnabled) return;
     if (!OtherActor || !OtherActor->IsA(ACharacter::StaticClass())) return;
+    if (TargetLevelName.IsNone()) return;
 
-    if (TargetLevelName.IsNone())
-        return;
-    // 라운드 클리어 먼저 처리
+    // 라운드 클리어 처리 (단, StartRound는 호출 금지!)
     if (bCallRoundClearedOnTravel)
     {
         if (APPPGameMode* GM = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this)))
         {
-            GM->OnRoundCleared(); // 라운드 증가/스코어 리셋/신호 브로드캐스트
+            GM->FlagRoundClearedWithoutStarting(); // <- 안전한 라운드 클리어 처리
         }
     }
+
+    bTriggered = true;
 
     UGameplayStatics::OpenLevel(this, TargetLevelName);
 }

@@ -3,9 +3,10 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "TestEnemyKillQuest.h"
+#include "PickUpWeaponMaster.h"
 #include "TestQuestActorComponent.generated.h" // 이 줄은 파일 마지막에 있어야 함
 
-
+class AEquipWeaponMaster;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnQuestProgressUpdated, int32, CurrentKills, int32, TargetKills);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnQuestStageCompleted, int32, CompletedStageIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllQuestsCompleted);
@@ -19,6 +20,10 @@ public:
 
     UTestQuestActorComponent();
 
+    // 스테이지별 보상 무기 배열
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Quest|Reward")
+    TArray<TSubclassOf<APickUpWeaponMaster>> RewardWeaponClasses;
+
 protected:
 
     virtual void BeginPlay() override;
@@ -28,8 +33,12 @@ public:
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
     // 현재 활성화된 퀘스트
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Quest")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Quest")
     UTestEnemyKillQuest* CurrentQuest;
+
+    // ✅ 보상 기본 클래스(에디터에서 세팅)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Quest|Reward")
+    TSubclassOf<APickUpWeaponMaster> DefaultRewardWeaponClass;
 
     // 퀘스트 목표 단계 배열 (20, 30, 40)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")

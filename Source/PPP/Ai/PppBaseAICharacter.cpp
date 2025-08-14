@@ -3,6 +3,8 @@
 #include "Components/CapsuleComponent.h" // 캡슐 컴포넌트를 사용하기 위함 (충돌 비활성화 등)
 #include "Animation/AnimMontage.h" // UAnimMontage 사용
 #include "AIController.h" // AAIController 사용을 위해 포함
+#include "../GameMode/PPPGameMode.h"
+#include "Kismet/GameplayStatics.h"
 #include "BrainComponent.h"
 
 APppBaseAICharacter::APppBaseAICharacter()
@@ -79,7 +81,6 @@ void APppBaseAICharacter::ApplyHealthChange(float DeltaHealth)
 void APppBaseAICharacter::Die()
 {
     if (bIsDead) return; // 이미 사망했다면 함수 종료
-
     bIsDead = true; // 사망 상태로 설정
 
     if (AAIController* AIController = Cast<AAIController>(GetController())) // AAIController로 캐스팅
@@ -104,6 +105,14 @@ void APppBaseAICharacter::Die()
         GetMesh()->SetGenerateOverlapEvents(false);
     }
 
+    // 기탁 델리게이트 호출로 GameMode에 통보
+    if (OnDeath.IsBound())
+    {
+        OnDeath.Broadcast();
+    }
+    // 기탁 GameMode와 연결된 델리게이트에도 알림
+    //OnCharacterDead.Broadcast(this);
+
 
     // 움직임 비활성화
     if (GetCharacterMovement())
@@ -122,6 +131,12 @@ void APppBaseAICharacter::Die()
 
     // 일정 시간 후 액터 파괴
     SetLifeSpan(5.0f); // 5초 후 액터 파괴
+
+    // 기탁 GameMode에 적 처치 알림
+    if (APPPGameMode* GM = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this)))
+    {
+        GM->OnEnemyKilled();
+    }
 }
 
 void APppBaseAICharacter::PlayDeathMontage()

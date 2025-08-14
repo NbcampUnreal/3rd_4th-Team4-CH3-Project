@@ -1,10 +1,13 @@
 // PPPGameMode.cpp
 #include "PPPGameMode.h"
 #include "PPPGameState.h"                 // GameState 캐스팅
+#include "../GameMode/PPPGameState.h"
 #include "EngineUtils.h"                  // TActorIterator
 #include "DummyEnemy.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameDefines.h"
+#include "PPPGameInstance.h"
+#include "PppPlayerController.h"
 #include "Engine/World.h"
 #include "EnemySpawnVolume.h"
 #include "PPPCharacter.h"                 // 플레이어 캐릭터
@@ -38,24 +41,40 @@ UTestQuestActorComponent* APPPGameMode::GetQuestComponent() const
     return QuestComponent;
 }
 
-void APPPGameMode::OnEnemyKilledFromDelegate()
-{
-    OnEnemyKilled(); //우선 있는거 사용
-}
 
+// void APPPGameMode::BindDeathEventsForExistingEnemies()
+// {
+//     UWorld* World = GetWorld();
+//     if (!World) return;
+//
+//     for (TActorIterator<APppBaseAICharacter> It(World); It; ++It)
+//     {
+//         APppBaseAICharacter* Enemy = *It;
+//         if (!IsValid(Enemy)) continue;
+//
+//         // 중복 바인딩 방지
+//         Enemy->OnDeath.AddUniqueDynamic(this, &APPPGameMode::OnEnemyKilledFromDelegate);
+//     }
+// }
 void APPPGameMode::BindDeathEventsForExistingEnemies()
 {
-    UWorld* World = GetWorld();
-    if (!World) return;
 
-    for (TActorIterator<APppBaseAICharacter> It(World); It; ++It)
+    for (TActorIterator<APppBaseAICharacter> It(GetWorld()); It; ++It)
     {
         APppBaseAICharacter* Enemy = *It;
-        if (!IsValid(Enemy)) continue;
+        if (!Enemy) continue;
 
-        // 중복 바인딩 방지
-        Enemy->OnDeath.AddUniqueDynamic(this, &APPPGameMode::OnEnemyKilledFromDelegate);
     }
+}
+
+void APPPGameMode::FlagRoundClearedWithoutStarting()
+{
+    ++CurrentRound;
+    TotalScore = 0;
+    OnRoundClearedSignal.Broadcast();
+
+    // StartRound 호출 X
+    // StairRoundTrigger에서만 StartRound 시작하게 유도
 }
 
 void APPPGameMode::BeginPlay()
@@ -245,20 +264,18 @@ void APPPGameMode::StartRound()
     APPPGameState* GS = GetGameState<APPPGameState>();
     if (GS)
     {
-        GS->SetGameState(EGameState::InProgress); // [복구] 전투 상태로 진입
-
-        // 라운드 증가 로직은 OnRoundCleared()에서만 처리
+        GS->SetGameState(EGameState::InProgress);
         GS->SetRemainingEnemies(EnemiesPerRound);
         UE_LOG(LogWave, Log, TEXT("Wave %d 시작!"), GS->CurrentRound);
 
-        // [로그] 라운드 타이머 분기 확인
-        UE_LOG(LogTemp, Warning, TEXT("[GM] StartRound: bUseStageTimer=%s"),
-            bUseStageTimer ? TEXT("true") : TEXT("false"));
+        // [수정] 라운드 타이머 초기화
+        float InitTime = bUseStageTimer ? StageTimerSeconds : RoundTimePerRound;
+        GS->SetRemainingTime(InitTime);
+        UE_LOG(LogTemp, Warning, TEXT("[GM] RemainingTime 초기화: %.1f초"), InitTime);
 
-        // [통일] 라운드 타이머는 ExitWindowSeconds로 '한 번만' 시작
+        // [기존] ExitWindowSeconds 타이머 시작
         GS->StartRoundTimer(ExitWindowSeconds);
         UE_LOG(LogTemp, Warning, TEXT("[GM] GS->StartRoundTimer(%.1f) 호출됨 (ExitWindowSeconds)"), ExitWindowSeconds);
-
     }
 
     // 4) 적 스폰
@@ -290,10 +307,10 @@ void APPPGameMode::EndRound()
     UE_LOG(LogWave, Log, TEXT("라운드 %d 종료!"), GS->CurrentRound);
 
     // 점수 또는 적 처치 조건 충족 여부 판단
-    const bool bClearedByScore   = GS->IsRoundCleared();
+    //const bool bClearedByScore   = GS->IsRoundCleared();
     const bool bClearedByEnemies = (GS->RemainingEnemies <= 0);
 
-    if (bClearedByScore || bClearedByEnemies)
+    if (bClearedByEnemies)
     {
         UE_LOG(LogGame, Log, TEXT("조건 충족 → 라운드 클리어"));
         OnRoundCleared();
@@ -307,26 +324,41 @@ void APPPGameMode::EndRound()
 
 void APPPGameMode::OnEnemyKilled()
 {
+    UE_LOG(LogTemp, Warning, TEXT(">>>>> OnEnemyKilled 호출됨"));
+
+    // 중복 제거!
     APPPGameState* GS = GetGameState<APPPGameState>();
     if (!GS) return;
 
-    // 정현성
-    // 퀘스트 진행도 업데이트
+    if (GS->GetCurrentState() != EGameState::InProgress)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("적 처치 무시: 현재 상태는 전투 중이 아님"));
+        return;
+    }
+
+    // 점수, 킬 수 한 번만 추가
+    GS->AddScore(ScorePerKill);
+    GS->AddKill();
+
+    // 퀘스트만 업데이트
     if (QuestComponent)
     {
         QuestComponent->OnEnemyKilled(1);
     }
 
-
-    //  킬당 Score 지급
-    GS->AddScore(ScorePerKill); // UI 업데이트까지 내부에서 처리됨
-
-    const int32 NewCount = GS->RemainingEnemies - 1;
+    const int32 NewCount = FMath::Max(GS->RemainingEnemies - 1, 0);
     GS->SetRemainingEnemies(NewCount);
 
     UE_LOG(LogEnemy, Log, TEXT("적 처치! 남은 적: %d, 현재 점수: %d"), NewCount, GS->GetScore());
 
     CheckRewardCondition();
+
+    const FString LevelName = UGameplayStatics::GetCurrentLevelName(this, true);
+    if (LevelName.Contains(TEXT("Stage1")) || LevelName.Contains(TEXT("stage1")))
+    {
+        UE_LOG(LogEnemy, Log, TEXT("Stage1 - 처치만으로 라운드 종료 안 함."));
+        return;
+    }
 
     if (NewCount <= 0)
     {
@@ -338,7 +370,6 @@ void APPPGameMode::OnEnemyKilled()
         UE_LOG(LogEnemy, Log, TEXT("라운드 진행 중 - 남은 적: %d"), NewCount);
     }
 }
-
 void APPPGameMode::OnPlayerDeath()
 {
     UE_LOG(LogGame, Error, TEXT("플레이어 사망"));
@@ -363,24 +394,25 @@ void APPPGameMode::SpawnEnemies()
     {
         if (AEnemySpawnVolume* SpawnVolume = Cast<AEnemySpawnVolume>(Actor))
         {
-            // 여기서 EnemyClass 강제 주입
-            if (EnemyClass)
+            // 현재 라운드와 일치하는 층의 스폰 볼륨만 스폰
+            if (SpawnVolume->RoundIndexToSpawn == CurrentRound)
             {
-                SpawnVolume->EnemyClasses.Empty();
-                SpawnVolume->EnemyClasses.Add(EnemyClass); // Chase, Flee 등 중 원하는 클래스
-                SpawnVolume->SpawnWeights.Empty();
-                SpawnVolume->SpawnWeights.Add(1.0f); // 확률 100%
-            }
+                // EnemyClass 강제 설정
+                if (EnemyClass)
+                {
+                    SpawnVolume->EnemyClasses.Empty();
+                    SpawnVolume->EnemyClasses.Add(EnemyClass);
+                    SpawnVolume->SpawnWeights.Empty();
+                    SpawnVolume->SpawnWeights.Add(1.0f);
+                }
 
-            SpawnVolume->SpawnEnemies(EnemiesPerRound);
-            UE_LOG(LogEnemy, Log, TEXT("%s에서 %d마리 적 스폰 (강제 EnemyClass: %s)"),
-                   *SpawnVolume->GetName(),
-                   EnemiesPerRound,
-                   EnemyClass ? *EnemyClass->GetName() : TEXT("기본"));
-        }
-        else
-        {
-            UE_LOG(LogEnemy, Warning, TEXT("EnemyClass가 지정되지 않은 EnemySpawnVolume이 있음: %s"), *Actor->GetName());
+                SpawnVolume->SpawnEnemies(EnemiesPerRound);
+                BindDeathEventsForExistingEnemies(); // ✅ 스폰된 적들에게도 델리게이트 연결
+
+
+                UE_LOG(LogEnemy, Log, TEXT("ROUND %d - %s 에서 적 %d마리 스폰됨"),
+                    CurrentRound, *SpawnVolume->GetName(), EnemiesPerRound);
+            }
         }
     }
 }
@@ -415,13 +447,13 @@ void APPPGameMode::CheckRewardCondition()
         {
             UE_LOG(LogGame, Warning, TEXT("RewardActor가 설정되지 않았습니다."));
         }
-
-        // 점수 조건을 만족하면 라운드 종료
-        if (GS->GetCurrentState() == EGameState::InProgress)
-        {
-            UE_LOG(LogGame, Log, TEXT("점수 조건 충족 → 라운드 종료 호출"));
-            EndRound();
-        }
+        // 게임방식 변경되어 삭제예정!
+        // // 점수 조건을 만족하면 라운드 종료
+        // if (GS->GetCurrentState() == EGameState::InProgress)
+        // {
+        //     UE_LOG(LogGame, Log, TEXT("점수 조건 충족 → 라운드 종료 호출"));
+        //     EndRound();
+        // }
     }
 }
 
@@ -454,10 +486,53 @@ void APPPGameMode::OnGameOver()
 {
     UE_LOG(LogGame, Warning, TEXT("게임 오버"));
 
-    if (APppPlayerController* PC = Cast<APppPlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
+    // 점수 가져오기
+    int32 FinalScore = 0;
+    if (APPPGameState* GS = GetGameState<APPPGameState>())
     {
-        PC->ShowGameOver();
+        FinalScore = GS->GetScore();
     }
+
+    if (UPPPGameInstance* GI = GetGameInstance<UPPPGameInstance>())
+    {
+        GI->FinalScore = FinalScore;
+    }
+
+    // 블루프린트 위젯 생성
+    if (GameOverWidgetClass) // 위젯 블루프린트 지정되어 있어야 함
+    {
+        UUserWidget* GameOverWidget = CreateWidget<UUserWidget>(GetWorld(), GameOverWidgetClass);
+        if (GameOverWidget)
+        {
+            GameOverWidget->AddToViewport();
+
+            // 블루프린트 함수 호출 (SetScore)
+            UFunction* Func = GameOverWidget->FindFunction(FName("SetScore"));
+            if (Func)
+            {
+                struct FScoreParam
+                {
+                    int32 Score;
+                };
+
+                FScoreParam Param;
+                Param.Score = FinalScore;
+
+                GameOverWidget->ProcessEvent(Func, &Param);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("SetScore 함수가 위젯에서 안 보입니다."));
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("GameOverWidget 생성 실패"));
+        }
+    }
+
+    // 기존 레벨 이동 제거 (레벨이동하면 UI 날아감)
+    //UGameplayStatics::OpenLevel(this, FName("LV_GameOver"));
 }
 
 // =========================
@@ -524,4 +599,14 @@ void APPPGameMode::OnExitTimeOver()
     }
 
     OnGameOver();
+}
+void APPPGameState::AddKill()
+{
+    ++KillCount;
+    UE_LOG(LogTemp, Log, TEXT("KillCount: %d"), KillCount);
+}
+
+int32 APPPGameState::GetKillCount() const
+{
+    return KillCount;
 }

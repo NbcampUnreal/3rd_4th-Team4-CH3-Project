@@ -30,9 +30,13 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+    private:
+    UPROPERTY(VisibleAnywhere, Category = "Timer")
+    bool bIsTimerRunning = false;
 
 
 public:
+
     // 이 AI 캐릭터가 사용할 비헤이비어 트리 애셋
     UPROPERTY(EditAnywhere, Category = "AI")
     UBehaviorTree* BehaviorTreeAsset;
@@ -80,7 +84,13 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "Stats")
     bool IsDead() const;
+    // 탁
+    // [델리게이트 선언] - 캐릭터가 죽을 때 GameMode에 알림용
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterDead, AActor*, DeadActor);
 
+    // 죽었을 때 GameMode 등에서 처리하기 위한 외부용 델리게이트
+    UPROPERTY(BlueprintAssignable, Category="Event")
+    FOnCharacterDead OnCharacterDead;
 protected:
     void ApplyHealthChange(float DeltaHealth);
 

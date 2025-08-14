@@ -2,9 +2,14 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "PickUpWeaponMaster.h"
+
 #include "TestEnemyKillQuest.generated.h"
 
-UENUM(BlueprintType)
+class AActor;
+class AEquipWeaponMaster;
+
+UENUM(Blueprintable, BlueprintType)
 enum class EQuestState : uint8
 {
     NotStarted UMETA(DisplayName = "Not Started"),
@@ -63,4 +68,19 @@ public: // <--- 'public:' 접근 지정자는 이 위치에 있어야 합니다.
      */
     UFUNCTION(BlueprintCallable, Category = "Quest")
     void ResetQuest();
+
+    /** ✅ 추가: 플레이어 참조 저장용 (보상 위치 계산용) */
+    UPROPERTY()
+    AActor* OwnerActor;
+
+    /** ✅ 추가: 보상 무기 클래스 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest|Reward")
+    TSubclassOf<APickUpWeaponMaster> RewardWeaponClass;
+
+private:
+    /** ✅ 추가: 중복 보상 방지용 */
+    bool bRewardGiven = false;
+
+    /** ✅ 추가: 보상 스폰 함수 */
+    void SpawnRewardIfNeeded();
 };
