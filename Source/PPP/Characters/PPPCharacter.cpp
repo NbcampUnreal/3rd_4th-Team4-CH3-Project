@@ -510,13 +510,16 @@ float APppCharacter::TakeDamage(
 void APppCharacter::OnDeath()
 {
 
-	APPPGameState* PPPGameState = GetWorld() ? GetWorld()->GetGameState<APPPGameState>() : nullptr;
-	if (PPPGameState)
-	{
-	    OnCharacterDead.Broadcast();
-	    UE_LOG(LogTemp, Warning, TEXT("You Died!"));
-	}
+	// APPPGameState* PPPGameState = GetWorld() ? GetWorld()->GetGameState<APPPGameState>() : nullptr;
+	// if (PPPGameState)
+	// {
+	//    OnCharacterDead.Broadcast();
+	//    UE_LOG(LogTemp, Warning, TEXT("You Died!"));
+	//}
 
+    // 김여울
+    // 브로드캐스트 항상 호출
+    OnCharacterDead.Broadcast();
 }
 
 //오류 수정

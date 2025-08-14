@@ -43,4 +43,9 @@ public:
     // 보상 소모(API): 현재 큐를 Out으로 내보내고 내부 큐 비움
     UFUNCTION(BlueprintCallable, Category="Reward")
     void ConsumeRewards(TArray<FPendingReward>& OutRewards);
+
+    // 김여울
+    // 최종 점수 (게임 오버 시 표시)
+    // UPROPERTY(BlueprintReadWrite)
+    // int32 FinalScore = 0;
 };
