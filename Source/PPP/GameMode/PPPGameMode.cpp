@@ -14,6 +14,7 @@
 #include "../characters/PppPlayerController.h" // 플레이어 컨트롤러
 #include "Blueprint/UserWidget.h"         // [추가] UUserWidget 사용 안전 헤더
 #include "TestQuestActorComponent.h" // 정현성 퀘스트 추가
+#include "GameOverWidget.h"
 
 APPPGameMode::APPPGameMode()
 {
@@ -495,36 +496,36 @@ void APPPGameMode::HandleGameOver()
         FinalScore = GS->GetScore();
     }
 
+    // 점수 저장
     if (UPPPGameInstance* GI = GetGameInstance<UPPPGameInstance>())
     {
         GI->FinalScore = FinalScore;
     }
 
-    // 블루프린트 위젯 생성
-    if (GameOverWidgetClass) // 위젯 블루프린트 지정되어 있어야 함
+    // GameOver 위젯 생성
+    if (GameOverWidgetClass)
     {
         UUserWidget* GameOverWidget = CreateWidget<UUserWidget>(GetWorld(), GameOverWidgetClass);
         if (GameOverWidget)
         {
             GameOverWidget->AddToViewport();
 
-            // 블루프린트 함수 호출 (SetScore)
-            UFunction* Func = GameOverWidget->FindFunction(FName("SetScore"));
-            if (Func)
+            // ✅ 위젯 캐스팅해서 점수 세팅
+            if (UGameOverWidget* TypedWidget = Cast<UGameOverWidget>(GameOverWidget))
             {
-                struct FScoreParam
+                if (UPPPGameInstance* GI = Cast<UPPPGameInstance>(GetGameInstance()))
                 {
-                    int32 Score;
-                };
-
-                FScoreParam Param;
-                Param.Score = FinalScore;
-
-                GameOverWidget->ProcessEvent(Func, &Param);
+                    TypedWidget->SetFinalScore(GI->FinalScore);
+                    UE_LOG(LogTemp, Warning, TEXT("✅ GameOverWidget에 점수 전달 완료: %d"), GI->FinalScore);
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Error, TEXT("GameInstance 캐스팅 실패"));
+                }
             }
             else
             {
-                UE_LOG(LogTemp, Error, TEXT("SetScore 함수가 위젯에서 안 보입니다."));
+                UE_LOG(LogTemp, Error, TEXT("GameOverWidget 캐스팅 실패"));
             }
         }
         else
@@ -533,20 +534,21 @@ void APPPGameMode::HandleGameOver()
         }
     }
 
-    // 기존 레벨 이동 제거 (레벨이동하면 UI 날아감)
-    //UGameplayStatics::OpenLevel(this, FName("LV_GameOver"));
-
-    // 모든 HUD 위젯 숨기기
+    // HUD 제거 + 커서 표시
     if (APppPlayerController* PC = Cast<APppPlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
     {
         PC->SetHudWidgetsVisible(false);
         PC->bShowMouseCursor = true;
+
+        FInputModeUIOnly UIOnly;
+        UIOnly.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+        PC->SetInputMode(UIOnly);
     }
 
-    // 게임 일시정지 (선택 사항)
+    // 일시정지
     UGameplayStatics::SetGamePaused(GetWorld(), true);
 
-    // 게임 오버 레벨로 이동
+    // GameOver 레벨 이동
     UGameplayStatics::OpenLevel(this, GameOverLevelName);
 }
 

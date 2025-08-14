@@ -1,10 +1,12 @@
 #include "PppPlayerController.h"
 #include "GameFramework/HUD.h"
 #include "PppCharacter.h"
+#include "../GameMode/PGameInstance.h"
+#include "GameOverWidget.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Blueprint/UserWidget.h"
-#include "GameOverWidget.h"
+#include "../GameMode/PPPGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/TextBlock.h"
@@ -52,6 +54,55 @@ void APppPlayerController::BeginPlay()
 
     const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
     UE_LOG(LogTemp, Warning, TEXT("CurrentLevelName = %s"), *CurrentLevelName);
+
+    // === GameOver 레벨 처리 ===
+    if (CurrentLevelName.Equals(TEXT("LV_GameOver")))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[GameOver] 레벨 시작"));
+
+        // 마우스 커서 활성화 및 UI 모드로 변경
+        bShowMouseCursor = true;
+
+        FInputModeUIOnly InputMode;
+        InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+        SetInputMode(InputMode);
+
+        // 기존 위젯 제거 (중복 방지)
+        if (GameOverWidgetInstance)
+        {
+            GameOverWidgetInstance->RemoveFromParent();
+            GameOverWidgetInstance = nullptr;
+        }
+
+        // 새 위젯 생성
+        if (GameOverWidgetClass)
+        {
+            UGameOverWidget* Widget = CreateWidget<UGameOverWidget>(this, GameOverWidgetClass);
+            GameOverWidgetInstance = Widget;
+
+            if (Widget)
+            {
+                Widget->AddToViewport(9999);          // 맨 위에 표시
+                Widget->SetIsFocusable(true);
+
+                //  점수 전달
+                if (UPPPGameInstance* GI = Cast<UPPPGameInstance>(GetGameInstance()))
+                {
+                    Widget->SetFinalScore(GI->FinalScore);
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Error, TEXT(" GameInstance 캐스팅 실패"));
+                }
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT(" GameOverWidget 생성 실패"));
+            }
+        }
+
+        return; // HUD 생성 스킵
+    }
 
     // === 메인메뉴일 때 ===
     if (CurrentLevelName.Equals(TEXT("MainMenuLevel")))
