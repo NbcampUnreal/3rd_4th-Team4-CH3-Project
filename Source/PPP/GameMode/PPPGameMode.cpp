@@ -82,6 +82,17 @@ void APPPGameMode::BeginPlay()
 {
     Super::BeginPlay();
 
+    // 정현성 스코어위젯 띄우기
+    if (ScoreWidgetClass)
+    {
+        UUserWidget* ScoreWidget = CreateWidget<UUserWidget>(GetWorld(), ScoreWidgetClass);
+        if (ScoreWidget)
+        {
+            ScoreWidget->AddToViewport();
+            UE_LOG(LogTemp, Warning, TEXT("ScoreWidget created and added to viewport"));
+        }
+    }
+
     // ===== [추가] 레벨별 라운드 기본 시간/모드 설정 (Stage1=60초, Stage2=120초) =====
 
     const FString Lraw = UGameplayStatics::GetCurrentLevelName(this, /*bRemovePrefixString=*/true);
@@ -349,30 +360,30 @@ void APPPGameMode::OnEnemyKilled()
         QuestComponent->OnEnemyKilled(1);
     }
 
-    const int32 NewCount = FMath::Max(GS->RemainingEnemies - 1, 0);
-    GS->SetRemainingEnemies(NewCount);
-
-    UE_LOG(LogEnemy, Log, TEXT("적 처치! 남은 적: %d, 현재 점수: %d"), NewCount, GS->GetScore());
-
-    CheckRewardCondition();
-
-    const FString LevelName = UGameplayStatics::GetCurrentLevelName(this, true);
-    if (LevelName.Contains(TEXT("Stage1")) || LevelName.Contains(TEXT("stage1")))
-    {
-        UE_LOG(LogEnemy, Log, TEXT("Stage1 - 처치만으로 라운드 종료 안 함."));
-        return;
-    }
-
-    if (NewCount <= 0)
-    {
-        UE_LOG(LogEnemy, Log, TEXT("모든 적 처치! 라운드 종료"));
-        EndRound();
-    }
-    else
-    {
-        UE_LOG(LogEnemy, Log, TEXT("라운드 진행 중 - 남은 적: %d"), NewCount);
-    }
-}
+    // const int32 NewCount = FMath::Max(GS->RemainingEnemies - 1, 0);
+    // GS->SetRemainingEnemies(NewCount);
+//
+    // UE_LOG(LogEnemy, Log, TEXT("적 처치! 남은 적: %d, 현재 점수: %d"), NewCount, GS->GetScore());
+//
+    // CheckRewardCondition();
+//
+    // const FString LevelName = UGameplayStatics::GetCurrentLevelName(this, true);
+    // if (LevelName.Contains(TEXT("Stage1")) || LevelName.Contains(TEXT("stage1")))
+    // {
+    //     UE_LOG(LogEnemy, Log, TEXT("Stage1 - 처치만으로 라운드 종료 안 함."));
+    //     return;
+    // }
+//
+    // if (NewCount <= 0)
+    // {
+    //     UE_LOG(LogEnemy, Log, TEXT("모든 적 처치! 라운드 종료"));
+    //     EndRound();
+    // }
+    // else
+    // {
+    //     UE_LOG(LogEnemy, Log, TEXT("라운드 진행 중 - 남은 적: %d"), NewCount);
+    // }
+}//
 void APPPGameMode::OnPlayerDeath()
 {
     UE_LOG(LogGame, Error, TEXT("플레이어 사망"));

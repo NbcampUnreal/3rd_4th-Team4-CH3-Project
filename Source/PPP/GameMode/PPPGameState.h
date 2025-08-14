@@ -5,6 +5,10 @@
 #include "GameDefines.h"
 #include "PPPGameState.generated.h"
 
+// 정현성
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreChanged, int32, NewScore);
+
+
 UCLASS()
 class PPP_API APPPGameState : public AGameState
 {
@@ -33,13 +37,25 @@ public:
 	/** 남은 적 */
 	UPROPERTY(BlueprintReadOnly, Category="State")
 	int32 RemainingEnemies;
-    /** 점수 */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Score")
+
+    // 정현성
+    // 점수가 변경될 때마다 함수 자동 호출
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_Score, Category = "Score")
     int32 Score = 0;
+
+    UPROPERTY(BlueprintAssignable, Category = "Score")
+    FOnScoreChanged OnScoreChanged;
+
+    /** 점수 (정현성 주석 처리) */
+    // UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Score")
+    // int32 Score = 0;
+
+
     // 점수로 라운드 클리어 판단
     UFUNCTION(BlueprintCallable)
     bool IsRoundCleared() const;
 
+    // 정현성
     UFUNCTION()
     void OnRep_Score();
 
