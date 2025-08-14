@@ -98,7 +98,6 @@ void UWeaponTray::HandleWeaponChanged(AEquipWeaponMaster* NewWeapon)
         if (FireModeText)     FireModeText->SetText(FText());
 
         if (WeaponImage)      WeaponImage->SetBrushFromTexture(nullptr);
-        \
         return;
     }
 

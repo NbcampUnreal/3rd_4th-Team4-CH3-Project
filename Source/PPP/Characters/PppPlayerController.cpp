@@ -53,13 +53,10 @@ void APppPlayerController::BeginPlay()
     Super::BeginPlay();
 
     const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
-    UE_LOG(LogTemp, Warning, TEXT("CurrentLevelName = %s"), *CurrentLevelName);
 
     // === GameOver 레벨 처리 ===
     if (CurrentLevelName.Equals(TEXT("LV_GameOver")))
     {
-        UE_LOG(LogTemp, Warning, TEXT("[GameOver] 레벨 시작"));
-
         // 이전 레벨의 AHUD 클래스를 제거 (필요한 경우)
         if (AHUD* Hud = GetHUD())
         {
@@ -96,14 +93,6 @@ void APppPlayerController::BeginPlay()
                 {
                     Widget->SetFinalScore(GI->FinalScore);
                 }
-                else
-                {
-                    UE_LOG(LogTemp, Error, TEXT(" GameInstance 캐스팅 실패"));
-                }
-            }
-            else
-            {
-                UE_LOG(LogTemp, Error, TEXT(" GameOverWidget 생성 실패"));
             }
         }
 
@@ -168,12 +157,8 @@ void APppPlayerController::BeginPlay()
 
             if (APPPGameMode* GameMode = Cast<APPPGameMode>(UGameplayStatics::GetGameMode(this)))
             {
-                UE_LOG(LogTemp, Warning, TEXT("GameMode is valid: %s"), GameMode ? TEXT("true") : TEXT("false"));
-
                 if (UTestQuestActorComponent* QuestComponent = GameMode->GetQuestComponent())
                 {
-                    UE_LOG(LogTemp, Warning, TEXT("QuestComponent is valid: %s"), QuestComponent ? TEXT("true") : TEXT("false"));
-
                     QuestComponent->OnQuestProgressUpdated.AddDynamic(this, &APppPlayerController::OnQuestProgressUpdated);
                 }
             }
@@ -188,11 +173,6 @@ void APppPlayerController::BeginPlay()
             if (InputMappingContext)
             {
                 SubSystem->AddMappingContext(InputMappingContext, 0);
-                UE_LOG(LogTemp, Warning, TEXT("InputMappingContext 등록 완료: %s"), *InputMappingContext->GetName());
-            }
-            else
-            {
-                UE_LOG(LogTemp, Error, TEXT("InputMappingContext가 설정되지 않았습니다."));
             }
 
             if (PauseMenuIMC)
@@ -210,15 +190,8 @@ void APppPlayerController::OnQuestProgressUpdated(int32 CurrentKills, int32 Targ
 {
     if (QuestProgressTextBlock)
     {
-        UE_LOG(LogTemp, Warning, TEXT("QuestProgressTextBlock is valid: true"));
-
         FText NewText = FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(CurrentKills), FText::AsNumber(TargetKills));
         QuestProgressTextBlock->SetText(NewText);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("QuestProgressTextBlock is valid: false"));
-
     }
 }
 
@@ -337,7 +310,6 @@ void APppPlayerController::ShowGameOver()
 
     if (GameOverWidgetInstance == nullptr)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Creating GameOverWidgetInstance"));
         UGameOverWidget* TypedWidget = CreateWidget<UGameOverWidget>(this, GameOverWidgetClass);
         GameOverWidgetInstance = TypedWidget;
         ensureMsgf(GameOverWidgetInstance != nullptr, TEXT("Failed to create GameOverWidgetInstance."));
@@ -346,16 +318,11 @@ void APppPlayerController::ShowGameOver()
         {
             GameOverWidgetInstance->AddToViewport(9999);
             GameOverWidgetInstance->SetIsFocusable(true);
-            UE_LOG(LogTemp, Warning, TEXT("✅ GameOverWidgetInstance AddToViewport 성공"));
 
             // Return 버튼 바인딩
             if (UButton* ReturnButton = Cast<UButton>(GameOverWidgetInstance->GetWidgetFromName(TEXT("Return_BTN"))))
             {
                 ReturnButton->OnClicked.AddDynamic(this, &APppPlayerController::StartGame);
-            }
-            else
-            {
-                UE_LOG(LogTemp, Error, TEXT("Return_BTN not found in GameOverWidget."));
             }
         }
     }
@@ -473,7 +440,6 @@ void APppPlayerController::HandlePauseKey()
 // by Team4 (yeoul)
 void APppPlayerController::OnCharacterDead()
 {
-    UE_LOG(LogTemp, Error, TEXT("OnCharacterDead() called in PlayerController"));
     ShowGameOver();
 }
 
@@ -514,7 +480,6 @@ void APppPlayerController::SetHudWidgetsVisible(bool bVisible)
                     Widget->AddToViewport(ZOrder);
                     Widget->SetIsEnabled(true);
                     Widget->SetVisibility(ESlateVisibility::HitTestInvisible);
-                    UE_LOG(LogTemp, Warning, TEXT("[HUD] Re-created: %s"), *Widget->GetName());
                 }
             }
             else if (IsValid(Widget))
@@ -528,7 +493,6 @@ void APppPlayerController::SetHudWidgetsVisible(bool bVisible)
             if (IsValid(Widget))
             {
                 Widget->RemoveFromParent();
-                UE_LOG(LogTemp, Warning, TEXT("[HUD] Removed: %s"), *Widget->GetName());
                 Widget = nullptr;
             }
         }
@@ -568,7 +532,6 @@ void APppPlayerController::BindDeathDelegateToPawn
         // 중복 방지 후 바인딩
         P->OnCharacterDead.RemoveDynamic(this, &APppPlayerController::OnCharacterDead);
         P->OnCharacterDead.AddDynamic(this, &APppPlayerController::OnCharacterDead);
-        UE_LOG(LogTemp, Warning, TEXT("[PC] Bound OnCharacterDead from Pawn."));
     }
 }
 
