@@ -123,10 +123,15 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Round|AutoStart")
     TArray<FName> AutoStartLevels;
 
+    // 플레이어 사망 및 시간 초과 시 호출될 공통 게임 오버 로직 함수
+    UFUNCTION()
+    void HandleGameOver();
+
+    // 게임 오버 레벨 로드를 위한 UPROPERTY 추가
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game")
+    FName GameOverLevelName = TEXT("LV_GameOver"); // 게임 오버 레벨 이름
 
 protected:
-
-
     // 현재 라운드 번호
     UPROPERTY(VisibleAnywhere, Category="Round")
     int32 CurrentRound = 1;

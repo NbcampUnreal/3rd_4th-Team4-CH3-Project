@@ -27,6 +27,13 @@ public:
     UPROPERTY(meta = (BindWidget))
     UButton* Return_BTN;
 
+    // 점수 표시할 TextBlock 변수 추가
+    UPROPERTY(meta = (BindWidget))
+    class UTextBlock* ScoreText;
+
+    // 게임 오버 위젯에 점수를 설정하는 함수 추가
+    void SetFinalScore(int32 FinalScore);
+
     UFUNCTION()
     void HandlePlayerDeath();
 

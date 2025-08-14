@@ -300,7 +300,8 @@ void APPPGameMode::EndRound()
     if (GS->HasTimedOut())
     {
         UE_LOG(LogGame, Warning, TEXT("시간 초과 → 게임 오버"));
-        OnGameOver();
+        // OnGameOver();
+        HandleGameOver();
         return;
     }
 
@@ -318,7 +319,8 @@ void APPPGameMode::EndRound()
     else
     {
         UE_LOG(LogGame, Warning, TEXT("조건 미달 → 게임 오버"));
-        OnGameOver();
+        // OnGameOver();
+        HandleGameOver();
     }
 }
 
@@ -482,7 +484,7 @@ void APPPGameMode::OnRoundCleared()
     // StartRound();
 }
 
-void APPPGameMode::OnGameOver()
+void APPPGameMode::HandleGameOver()
 {
     UE_LOG(LogGame, Warning, TEXT("게임 오버"));
 
@@ -533,6 +535,19 @@ void APPPGameMode::OnGameOver()
 
     // 기존 레벨 이동 제거 (레벨이동하면 UI 날아감)
     //UGameplayStatics::OpenLevel(this, FName("LV_GameOver"));
+
+    // 모든 HUD 위젯 숨기기
+    if (APppPlayerController* PC = Cast<APppPlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
+    {
+        PC->SetHudWidgetsVisible(false);
+        PC->bShowMouseCursor = true;
+    }
+
+    // 게임 일시정지 (선택 사항)
+    UGameplayStatics::SetGamePaused(GetWorld(), true);
+
+    // 게임 오버 레벨로 이동
+    UGameplayStatics::OpenLevel(this, GameOverLevelName);
 }
 
 // =========================
@@ -609,4 +624,32 @@ void APPPGameState::AddKill()
 int32 APPPGameState::GetKillCount() const
 {
     return KillCount;
+}
+
+void APPPGameMode::OnGameOver()
+{
+    // 최종 점수를 PPPGameInstance에 저장
+    int32 FinalScore = 0;
+    if (APPPGameState* GS = GetGameState<APPPGameState>())
+    {
+        FinalScore = GS->GetScore();
+    }
+
+    if (UPPPGameInstance* GI = GetGameInstance<UPPPGameInstance>())
+    {
+        GI->FinalScore = FinalScore;
+    }
+
+    // 모든 HUD 위젯 숨기기
+    if (APppPlayerController* PC = Cast<APppPlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
+    {
+        PC->SetHudWidgetsVisible(false);
+        // C++ 코드로 마우스 커서 활성화 및 입력 모드 변경
+        PC->bShowMouseCursor = true;
+        FInputModeUIOnly UIOnly;
+        PC->SetInputMode(UIOnly);
+    }
+
+    // 게임 오버 레벨로 이동
+    UGameplayStatics::OpenLevel(this, FName("LV_GameOver"));
 }
