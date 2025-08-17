@@ -42,8 +42,10 @@ void UWeaponTray::NativeDestruct()
     CachedCharacter = Cast<APppCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
     if (CachedCharacter)
     {
-        CachedCharacter->OnWeaponChanged.AddDynamic(this, &UWeaponTray::HandleWeaponChanged);
-        CachedCharacter->OnAmmoChanged.AddDynamic(this, &UWeaponTray::HandleAmmoChanged);
+        // CachedCharacter->OnWeaponChanged.AddDynamic(this, &UWeaponTray::HandleWeaponChanged);
+        // CachedCharacter->OnAmmoChanged.AddDynamic(this, &UWeaponTray::HandleAmmoChanged);
+        CachedCharacter->OnWeaponChanged.RemoveDynamic(this, &UWeaponTray::HandleWeaponChanged);
+        CachedCharacter->OnAmmoChanged.RemoveDynamic(this, &UWeaponTray::HandleAmmoChanged);
     }
     Super::NativeDestruct();
 }

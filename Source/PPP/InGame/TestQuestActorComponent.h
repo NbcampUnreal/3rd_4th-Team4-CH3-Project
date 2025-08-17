@@ -27,8 +27,21 @@ public:
 protected:
 
     virtual void BeginPlay() override;
-
+private:
+    UPROPERTY()
+    AActor* CachedOwnerActor;
 public:
+
+    void SetOwnerActor(AActor* InOwner)
+    {
+        if (CurrentQuest)
+        {
+            CurrentQuest->SetOwnerActor(InOwner);
+        }
+
+        // ✅ 캐시 저장
+        CachedOwnerActor = InOwner;
+    }
 
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
