@@ -60,14 +60,21 @@ void UTestQuestActorComponent::StartQuest()
         if (OwnerCharacter)
         {
             CurrentQuest->OwnerActor = OwnerCharacter;
+            UE_LOG(LogTemp, Warning, TEXT("[QuestInit] OwnerActor를 캐릭터로 세팅: %s"), *OwnerCharacter->GetName());
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("퀘스트 컴포넌트의 Owner가 캐릭터가 아닙니다. 보상 스폰 실패 가능성 있음."));
-            CurrentQuest->OwnerActor = GetOwner(); // fallback: 기존 방식 유지
+            CurrentQuest->OwnerActor = GetOwner(); // fallback
+            UE_LOG(LogTemp, Warning, TEXT("[QuestInit] Owner가 캐릭터가 아님 → fallback 사용: %s"), *GetNameSafe(GetOwner()));
         }
 
         CurrentQuest->RewardWeaponClass = DefaultRewardWeaponClass;
+
+        if (CachedOwnerActor)
+        {
+            CurrentQuest->SetOwnerActor(CachedOwnerActor);
+            UE_LOG(LogTemp, Warning, TEXT("[QuestInit] CachedOwnerActor 재설정: %s"), *CachedOwnerActor->GetName());
+        }
 
 
         // 퀘스트 단계/텍스트 설정

@@ -88,7 +88,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int32 GetMaxRounds() const;
     /**점수 보상 조건 확인 */
-    void CheckRewardCondition();
+    //void CheckRewardCondition();
 
     /**stage(라운드) 관리 */
     UFUNCTION(BlueprintPure, Category="Round")

@@ -23,7 +23,9 @@ class PPP_API UTestEnemyKillQuest : public UObject
 {
     GENERATED_BODY()
 
-public: // <--- 'public:' 접근 지정자는 이 위치에 있어야 합니다.
+public:
+
+    void SetOwnerActor(AActor* InOwner) { OwnerActor = InOwner; }
 
     UTestEnemyKillQuest(); // 생성자
 

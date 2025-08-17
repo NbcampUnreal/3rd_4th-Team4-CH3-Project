@@ -6,6 +6,7 @@
 #include "DummyEnemy.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameDefines.h"
+#include "../InGame/TestEnemyKillQuest.h"
 #include "PPPGameInstance.h"
 #include "PppPlayerController.h"
 #include "Engine/World.h"
@@ -358,32 +359,31 @@ void APPPGameMode::OnEnemyKilled()
     if (QuestComponent)
     {
         QuestComponent->OnEnemyKilled(1);
+
     }
 
-    // const int32 NewCount = FMath::Max(GS->RemainingEnemies - 1, 0);
-    // GS->SetRemainingEnemies(NewCount);
-//
-    // UE_LOG(LogEnemy, Log, TEXT("적 처치! 남은 적: %d, 현재 점수: %d"), NewCount, GS->GetScore());
-//
-    // CheckRewardCondition();
-//
-    // const FString LevelName = UGameplayStatics::GetCurrentLevelName(this, true);
-    // if (LevelName.Contains(TEXT("Stage1")) || LevelName.Contains(TEXT("stage1")))
-    // {
-    //     UE_LOG(LogEnemy, Log, TEXT("Stage1 - 처치만으로 라운드 종료 안 함."));
-    //     return;
-    // }
-//
-    // if (NewCount <= 0)
-    // {
-    //     UE_LOG(LogEnemy, Log, TEXT("모든 적 처치! 라운드 종료"));
-    //     EndRound();
-    // }
-    // else
-    // {
-    //     UE_LOG(LogEnemy, Log, TEXT("라운드 진행 중 - 남은 적: %d"), NewCount);
-    // }
-}//
+    const int32 NewCount = FMath::Max(GS->RemainingEnemies - 1, 0);
+    GS->SetRemainingEnemies(NewCount);
+
+    UE_LOG(LogEnemy, Log, TEXT("적 처치! 남은 적: %d, 현재 점수: %d"), NewCount, GS->GetScore());
+
+    const FString LevelName = UGameplayStatics::GetCurrentLevelName(this, true);
+    if (LevelName.Contains(TEXT("Stage1")) || LevelName.Contains(TEXT("stage1")))
+    {
+        UE_LOG(LogEnemy, Log, TEXT("Stage1 - 처치만으로 라운드 종료 안 함."));
+        return;
+    }
+
+    if (NewCount <= 0)
+    {
+        UE_LOG(LogEnemy, Log, TEXT("모든 적 처치! 라운드 종료"));
+        EndRound();
+    }
+    else
+    {
+        UE_LOG(LogEnemy, Log, TEXT("라운드 진행 중 - 남은 적: %d"), NewCount);
+    }
+}
 void APPPGameMode::OnPlayerDeath()
 {
     UE_LOG(LogGame, Error, TEXT("플레이어 사망"));
