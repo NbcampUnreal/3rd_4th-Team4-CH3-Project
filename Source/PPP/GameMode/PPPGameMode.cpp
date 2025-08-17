@@ -436,31 +436,31 @@ int32 APPPGameMode::GetMaxRounds() const
     return MaxRounds;
 }
 
-void APPPGameMode::CheckRewardCondition()
-{
-    APPPGameState* GS = GetGameState<APPPGameState>();
-    if (!GS) return;
-
-    if (bRewardGiven) return;
-
-    if (GS->GetScore() >= 40)
-    {
-        bRewardGiven = true;
-
-        if (RewardActorClass)
-        {
-            // 보상 스폰 위치 예시: 특정 좌표
-            const FVector  SpawnLocation = FVector(-500.0f, 500.0f, 0.0f);
-            const FRotator SpawnRotation = FRotator::ZeroRotator;
-            FActorSpawnParameters SpawnParams;
-
-            GetWorld()->SpawnActor<AActor>(RewardActorClass, SpawnLocation, SpawnRotation, SpawnParams);
-            UE_LOG(LogGame, Warning, TEXT("점수 40 달성! 보상 액터 스폰"));
-        }
-        else
-        {
-            UE_LOG(LogGame, Warning, TEXT("RewardActor가 설정되지 않았습니다."));
-        }
+// void APPPGameMode::CheckRewardCondition()
+// {
+//     APPPGameState* GS = GetGameState<APPPGameState>();
+//     if (!GS) return;
+//
+//     if (bRewardGiven) return;
+//
+//     if (GS->GetScore() >= 40)
+//     {
+//         bRewardGiven = true;
+//
+//         if (RewardActorClass)
+//         {
+//             // 보상 스폰 위치 예시: 특정 좌표
+//             const FVector  SpawnLocation = FVector(-500.0f, 500.0f, 0.0f);
+//             const FRotator SpawnRotation = FRotator::ZeroRotator;
+//             FActorSpawnParameters SpawnParams;
+//
+//             GetWorld()->SpawnActor<AActor>(RewardActorClass, SpawnLocation, SpawnRotation, SpawnParams);
+//             UE_LOG(LogGame, Warning, TEXT("점수 40 달성! 보상 액터 스폰"));
+//         }
+//         else
+//         {
+//             UE_LOG(LogGame, Warning, TEXT("RewardActor가 설정되지 않았습니다."));
+//         }
         // 게임방식 변경되어 삭제예정!
         // // 점수 조건을 만족하면 라운드 종료
         // if (GS->GetCurrentState() == EGameState::InProgress)
@@ -468,8 +468,7 @@ void APPPGameMode::CheckRewardCondition()
         //     UE_LOG(LogGame, Log, TEXT("점수 조건 충족 → 라운드 종료 호출"));
         //     EndRound();
         // }
-    }
-}
+
 
 void APPPGameMode::OnRoundCleared()
 {
@@ -498,6 +497,12 @@ void APPPGameMode::OnRoundCleared()
 
 void APPPGameMode::HandleGameOver()
 {
+    UE_LOG(LogTemp, Warning, TEXT("[GM] HandleGameOver() 실행됨"));
+
+    if (!GameOverWidgetClass)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[GM] GameOverWidgetClass가 설정되지 않음!"));
+    }
     UE_LOG(LogGame, Warning, TEXT("게임 오버"));
 
     // 점수 가져오기
@@ -641,28 +646,35 @@ int32 APPPGameState::GetKillCount() const
 
 void APPPGameMode::OnGameOver()
 {
-    // 최종 점수를 PPPGameInstance에 저장
+    UE_LOG(LogTemp, Warning, TEXT("[GM] OnGameOver() 실행됨"));
+
     int32 FinalScore = 0;
+
+    // ✅ GameState에서 점수 가져오기
     if (APPPGameState* GS = GetGameState<APPPGameState>())
     {
         FinalScore = GS->GetScore();
+        UE_LOG(LogTemp, Warning, TEXT("[GameMode] GameState 점수 가져옴: %d"), FinalScore);
     }
 
+    // ✅ GameInstance에 저장
     if (UPPPGameInstance* GI = GetGameInstance<UPPPGameInstance>())
     {
         GI->FinalScore = FinalScore;
+        UE_LOG(LogTemp, Warning, TEXT("[GameMode] GameInstance에 FinalScore 저장 완료: %d"), GI->FinalScore);
     }
 
-    // 모든 HUD 위젯 숨기기
+    // ✅ HUD 숨기기 + 입력 전환
     if (APppPlayerController* PC = Cast<APppPlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
     {
         PC->SetHudWidgetsVisible(false);
-        // C++ 코드로 마우스 커서 활성화 및 입력 모드 변경
         PC->bShowMouseCursor = true;
+
         FInputModeUIOnly UIOnly;
         PC->SetInputMode(UIOnly);
     }
 
-    // 게임 오버 레벨로 이동
+    // ✅ 맵 이동은 반드시 저장 완료 후 실행
+    UE_LOG(LogTemp, Warning, TEXT("[GameMode] LV_GameOver로 이동 시작"));
     UGameplayStatics::OpenLevel(this, FName("LV_GameOver"));
 }

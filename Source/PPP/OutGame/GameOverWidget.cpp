@@ -11,31 +11,37 @@ void UGameOverWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    if (Return_BTN)
+    if (UPPPGameInstance* GI = GetGameInstance<UPPPGameInstance>())
     {
-        Return_BTN->OnClicked.AddDynamic(this, &UGameOverWidget::OnReturnToMainMenuClicked);
-    }
+        int32 FinalScore = GI->FinalScore;
+        UE_LOG(LogTemp, Warning, TEXT("[Widget] NativeConstruct에서 GI->FinalScore = %d"), FinalScore);
 
-    // 게임 인스턴스에서 최종 점수 가져오기
-    if (UGameInstance* GameInstance = GetGameInstance())
-    {
-        if (UPPPGameInstance* PPPGameInstance = Cast<UPPPGameInstance>(GameInstance))
+        if (ScoreText)
         {
-            SetFinalScore(PPPGameInstance->FinalScore);
+            ScoreText->SetText(FText::AsNumber(FinalScore));
         }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("[Widget] ScoreText is nullptr! 바인딩 확인 필요"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("[Widget] GameInstance 캐스팅 실패"));
     }
 }
 
-void UGameOverWidget::NativeDestruct
-(
-)
+
+void UGameOverWidget::NativeDestruct()
 {
     if (Return_BTN)
     {
         Return_BTN->OnClicked.RemoveDynamic(this, &UGameOverWidget::OnReturnToMainMenuClicked);
     }
+
     Super::NativeDestruct();
 }
+
 
 void UGameOverWidget::OnReturnToMainMenuClicked()
 {
@@ -47,6 +53,8 @@ void UGameOverWidget::OnReturnToMainMenuClicked()
 
 void UGameOverWidget::SetFinalScore(int32 FinalScore)
 {
+    UE_LOG(LogTemp, Warning, TEXT("[Widget] 최종 점수 표시: %d"), FinalScore);
+
     if (ScoreText)
     {
         FString ScoreString = FString::Printf(TEXT("Total Score : %d"), FinalScore);

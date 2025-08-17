@@ -10,6 +10,8 @@
  */
 
 class APppCharacter;
+class UTextBlock;
+
 
 UCLASS()
 class PPP_API UGameOverWidget : public UUserWidget
@@ -39,5 +41,13 @@ public:
 
 private:
     APppCharacter* CachedCharacter;
+
+#pragma region ScoreText탁
+public:
+
+
+
+
+#pragma endregion
 
 };

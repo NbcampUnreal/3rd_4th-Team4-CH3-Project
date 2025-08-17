@@ -46,6 +46,9 @@ public:
     UPROPERTY(BlueprintAssignable, Category = "Score")
     FOnScoreChanged OnScoreChanged;
 
+    UFUNCTION(BlueprintCallable, Category="Score")
+    int32 GetScore() const { return Score; }
+
     /** 점수 (정현성 주석 처리) */
     // UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Score")
     // int32 Score = 0;
@@ -84,8 +87,6 @@ public:
 	// -------------------------------
 	int32 GetCurrentRound() const;
 	int32 GetRemainingEnemies() const;
-    UFUNCTION(BlueprintCallable)
-    int32 GetScore() const { return Score; } //reward 확인용
     UPROPERTY(EditAnywhere, Category="Score")
     int32 ScoreToClearRound = 100; //라운드 클리어 점수
 
