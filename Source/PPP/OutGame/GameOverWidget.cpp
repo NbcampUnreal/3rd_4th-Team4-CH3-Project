@@ -18,8 +18,8 @@ void UGameOverWidget::NativeConstruct()
 
         if (ScoreText)
         {
-            ScoreText->SetText(FText::AsNumber(FinalScore));
-        }
+            FString ScoreString = FString::Printf(TEXT("Total Score: %d"), FinalScore);
+            ScoreText->SetText(FText::FromString(ScoreString));        }
         else
         {
             UE_LOG(LogTemp, Error, TEXT("[Widget] ScoreText is nullptr! 바인딩 확인 필요"));
