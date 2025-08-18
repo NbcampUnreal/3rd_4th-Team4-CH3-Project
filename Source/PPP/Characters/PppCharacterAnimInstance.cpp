@@ -35,7 +35,7 @@ void UPppCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
         MoveDirection = FMath::Clamp(MoveDirection, -180.0f, 180.0f);
 
         // 캐릭터의 bool 값을 읽어와 동기화
-        bIsRifleEquipped = MyChar->GetIsRifleEquipped();
+        bIsWeaponEquipped = MyChar->GetIsRifleEquipped();
 
         bIsReloading = MyChar->bIsReloading;
     }
