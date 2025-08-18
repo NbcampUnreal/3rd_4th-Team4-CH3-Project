@@ -11,6 +11,12 @@ void UGameOverWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
+    // 메인메뉴로 돌아가는 버튼 연결
+    if (Return_BTN)
+    {
+        Return_BTN->OnClicked.AddDynamic(this, &UGameOverWidget::OnReturnToMainMenuClicked);
+    }
+
     if (UPPPGameInstance* GI = GetGameInstance<UPPPGameInstance>())
     {
         int32 FinalScore = GI->FinalScore;
