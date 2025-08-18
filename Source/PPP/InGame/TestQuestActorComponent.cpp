@@ -204,6 +204,7 @@ void UTestQuestActorComponent::GoToNextQuestStage()
     }
 }
 
+
 void UTestQuestActorComponent::UpdateQuestProgress()
 {
     OnEnemyKilled(1);
