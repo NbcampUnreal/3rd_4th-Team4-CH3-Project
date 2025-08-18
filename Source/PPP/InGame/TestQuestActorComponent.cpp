@@ -18,7 +18,7 @@ UTestQuestActorComponent::UTestQuestActorComponent()
     QuestStages.Add(30);
     QuestStages.Add(40);
 
-    CurrentQuestStageIndex = -1; // 퀘스트 시작 전
+    CurrentQuestStageIndex = 0; // 퀘스트 시작 전
 }
 
 
@@ -48,7 +48,7 @@ void UTestQuestActorComponent::StartQuest()
         return;
     }
 
-    if (CurrentQuestStageIndex == -1) // 퀘스트가 처음 시작될 때
+    if (CurrentQuestStageIndex == 0) // 퀘스트가 처음 시작될 때
     {
         CurrentQuestStageIndex = 0;
 
@@ -137,46 +137,69 @@ void UTestQuestActorComponent::OnEnemyKilled(int32 KillAmount)
 
 void UTestQuestActorComponent::GoToNextQuestStage()
 {
-    // 보상 무기 클래스 설정
-    if (RewardWeaponClasses.IsValidIndex(CurrentQuestStageIndex))
-    {
-        CurrentQuest->RewardWeaponClass = RewardWeaponClasses[CurrentQuestStageIndex];
-    }
-    else
-    {
-        CurrentQuest->RewardWeaponClass = nullptr;
-        UE_LOG(LogTemp, Warning, TEXT("[QuestInit] RewardWeaponClasses에 해당 인덱스가 없습니다."));
-    }
     // 다음 퀘스트 단계가 있는지 확인
     if (CurrentQuestStageIndex + 1 < QuestStages.Num())
     {
+        // 먼저 인덱스를 증가시킴
         CurrentQuestStageIndex++;
 
-        if (CurrentQuest)
+        // 보상 무기 클래스 설정 (인덱스 증가 후 적용)
+        if (RewardWeaponClasses.IsValidIndex(CurrentQuestStageIndex))
         {
-            CurrentQuest->AdvanceQuest(QuestStages[CurrentQuestStageIndex]);
-            CurrentQuest->QuestName = FText::Format(FText::FromString(TEXT("Enemy Kill Quest Stage {0}")), FText::AsNumber(CurrentQuestStageIndex + 1));
-            CurrentQuest->QuestDescription = FText::Format(FText::FromString(TEXT("Defeat {0} enemies.")), FText::AsNumber(QuestStages[CurrentQuestStageIndex]));
+            CurrentQuest->RewardWeaponClass = RewardWeaponClasses[CurrentQuestStageIndex];
         }
         else
         {
+            CurrentQuest->RewardWeaponClass = nullptr;
+            UE_LOG(LogTemp, Warning, TEXT("[QuestInit] RewardWeaponClasses에 해당 인덱스가 없습니다."));
+        }
 
+        // 퀘스트 진행 갱신
+        if (CurrentQuest)
+        {
+            CurrentQuest->AdvanceQuest(QuestStages[CurrentQuestStageIndex]);
+            CurrentQuest->QuestName = FText::Format(
+                FText::FromString(TEXT("Enemy Kill Quest Stage {0}")),
+                FText::AsNumber(CurrentQuestStageIndex + 1)
+            );
+            CurrentQuest->QuestDescription = FText::Format(
+                FText::FromString(TEXT("Defeat {0} enemies.")),
+                FText::AsNumber(QuestStages[CurrentQuestStageIndex])
+            );
+        }
+        else
+        {
+            // 혹시 CurrentQuest가 없는 경우 새로 생성
             CurrentQuest = NewObject<UTestEnemyKillQuest>(this, UTestEnemyKillQuest::StaticClass(), TEXT("KillQuestInstance"));
             CurrentQuest->AdvanceQuest(QuestStages[CurrentQuestStageIndex]);
-            CurrentQuest->QuestName = FText::Format(FText::FromString(TEXT("Enemy Kill Quest Stage {0}")), FText::AsNumber(CurrentQuestStageIndex + 1));
-            CurrentQuest->QuestDescription = FText::Format(FText::FromString(TEXT("Defeat {0} enemies.")), FText::AsNumber(QuestStages[CurrentQuestStageIndex]));
+            CurrentQuest->QuestName = FText::Format(
+                FText::FromString(TEXT("Enemy Kill Quest Stage {0}")),
+                FText::AsNumber(CurrentQuestStageIndex + 1)
+            );
+            CurrentQuest->QuestDescription = FText::Format(
+                FText::FromString(TEXT("Defeat {0} enemies.")),
+                FText::AsNumber(QuestStages[CurrentQuestStageIndex])
+            );
         }
-        UE_LOG(LogTemp, Log, TEXT("다음 퀘스트 단계로 이동: %d, 목표: %d"), CurrentQuestStageIndex + 1, CurrentQuest->TargetKillCount);
+
+        UE_LOG(LogTemp, Log, TEXT("다음 퀘스트 단계로 이동: %d, 목표: %d"),
+            CurrentQuestStageIndex + 1,
+            CurrentQuest->TargetKillCount
+        );
+
+        // UI 업데이트 등
         OnQuestProgressUpdated.Broadcast(CurrentQuest->CurrentKillCount, CurrentQuest->TargetKillCount);
     }
     else
     {
-
+        // 모든 단계 완료
         UE_LOG(LogTemp, Log, TEXT("모든 퀘스트 단계가 완료되었습니다!"));
+
         if (CurrentQuest)
         {
             CurrentQuest->CompleteQuest(); // 최종적으로 완료 상태로 설정
         }
+
         OnAllQuestsCompleted.Broadcast();
     }
 }
