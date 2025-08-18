@@ -11,6 +11,17 @@ void UGameOverWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
+    // 마우스 커서 보이게 설정
+    APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+    if (PlayerController)
+    {
+        PlayerController->bShowMouseCursor = true;
+
+        FInputModeUIOnly InputMode;
+        InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+        PlayerController->SetInputMode(InputMode);
+    }
+
     // 메인메뉴로 돌아가는 버튼 연결
     if (Return_BTN)
     {
