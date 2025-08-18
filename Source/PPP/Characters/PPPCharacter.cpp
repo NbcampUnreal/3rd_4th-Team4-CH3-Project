@@ -189,6 +189,8 @@ void APppCharacter::Move(const FInputActionValue& value)
 {
     if (!Controller) return;
 
+    if (bIsReloading) return;
+
     const FVector2D MoveInput = value.Get<FVector2D>();
 
     if (bIsCrouchKeyPressed && !bIsCrouched)
@@ -210,6 +212,7 @@ void APppCharacter::StartJump(const FInputActionValue& value)
 {
 
     if (bIsCrouched) return;
+    if (bIsReloading) return;
 
 	if (CanJump())
 	{
