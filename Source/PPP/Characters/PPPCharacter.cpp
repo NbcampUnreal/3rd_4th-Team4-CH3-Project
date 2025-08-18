@@ -215,6 +215,7 @@ void APppCharacter::StartJump(const FInputActionValue& value)
 	{
 		Jump();
 	    UE_LOG(LogTemp, Warning, TEXT("Jump"));
+	    bIsJumping = true;
 	}
 }
 
@@ -223,6 +224,7 @@ void APppCharacter::StopJump(const FInputActionValue& value)
 {
     if (!value.Get<bool>())
         StopJumping();
+    bIsJumping = false;
 }
 void APppCharacter::StartSprint(const FInputActionValue& value)
 {
@@ -520,6 +522,12 @@ void APppCharacter::OnDeath()
     // 김여울
     // 브로드캐스트 항상 호출
     OnCharacterDead.Broadcast();
+}
+
+void APppCharacter::Landed(const FHitResult& Hit)
+{
+    Super::Landed(Hit);
+    bIsJumping = false;
 }
 
 //오류 수정
