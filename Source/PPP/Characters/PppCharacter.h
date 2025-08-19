@@ -199,6 +199,8 @@ protected:
     void ToggleCamera();
     void OnDeath();
 
+    void Landed(const FHitResult& Hit);
+
 private:
 
 	float SprintSpeed; //스프린트 속도
@@ -215,6 +217,8 @@ public:
     // 정현수, 재장전 변수를 애님 인스턴스로 호출하기 위해 public으로 변경
     // 성준모, 재장전 애니메이션 동작 중인지 확인하는 부울 값
     bool bIsReloading = false;
+
+    bool bIsJumping = false;
 
 private:
     // 성준모, 장전 시간(타이머 핸들)
