@@ -1,0 +1,108 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/GameState.h"
+#include "GameDefines.h"
+#include "PPPGameState.generated.h"
+
+// 정현성
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreChanged, int32, NewScore);
+
+
+UCLASS()
+class PPP_API APPPGameState : public AGameState
+{
+	GENERATED_BODY()
+
+public:
+    void AddKill();                 // 함수 선언
+    int32 GetKillCount() const;    // 킬 수 조회 함수
+
+    void SetRemainingTime(float NewTime);
+
+	APPPGameState();
+
+    // [추가] 타이머 로그를 켜고 끄는 스위치
+    UPROPERTY(EditAnywhere, Category="Round|Debug")
+    bool bDebugTimerLogs = true;
+
+	/** 현재 게임 상태 (InProgress, GameOver 같은 거) */
+	UPROPERTY(BlueprintReadOnly, Category="State")
+	EGameState CurrentState;
+
+	/** 현재 라운드 */
+	UPROPERTY(BlueprintReadOnly, Category="State")
+	int32 CurrentRound;
+
+	/** 남은 적 */
+	UPROPERTY(BlueprintReadOnly, Category="State")
+	int32 RemainingEnemies;
+
+    // 정현성
+    // 점수가 변경될 때마다 함수 자동 호출
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_Score, Category = "Score")
+    int32 Score = 0;
+
+    UPROPERTY(BlueprintAssignable, Category = "Score")
+    FOnScoreChanged OnScoreChanged;
+
+    UFUNCTION(BlueprintCallable, Category="Score")
+    int32 GetScore() const { return Score; }
+
+    /** 점수 (정현성 주석 처리) */
+    // UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Score")
+    // int32 Score = 0;
+
+
+    // 점수로 라운드 클리어 판단
+    UFUNCTION(BlueprintCallable)
+    bool IsRoundCleared() const;
+
+    // 정현성
+    UFUNCTION()
+    void OnRep_Score();
+
+    UFUNCTION(BlueprintCallable)
+
+    void AddScore(int32 Amount); //증가
+    void ResetScore(); //스코어 초기화
+    void StartRoundTimer(float Duration); //타이머 시작
+    void StopRoundTimer(); //타이머 중지
+
+    UFUNCTION(BlueprintCallable, Category = "Timer") // 정현성 Get Remaining Time 블루프린트로 호출
+    float GetRemainingTime() const; //남은 시간 가져오기
+
+    virtual void Tick(float DeltaTime) override;//tick사용
+    EGameState GetCurrentState()const;
+	// -------------------------------
+	// GameMode에서 호출할 Setter 함수들
+	// -------------------------------
+
+	void SetGameState(EGameState NewState);
+	void SetCurrentRound(int32 Round);
+	void SetRemainingEnemies(int32 Count);
+
+	// -------------------------------
+	// Getter 함수들
+	// -------------------------------
+	int32 GetCurrentRound() const;
+	int32 GetRemainingEnemies() const;
+    UPROPERTY(EditAnywhere, Category="Score")
+    int32 ScoreToClearRound = 100; //라운드 클리어 점수
+
+    UFUNCTION(BlueprintPure, Category="Timer")
+    bool HasTimedOut() const { return bTimedOut; }//스테이지 타임아웃 여부
+
+    virtual void BeginPlay() override; // [로그용] 실제로 GS가 뜨는지 확인
+
+private:
+    UPROPERTY(VisibleAnywhere, Category="Timer")
+    float RemainingTime; //남은 시간
+    bool bIsTimerRunning; //타이머 작동중인지
+    void OnRoundTimerFinished(); //라운드 제한 시간 끝났을 때
+    int32 PreviousDisplaySeconds = -1; //화면 표시용 이전 초 값을 저장 ! -1부터 시작해서 무조건 첫 프레임에 갱신되게
+    bool bTimedOut = false;//스테이지 타임아웃 여부
+    int32 KillCount = 0;           // 킬 수 변수
+
+
+};
